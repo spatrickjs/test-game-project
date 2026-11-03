@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://c4fpifar6lrnd" path="res://assets/art/tilesets/terrain/paddy_mud.png.png" id="5_ql0s4"]
 [ext_resource type="Script" uid="uid://clvmxcrluptf4" path="res://src/presentation/world/crop_debug_overlay.gd" id="6_g68ao"]
 [ext_resource type="Script" uid="uid://jt23o8e58cda" path="res://src/data/resources/soil_state.gd" id="7_p35bb"]
+[ext_resource type="Resource" path="res://src/data/databases/default_disease_database.tres" id="8_qayry"]
 [ext_resource type="Script" uid="uid://ddq1k2v5ci1j1" path="res://src/data/resources/abiotic_state.gd" id="8_yhesb"]
 [ext_resource type="Script" uid="uid://dphgo78jfmxeh" path="res://src/presentation/ui/inspectors/tile_inspector_view.gd" id="12_56fpe"]
 
@@ -24,12 +25,10 @@ metadata/_custom_type_script = "uid://ddq1k2v5ci1j1"
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_56fpe"]
 load_path = "res://.godot/imported/dry_soil.png.png-1a6462df813c7b924cf0c9552dd5120a.ctex"
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qayry"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_v286j"]
 resource_name = "dry_soil"
 texture = SubResource("CompressedTexture2D_56fpe")
 texture_region_size = Vector2i(512, 512)
-0:1/0 = 0
-0:2/0 = 0
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(4, -14)
 
@@ -40,8 +39,6 @@ load_path = "res://.godot/imported/grass.png.png-b7a38354c4577d6470e0b8cbdcc0165
 resource_name = "grass"
 texture = SubResource("CompressedTexture2D_v286j")
 texture_region_size = Vector2i(512, 512)
-0:1/0 = 0
-0:2/0 = 0
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(4, -14)
 
@@ -49,8 +46,6 @@ texture_region_size = Vector2i(512, 512)
 resource_name = "paddy_mud"
 texture = ExtResource("5_ql0s4")
 texture_region_size = Vector2i(512, 512)
-0:1/0 = 0
-0:2/0 = 0
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(4, -14)
 
@@ -58,11 +53,14 @@ texture_region_size = Vector2i(512, 512)
 tile_shape = 1
 tile_layout = 4
 tile_size = Vector2i(276, 140)
-sources/0 = SubResource("TileSetAtlasSource_qayry")
+sources/0 = SubResource("TileSetAtlasSource_v286j")
 sources/1 = SubResource("TileSetAtlasSource_fdjjd")
 sources/2 = SubResource("TileSetAtlasSource_tcj1j")
 
 [sub_resource type="FontFile" id="FontFile_g68ao"]
+subpixel_positioning = 0
+msdf_pixel_range = 14
+msdf_size = 128
 cache/0/variation_coordinates = {}
 cache/0/face_index = 0
 cache/0/embolden = 0.0
@@ -78,7 +76,7 @@ cache/0/16/0/underline_position = 0.0
 cache/0/16/0/underline_thickness = 0.0
 cache/0/16/0/scale = 1.0
 
-[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button")]
+[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector")]
 script = ExtResource("1_44tld")
 farming_controller = NodePath("FarmingController")
 turn_controller = NodePath("TurnController")
@@ -92,6 +90,7 @@ sugarcane_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/SugarcaneButt
 rice_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/RiceButton")
 corn_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/CornButton")
 next_turn_button = NodePath("HUD/Panel/Margin/Controls/NextTurnButton")
+algorithm_selector = NodePath("HUD/Panel/Margin/Controls/AlgorithmSelector")
 
 [node name="FarmingController" type="Node" parent="." unique_id=889834426]
 script = ExtResource("2_jfjlv")
@@ -104,6 +103,7 @@ terrain_bands = Array[int]([0, 2, 1])
 [node name="TurnController" type="Node" parent="." unique_id=980371109 node_paths=PackedStringArray("farming_controller")]
 script = ExtResource("3_r0odj")
 farming_controller = NodePath("../FarmingController")
+disease_database = ExtResource("8_qayry")
 
 [node name="World" type="Node2D" parent="." unique_id=369827757 node_paths=PackedStringArray("terrain_layer", "crop_overlay", "camera")]
 script = ExtResource("4_34f8n")
@@ -176,7 +176,22 @@ text = "Next Turn"
 layout_mode = 2
 text = "Click a tile to inspect it."
 
-[node name="TileInspectorPanel" type="PanelContainer" parent="HUD" unique_id=716647788 node_paths=PackedStringArray("close_button", "scroll_container", "title_label", "terrain_label", "soil_ph_label", "macronutrients_label", "crop_name_label", "growth_label", "disease_label", "state_label", "removed_outcome_label", "susceptible_label", "exposed_label", "infected_label", "immune_label", "dead_label", "growth_bar", "susceptible_bar", "exposed_bar", "infected_bar", "immune_bar", "dead_bar")]
+[node name="AlgorithmSelector" type="OptionButton" parent="HUD/Panel/Margin/Controls" unique_id=188980615]
+custom_minimum_size = Vector2(160, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+selected = 0
+item_count = 4
+popup/item_0/text = "Disease Default"
+popup/item_0/id = 0
+popup/item_1/text = "Spatial SIR"
+popup/item_1/id = 1
+popup/item_2/text = "Spatial SEIR"
+popup/item_2/id = 2
+popup/item_3/text = "Stochastic CA-SIR"
+popup/item_3/id = 3
+
+[node name="TileInspectorPanel" type="PanelContainer" parent="HUD" unique_id=716647788 node_paths=PackedStringArray("close_button", "seed_infection_button", "scroll_container", "title_label", "terrain_label", "soil_ph_label", "macronutrients_label", "crop_name_label", "growth_label", "disease_label", "state_label", "removed_outcome_label", "susceptible_label", "exposed_label", "infected_label", "immune_label", "dead_label", "growth_bar", "susceptible_bar", "exposed_bar", "infected_bar", "immune_bar", "dead_bar")]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -185,7 +200,9 @@ offset_bottom = 575.0
 grow_horizontal = 0
 size_flags_horizontal = 3
 script = ExtResource("12_56fpe")
+disease_database = ExtResource("8_qayry")
 close_button = NodePath("Margin/Layout/Header/CloseButton")
+seed_infection_button = NodePath("Margin/Layout/SeedInfectionButton")
 scroll_container = NodePath("Margin/Layout/Scroll")
 title_label = NodePath("Margin/Layout/Header/TitleLabel")
 terrain_label = NodePath("Margin/Layout/Scroll/Content/TerrainLabel")
@@ -417,3 +434,9 @@ size_flags_horizontal = 3
 mouse_filter = 2
 step = 0.1
 show_percentage = false
+
+[node name="SeedInfectionButton" type="Button" parent="HUD/TileInspectorPanel/Margin/Layout" unique_id=1565661412]
+custom_minimum_size = Vector2(64, 44)
+layout_mode = 2
+size_flags_horizontal = 8
+text = "Seed Infection"

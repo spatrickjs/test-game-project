@@ -1,25 +1,21 @@
-extends SceneTree
-## Run with --headless --editor --script. Modifies only the unsaved editor scene.
+@tool
+extends RefCounted
+## Invoked by the gated editor plugin, never via --editor --script.
 
 const Builder: Script = preload("res://src/presentation/ui/inspectors/build_tile_inspector_scene.gd")
 var _failures: PackedStringArray = PackedStringArray()
 
 
-func _initialize() -> void:
-	_run.call_deferred()
-
-
-func _run() -> void:
+func run(tree: SceneTree) -> int:
 	for frame: int in range(10):
-		await process_frame
+		await tree.process_frame
 	EditorInterface.open_scene_from_path("res://field_prototype.tscn")
 	for frame: int in range(10):
-		await process_frame
+		await tree.process_frame
 	var scene_root: Node = EditorInterface.get_edited_scene_root()
 	if scene_root == null:
 		printerr("BUILDER_TEST_FAIL: no edited scene")
-		quit(1)
-		return
+		return 1
 	var had_panel: bool = scene_root.has_node(^"HUD/TileInspectorPanel")
 	var previous_binding: Node = scene_root.get("tile_inspector") as Node
 	var builder: EditorScript = Builder.new() as EditorScript
@@ -27,8 +23,7 @@ func _run() -> void:
 	var panel: Node = scene_root.get_node_or_null(^"HUD/TileInspectorPanel")
 	if panel == null:
 		printerr("BUILDER_TEST_FAIL: panel was not created")
-		quit(1)
-		return
+		return 1
 	_check_bindings(scene_root, panel)
 	var count_before: int = panel.find_children("*", "", true, false).size()
 	var manager: EditorUndoRedoManager = EditorInterface.get_editor_undo_redo()
@@ -71,14 +66,22 @@ func _run() -> void:
 	var rebuilt_instance: Node = rebuilt.instantiate()
 	_check_bindings(rebuilt_instance, rebuilt_instance.get_node(^"HUD/TileInspectorPanel"))
 	rebuilt_instance.free()
-	# Retain the detached original until editor shutdown; undo history refers to it.
+	# Release undo references before freeing the detached original HUD.
+	if history != null:
+		history.clear_history()
+	old_hud.free()
+	# Let deferred editor UI updates and queued deletions finish before shutdown.
+	EditorInterface.get_selection().clear()
+	EditorInterface.edit_node(null)
+	for frame: int in range(5):
+		await tree.process_frame
 	if _failures.is_empty():
 		print("TILE_INSPECTOR_BUILDER_EDITOR_PASS")
 	else:
 		for failure: String in _failures:
 			printerr("BUILDER_TEST_FAIL: " + failure)
 	# No ResourceSaver.save(), save_scene(), or raw scene output.
-	quit(0 if _failures.is_empty() else 1)
+	return 0 if _failures.is_empty() else 1
 
 
 func _check_bindings(scene_root: Node, panel: Node) -> void:

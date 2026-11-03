@@ -18,6 +18,8 @@ extends Node
 @export var rice_button: Button
 @export var corn_button: Button
 @export var next_turn_button: Button
+@export var algorithm_selector: OptionButton
+@export var playtest_disease_id: SimulationEnums.DiseaseId = SimulationEnums.DiseaseId.RICE_BLAST
 var _selected_crop: SimulationEnums.CropType = SimulationEnums.CropType.SUGARCANE
 var _running: bool = false
 var _planting_enabled: bool = false
@@ -62,6 +64,9 @@ func _connect_signals() -> void:
 	_connect_once(turn_controller.turn_completed, _on_turn_completed)
 	_connect_once(get_viewport().size_changed, _on_viewport_resized)
 	_connect_once(tile_inspector.close_requested, _on_inspector_closed)
+	_connect_once(tile_inspector.seed_infection_requested, _on_seed_infection_requested)
+	if algorithm_selector != null:
+		_connect_once(algorithm_selector.item_selected, _on_algorithm_selected)
 
 
 func _on_viewport_resized() -> void:
@@ -99,6 +104,7 @@ func _on_field_initialized() -> void:
 	_set_controls_enabled(true)
 	_enter_inspect_mode()
 	turn_label.text = "Turn: 0"
+	_sync_algorithm_selector()
 	# Run again after the scene's first layout pass.
 	world_view.frame_field.call_deferred()
 
@@ -159,6 +165,8 @@ func _refresh_inspected_cell() -> void:
 	if cell.has_crop:
 		crop = farming_controller.crop_database.get_crop(cell.crop_type)
 	tile_inspector.display_cell(cell, crop)
+	var disease: DiseaseData = turn_controller.disease_database.get_disease(playtest_disease_id) if turn_controller.disease_database != null else null
+	tile_inspector.set_seed_available(cell.has_crop and disease != null and cell.crop_type == disease.target_crop and not cell.has_active_disease and cell.susceptible_fraction == 1.0)
 
 
 func _on_inspector_closed() -> void:
@@ -166,6 +174,32 @@ func _on_inspector_closed() -> void:
 	tile_inspector.clear_display()
 	if not _planting_enabled:
 		status_label.text = "Click another tile to inspect it."
+
+
+func _on_seed_infection_requested() -> void:
+	if not _running or _planting_enabled or _inspected_coordinates.x < 0:
+		return
+	if farming_controller.seed_infection(_inspected_coordinates, playtest_disease_id, turn_controller.disease_database, turn_controller.simulation_controller):
+		status_label.text = "Patient zero seeded. Next Turn advances disease spread."
+	else:
+		status_label.text = farming_controller.last_error
+
+
+func _on_algorithm_selected(index: int) -> void:
+	if not _running:
+		return
+	# Baked order: default, SIR, SEIR, CA. No runtime item creation.
+	if not turn_controller.try_set_algorithm_override(index - 1):
+		status_label.text = turn_controller.last_error
+	else:
+		status_label.text = "Algorithm selected: " + algorithm_selector.get_item_text(index)
+	_sync_algorithm_selector()
+	_refresh_inspected_cell()
+
+
+func _sync_algorithm_selector() -> void:
+	if algorithm_selector != null:
+		algorithm_selector.select(turn_controller.simulation_controller.algorithm_override + 1)
 
 
 func _on_sugarcane_pressed() -> void:

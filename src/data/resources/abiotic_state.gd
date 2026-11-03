@@ -2,6 +2,7 @@ class_name AbioticState
 extends Resource
 ## Passive field-wide environmental data for the initial prototype.
 ## Defaults are authoring placeholders, not recommended growing conditions.
+@export var temperature_celsius: float = 25.0
 
 ## Normalized instantaneous light; this is not a measured irradiance unit.
 @export_range(0.0, 1.0, 0.01) var light_intensity: float = 0.5
@@ -17,6 +18,8 @@ var atmospheric_pressure_kpa: float = 101.325
 ## Reports invalid values without mutating this resource.
 func validate() -> PackedStringArray:
 	var errors: PackedStringArray = PackedStringArray()
+	if not is_finite(temperature_celsius) or temperature_celsius < -273.15:
+		errors.append("temperature_celsius must be finite and at least -273.15.")
 	_validate_normalized("light_intensity", light_intensity, errors)
 	_validate_normalized("relative_humidity", relative_humidity, errors)
 	if is_nan(atmospheric_pressure_kpa) or is_inf(atmospheric_pressure_kpa):
@@ -29,6 +32,7 @@ func validate() -> PackedStringArray:
 ## Copies all schema values, including invalid values, without sharing state.
 func copy() -> AbioticState:
 	var result: AbioticState = AbioticState.new()
+	result.temperature_celsius = temperature_celsius
 	result.light_intensity = light_intensity
 	result.relative_humidity = relative_humidity
 	result.atmospheric_pressure_kpa = atmospheric_pressure_kpa

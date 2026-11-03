@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="DiseaseDatabase" format=3]
+
+[ext_resource type="Script" path="res://src/data/resources/disease_data.gd" id="1_m8dav"]
+[ext_resource type="Resource" path="res://src/data/resources/diseases/rice_blast.tres" id="2_38dqp"]
+[ext_resource type="Script" path="res://src/data/databases/disease_database.gd" id="5_ki5jm"]
+
+[resource]
+script = ExtResource("5_ki5jm")
+diseases = Array[ExtResource("1_m8dav")]([ExtResource("2_38dqp")])

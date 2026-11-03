@@ -1,0 +1,42 @@
+"""Run every executable test in fresh Godot processes; fail on engine errors."""
+import argparse
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--godot", required=True)
+args = parser.parse_args()
+root = Path(__file__).resolve().parents[1]
+logs = root / ".godot"
+tests = [
+    "tests/logic/field_prototype_smoke.gd",
+    "tests/logic/field_scene_integration.gd",
+    "tests/logic/simulation_scaffold_test.gd",
+    "tests/logic/disease_playtest_test.gd",
+    "tests/simulation/epidemiology_models_test.gd",
+    "tests/simulation/transmission_modifiers_test.gd",
+    "tests/presentation/tile_inspector_builder_editor_test.gd",
+]
+failed = False
+for test in tests:
+    command = [args.godot, "--headless", "--path", str(root),
+               "--script", "res://" + test, "--log-file", str(logs / (Path(test).stem + ".log"))]
+    environment = os.environ.copy()
+    environment.pop("GODOT_EDITOR_TEST", None)
+    environment.pop("GODOT_PLAYTEST_SETUP", None)
+    if test.endswith("editor_test.gd"):
+        command = [args.godot, "--headless", "--path", str(root), "--editor",
+                   "--log-file", str(logs / (Path(test).stem + ".log"))]
+        environment["GODOT_EDITOR_TEST"] = "tile_inspector_builder"
+    result = subprocess.run(command, cwd=root, env=environment, capture_output=True, text=True, timeout=60)
+    output = result.stdout + result.stderr
+    diagnostics = [line for line in output.splitlines()
+                   if any(token in line for token in ("ERROR:", "WARNING:", "FAIL:"))]
+    passed = result.returncode == 0 and "_PASS" in output and not diagnostics
+    print(("PASS " if passed else "FAIL ") + test)
+    for line in diagnostics:
+        print("  " + line)
+    failed |= not passed
+sys.exit(1 if failed else 0)

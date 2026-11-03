@@ -30,6 +30,22 @@ var recovered_immune_fraction: float = 0.0
 var dead_fraction: float = 0.0
 
 
+## Reset crop state after setting has_crop/crop_type. Preserve soil and terrain.
+func reset_crop_state() -> void:
+	growth_elapsed_ticks = 0
+	sir_state = SimulationEnums.SIRState.S
+	removed_outcome = SimulationEnums.RemovedOutcome.NONE
+	has_active_disease = false
+	active_disease_id = SimulationEnums.DiseaseId.RSSI
+	susceptible_fraction = 1.0 if has_crop else 0.0
+	exposed_fraction = 0.0
+	infected_fraction = 0.0
+	recovered_immune_fraction = 0.0
+	dead_fraction = 0.0
+	if not has_crop:
+		crop_type = SimulationEnums.CropType.SUGARCANE
+
+
 func is_mature(crop_data: CropData) -> bool:
 	if not has_crop or crop_data == null:
 		return false

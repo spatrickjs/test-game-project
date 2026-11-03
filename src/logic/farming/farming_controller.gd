@@ -73,16 +73,7 @@ func try_plant(coordinates: Vector2i, crop_type: SimulationEnums.CropType) -> bo
 	var cell: FieldCellState = _grid.get_cell(coordinates)
 	cell.has_crop = true
 	cell.crop_type = crop_type
-	cell.growth_elapsed_ticks = 0
-	cell.sir_state = SimulationEnums.SIRState.S
-	cell.removed_outcome = SimulationEnums.RemovedOutcome.NONE
-	cell.has_active_disease = false
-	cell.active_disease_id = SimulationEnums.DiseaseId.RSSI
-	cell.susceptible_fraction = 1.0
-	cell.exposed_fraction = 0.0
-	cell.infected_fraction = 0.0
-	cell.recovered_immune_fraction = 0.0
-	cell.dead_fraction = 0.0
+	cell.reset_crop_state()
 	last_error = ""
 	cell_changed.emit(coordinates)
 	return true
@@ -107,6 +98,74 @@ func advance_growth() -> bool:
 			if cell.growth_elapsed_ticks < crop.growth_ticks:
 				cell.growth_elapsed_ticks += 1
 	last_error = ""
+	return true
+
+
+## State clearing only, without harvesting/reward mechanics.
+func clear_crop(coordinates: Vector2i) -> bool:
+	if _grid == null:
+		return _fail("Initialize the field before clearing crops.")
+	var cell: FieldCellState = _grid.get_cell(coordinates)
+	if cell == null:
+		return _fail("Choose a tile inside the field.")
+	cell.has_crop = false
+	cell.reset_crop_state()
+	last_error = ""
+	cell_changed.emit(coordinates)
+	return true
+
+
+## Logic-only bridge; no authoritative grid escapes to Presentation.
+func process_simulation(simulation: SimulationController, diseases: DiseaseDatabase) -> bool:
+	simulation.crop_database = crop_database
+	return simulation.process_turn(_grid, diseases)
+
+
+## Transaction boundary: no growth or epidemic state survives a failed turn.
+func advance_simulated_turn(simulation: SimulationController, diseases: DiseaseDatabase) -> bool:
+	simulation.crop_database = crop_database
+	var errors: PackedStringArray = simulation.validate_turn(_grid, diseases)
+	if not errors.is_empty():
+		return _fail("\n".join(errors))
+	var before: FieldGridState = _grid.copy()
+	if not advance_growth():
+		return false
+	if not process_simulation(simulation, diseases):
+		_grid = before
+		return _fail(simulation.last_error)
+	return true
+
+
+## Debug action; never changes growth, soil, or turn count.
+func seed_infection(coordinates: Vector2i, disease_id: SimulationEnums.DiseaseId, diseases: DiseaseDatabase, simulation: SimulationController) -> bool:
+	if _grid == null or diseases == null or simulation == null:
+		return _fail("Initialize the field and assign simulation/catalog first.")
+	var disease: DiseaseData = diseases.get_disease(disease_id)
+	var cell: FieldCellState = _grid.get_cell(coordinates)
+	if disease == null or cell == null or not cell.has_crop or cell.soil == null:
+		return _fail("Select an occupied tile with a registered disease.")
+	if disease.target_crop != cell.crop_type:
+		return _fail("This disease cannot infect the selected crop.")
+	if not cell.validate().is_empty():
+		return _fail("The selected tile has invalid crop state.")
+	if cell.has_active_disease or cell.susceptible_fraction != 1.0 or cell.exposed_fraction != 0.0 or cell.infected_fraction != 0.0 or cell.recovered_immune_fraction != 0.0 or cell.dead_fraction != 0.0:
+		return _fail("Patient zero must be a clean, fully susceptible crop.")
+	var candidate: FieldGridState = _grid.copy()
+	var seeded: FieldCellState = candidate.get_cell(coordinates)
+	seeded.has_active_disease = true
+	seeded.active_disease_id = disease_id
+	seeded.sir_state = SimulationEnums.SIRState.I
+	seeded.removed_outcome = SimulationEnums.RemovedOutcome.NONE
+	var algorithm: int = disease.default_algorithm if simulation.algorithm_override == -1 else simulation.algorithm_override
+	seeded.infected_fraction = 1.0 if algorithm == SimulationEnums.SimulationAlgorithm.STOCHASTIC_CA_SIR else 0.2
+	seeded.susceptible_fraction = 1.0 - seeded.infected_fraction
+	simulation.crop_database = crop_database
+	var errors: PackedStringArray = simulation.validate_turn(candidate, diseases)
+	if not errors.is_empty():
+		return _fail("\n".join(errors))
+	_grid = candidate
+	last_error = ""
+	cell_changed.emit(coordinates)
 	return true
 
 

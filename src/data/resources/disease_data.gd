@@ -7,6 +7,7 @@ extends Resource
 @export var disease_id: SimulationEnums.DiseaseId = SimulationEnums.DiseaseId.RSSI
 @export var display_name: String = ""
 @export var target_crop: SimulationEnums.CropType = SimulationEnums.CropType.SUGARCANE
+@export var transmission_modifier_profile: TransmissionModifierProfile = null
 
 @export_group("Algorithm")
 ## The benchmark runner may override this without mutating the resource.
@@ -42,6 +43,9 @@ extends Resource
 ## Reports invalid configuration without mutation.
 func validate() -> PackedStringArray:
 	var errors: PackedStringArray = PackedStringArray()
+	if transmission_modifier_profile != null:
+		for error: String in transmission_modifier_profile.validate():
+			errors.append("transmission_modifier_profile: " + error)
 	if display_name.strip_edges().is_empty():
 		errors.append("display_name must not be blank.")
 	if not SimulationEnums.DiseaseId.values().has(disease_id):
@@ -99,6 +103,8 @@ func copy() -> DiseaseData:
 	result.disease_id = disease_id
 	result.display_name = display_name
 	result.target_crop = target_crop
+	if transmission_modifier_profile != null:
+		result.transmission_modifier_profile = transmission_modifier_profile.copy()
 	result.default_algorithm = default_algorithm
 	result.beta = beta
 	result.sigma = sigma

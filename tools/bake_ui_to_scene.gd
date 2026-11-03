@@ -18,6 +18,7 @@ const NODE_TYPES: Dictionary[String, StringName] = {
 	"HUD/Panel/Margin/Controls/CropButtons": &"HBoxContainer",
 	"HUD/Panel/Margin/Controls/NextTurnButton": &"Button",
 	"HUD/Panel/Margin/Controls/StatusLabel": &"Label",
+	"HUD/Panel/Margin/Controls/AlgorithmSelector": &"OptionButton",
 	"HUD/Panel/Margin/Controls/CropButtons/SugarcaneButton": &"Button",
 	"HUD/Panel/Margin/Controls/CropButtons/RiceButton": &"Button",
 	"HUD/Panel/Margin/Controls/CropButtons/CornButton": &"Button",
@@ -27,6 +28,7 @@ const NODE_TYPES: Dictionary[String, StringName] = {
 	"HUD/TileInspectorPanel/Margin/Layout/Header": &"HBoxContainer",
 	"HUD/TileInspectorPanel/Margin/Layout/Header/TitleLabel": &"Label",
 	"HUD/TileInspectorPanel/Margin/Layout/Header/CloseButton": &"Button",
+	"HUD/TileInspectorPanel/Margin/Layout/SeedInfectionButton": &"Button",
 	"HUD/TileInspectorPanel/Margin/Layout/Scroll": &"ScrollContainer",
 	"HUD/TileInspectorPanel/Margin/Layout/Scroll/Content": &"VBoxContainer",
 	"HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/TerrainHeading": &"Label",
@@ -57,6 +59,7 @@ const NODE_TYPES: Dictionary[String, StringName] = {
 	"HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/Compartments/DeadBar": &"ProgressBar",
 }
 const BINDINGS: Dictionary[StringName, NodePath] = {
+	&"seed_infection_button": ^"HUD/TileInspectorPanel/Margin/Layout/SeedInfectionButton",
 	&"close_button": ^"HUD/TileInspectorPanel/Margin/Layout/Header/CloseButton",
 	&"scroll_container": ^"HUD/TileInspectorPanel/Margin/Layout/Scroll",
 	&"title_label": ^"HUD/TileInspectorPanel/Margin/Layout/Header/TitleLabel",
@@ -82,6 +85,7 @@ const BINDINGS: Dictionary[StringName, NodePath] = {
 }
 
 const HUD_BINDINGS: Dictionary[StringName, NodePath] = {
+	&"algorithm_selector": ^"HUD/Panel/Margin/Controls/AlgorithmSelector",
 	&"hud_panel": ^"HUD/Panel",
 	&"turn_label": ^"HUD/Panel/Margin/Controls/TurnLabel",
 	&"selected_crop_label": ^"HUD/Panel/Margin/Controls/SelectedCropLabel",
@@ -243,6 +247,12 @@ func _configure_new_node(node: Node) -> void:
 		scroll.mouse_force_pass_scroll_events = false
 	elif node is GridContainer:
 		(node as GridContainer).columns = 2
+	elif node is OptionButton:
+		var selector: OptionButton = node as OptionButton
+		for caption: String in ["Disease Default", "Spatial SIR", "Spatial SEIR", "Stochastic CA-SIR"]:
+			selector.add_item(caption)
+		selector.mouse_filter = Control.MOUSE_FILTER_STOP
+		selector.custom_minimum_size = Vector2(160.0, 44.0)
 	elif node is Button:
 		var button: Button = node as Button
 		button.text = _preview_text(String(node.name))
@@ -291,6 +301,7 @@ func _preview_text(node_name: String) -> String:
 		"CornButton": return "Corn"
 		"NextTurnButton": return "Next Turn"
 		"CloseButton": return "Close"
+		"SeedInfectionButton": return "Seed Infection"
 		"TurnLabel": return "Turn: 0"
 		"SelectedCropLabel": return "Mode: Inspect"
 		"StatusLabel": return "Click a tile to inspect it."

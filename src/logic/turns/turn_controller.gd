@@ -5,6 +5,10 @@ extends Node
 signal turn_completed(turn_index: int)
 
 @export var farming_controller: FarmingController
+## Empty catalog supports authoring; explicitly null is a configuration error.
+@export var disease_database: DiseaseDatabase = DiseaseDatabase.new()
+## RefCounted dependency: may be injected from code, not a scene node.
+var simulation_controller: SimulationController = SimulationController.new()
 
 var turn_index: int = 0
 var last_error: String = ""
@@ -17,14 +21,37 @@ func reset_clock() -> void:
 		last_error = ""
 
 
+func try_set_algorithm_override(value: int) -> bool:
+	if _advancing or farming_controller == null or not farming_controller.is_initialized() or simulation_controller == null:
+		last_error = "Initialize the field before selecting an algorithm."
+		return false
+	var previous: int = simulation_controller.algorithm_override
+	simulation_controller.algorithm_override = value
+	simulation_controller.crop_database = farming_controller.crop_database
+	var errors: PackedStringArray = simulation_controller.validate_turn(farming_controller.get_grid_snapshot(), disease_database)
+	if not errors.is_empty():
+		simulation_controller.algorithm_override = previous
+		last_error = "\n".join(errors)
+		return false
+	last_error = ""
+	return true
+
+
 func advance_turn() -> bool:
 	if _advancing:
 		return false
 	if farming_controller == null or not farming_controller.is_initialized():
 		last_error = "Assign and initialize the FarmingController first."
 		return false
+	if simulation_controller == null or disease_database == null:
+		last_error = "Assign a simulation controller and disease catalog."
+		return false
+	var errors: PackedStringArray = disease_database.validate()
+	if not errors.is_empty():
+		last_error = "\n".join(errors)
+		return false
 	_advancing = true
-	if not farming_controller.advance_growth():
+	if not farming_controller.advance_simulated_turn(simulation_controller, disease_database):
 		last_error = farming_controller.last_error
 		_advancing = false
 		return false

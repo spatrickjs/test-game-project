@@ -3,6 +3,7 @@ extends PanelContainer
 ## Read-only snapshot display. No simulation references are retained or mutated.
 
 signal close_requested
+signal seed_infection_requested
 
 @export_group("Catalog")
 ## Optional during authoring; an unresolved active ID is displayed explicitly.
@@ -10,6 +11,7 @@ signal close_requested
 
 @export_group("Structure")
 @export var close_button: Button
+@export var seed_infection_button: Button
 @export var scroll_container: ScrollContainer
 @export_group("Labels")
 @export var title_label: Label
@@ -37,6 +39,8 @@ signal close_requested
 
 
 func _ready() -> void:
+	if seed_infection_button != null and not seed_infection_button.pressed.is_connected(_on_seed_pressed):
+		seed_infection_button.pressed.connect(_on_seed_pressed)
 	if close_button != null and not close_button.pressed.is_connected(_on_close_pressed):
 		close_button.pressed.connect(_on_close_pressed)
 	clear_display()
@@ -124,6 +128,7 @@ func display_cell(cell_state: FieldCellState, crop_data: CropData) -> void:
 
 
 func clear_display() -> void:
+	set_seed_available(false)
 	for label: Label in _labels():
 		if label != null:
 			label.text = ""
@@ -257,3 +262,12 @@ func _bars() -> Array[ProgressBar]:
 func _on_close_pressed() -> void:
 	clear_display()
 	close_requested.emit()
+
+
+func set_seed_available(available: bool) -> void:
+	if seed_infection_button != null:
+		seed_infection_button.disabled = not available
+
+
+func _on_seed_pressed() -> void:
+	seed_infection_requested.emit()

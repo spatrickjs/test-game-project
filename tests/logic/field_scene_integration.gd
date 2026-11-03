@@ -5,6 +5,7 @@ const InspectorFixture = preload("res://tests/presentation/inspector_test_fixtur
 
 var _failures: PackedStringArray = PackedStringArray()
 var _intent_count: int = 0
+var _close_count: int = 0
 
 
 func _initialize() -> void:
@@ -28,6 +29,7 @@ func _run() -> void:
 	presenter.hud_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	presenter.hud_panel.position = Vector2(12.0, 12.0)
 	presenter.hud_panel.size = Vector2(360.0, 240.0)
+	presenter.tile_inspector.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	presenter.tile_inspector.position = Vector2(800.0, 12.0)
 	presenter.tile_inspector.size = Vector2(340.0, 560.0)
 	root.add_child(presenter)
@@ -50,6 +52,7 @@ func _run() -> void:
 	presenter._connect_signals()
 	presenter._connect_signals()
 	view.cell_clicked.connect(_count_intent)
+	presenter.tile_inspector.close_requested.connect(func() -> void: _close_count += 1)
 	_click(presenter.rice_button.get_global_rect().get_center())
 	await process_frame
 	_check(presenter.rice_button.button_pressed and not presenter.tile_inspector.visible, "Plant mode closes inspector and highlights crop")
@@ -97,6 +100,7 @@ func _run() -> void:
 	_click(presenter.tile_inspector.close_button.get_global_rect().get_center())
 	await process_frame
 	_check(not presenter.tile_inspector.visible, "Close button hides inspector")
+	_check(_close_count == 1, "Close button emits close_requested exactly once")
 	_click(presenter.next_turn_button.get_global_rect().get_center())
 	await process_frame
 	_check(not presenter.tile_inspector.visible, "A closed inspector stays closed after turns")
@@ -119,11 +123,18 @@ func _run() -> void:
 	presenter.tile_inspector.display_cell(empty_grass, null)
 	_check(presenter.tile_inspector.soil_ph_label.text == "No soil data", "Grass has no soil display")
 	_check(presenter.tile_inspector.state_label.text.contains("Not applicable"), "Empty tile epidemic values are not applicable")
+	# Exercise authored right anchoring: resize may change position, not offsets.
+	presenter.tile_inspector.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	presenter.tile_inspector.offset_left = -352.0
+	presenter.tile_inspector.offset_right = -12.0
+	presenter.tile_inspector.offset_top = 12.0
+	presenter.tile_inspector.offset_bottom = 572.0
 	root.content_scale_size = Vector2i(480, 480)
 	root.size = Vector2i(480, 480)
 	for frame: int in range(3):
 		await process_frame
-	_check(presenter.tile_inspector.position == Vector2(800.0, 12.0), "Viewport resize preserves authored inspector position")
+	_check(presenter.tile_inspector.anchor_right == 1.0 and presenter.tile_inspector.anchor_left == 1.0, "Viewport resize preserves authored anchors")
+	_check(is_equal_approx(presenter.tile_inspector.offset_right, -12.0) and is_equal_approx(presenter.tile_inspector.offset_left, -352.0), "Viewport resize preserves authored offsets")
 	_check(presenter.tile_inspector.scroll_container.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_AUTO, "Small viewport content is scrollable")
 	presenter.queue_free()
 	await process_frame
