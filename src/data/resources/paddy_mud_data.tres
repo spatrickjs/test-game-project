@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TerrainData" format=3 uid="uid://c01xejcbarce3"]
+
+[ext_resource type="Script" uid="uid://b8uw70t1ej08g" path="res://src/data/resources/terrain_data.gd" id="1_fxtgf"]
+
+[resource]
+script = ExtResource("1_fxtgf")
+terrain_type = 1
+display_name = "Paddy_Mud"
+is_plantable = true
+allowed_crops = Array[int]([1])

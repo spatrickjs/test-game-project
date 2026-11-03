@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CropData" format=3 uid="uid://dqymjdquxlcns"]
+
+[ext_resource type="Script" uid="uid://bbr8k8k27fpoh" path="res://src/data/resources/abiotic_rule.gd" id="1_70nkg"]
+[ext_resource type="Script" uid="uid://bd8k7muh8e7gn" path="res://src/data/resources/nutrient_rule.gd" id="2_6km3l"]
+[ext_resource type="Script" uid="uid://cy15hmnrw2rf7" path="res://src/data/resources/crop_data.gd" id="3_gxv3q"]
+
+[resource]
+script = ExtResource("3_gxv3q")
+display_name = "Sugarcane"
+growth_ticks = 5
+metadata/_custom_type_script = "uid://cy15hmnrw2rf7"

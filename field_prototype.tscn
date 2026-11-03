@@ -1,0 +1,419 @@
+[gd_scene format=3 uid="uid://beit4bfuaevfp"]
+
+[ext_resource type="Script" uid="uid://cv57j7qhuge76" path="res://src/presentation/world/field_prototype_presenter.gd" id="1_44tld"]
+[ext_resource type="Script" uid="uid://b5c7chugjxt0o" path="res://src/logic/farming/farming_controller.gd" id="2_jfjlv"]
+[ext_resource type="Resource" uid="uid://bsijc06et0wly" path="res://src/data/databases/crop_database.tres" id="3_g68ao"]
+[ext_resource type="Script" uid="uid://bghaw4686gwwc" path="res://src/logic/turns/turn_controller.gd" id="3_r0odj"]
+[ext_resource type="Script" uid="uid://bs822juxs21vk" path="res://src/presentation/world/field_world_view.gd" id="4_34f8n"]
+[ext_resource type="Resource" uid="uid://c7dk6a0ty5b4l" path="res://src/data/databases/terrain_database.tres" id="5_56fpe"]
+[ext_resource type="Resource" uid="uid://daii8ilkm3qn4" path="res://src/presentation/world/TerrainTileVisualMap.tres" id="5_jfjlv"]
+[ext_resource type="Texture2D" uid="uid://c4fpifar6lrnd" path="res://assets/art/tilesets/terrain/paddy_mud.png.png" id="5_ql0s4"]
+[ext_resource type="Script" uid="uid://clvmxcrluptf4" path="res://src/presentation/world/crop_debug_overlay.gd" id="6_g68ao"]
+[ext_resource type="Script" uid="uid://jt23o8e58cda" path="res://src/data/resources/soil_state.gd" id="7_p35bb"]
+[ext_resource type="Script" uid="uid://ddq1k2v5ci1j1" path="res://src/data/resources/abiotic_state.gd" id="8_yhesb"]
+[ext_resource type="Script" uid="uid://dphgo78jfmxeh" path="res://src/presentation/ui/inspectors/tile_inspector_view.gd" id="12_56fpe"]
+
+[sub_resource type="Resource" id="Resource_34f8n"]
+script = ExtResource("7_p35bb")
+metadata/_custom_type_script = "uid://jt23o8e58cda"
+
+[sub_resource type="Resource" id="Resource_ql0s4"]
+script = ExtResource("8_yhesb")
+metadata/_custom_type_script = "uid://ddq1k2v5ci1j1"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_56fpe"]
+load_path = "res://.godot/imported/dry_soil.png.png-1a6462df813c7b924cf0c9552dd5120a.ctex"
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qayry"]
+resource_name = "dry_soil"
+texture = SubResource("CompressedTexture2D_56fpe")
+texture_region_size = Vector2i(512, 512)
+0:1/0 = 0
+0:2/0 = 0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(4, -14)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_v286j"]
+load_path = "res://.godot/imported/grass.png.png-b7a38354c4577d6470e0b8cbdcc01659.ctex"
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fdjjd"]
+resource_name = "grass"
+texture = SubResource("CompressedTexture2D_v286j")
+texture_region_size = Vector2i(512, 512)
+0:1/0 = 0
+0:2/0 = 0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(4, -14)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tcj1j"]
+resource_name = "paddy_mud"
+texture = ExtResource("5_ql0s4")
+texture_region_size = Vector2i(512, 512)
+0:1/0 = 0
+0:2/0 = 0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(4, -14)
+
+[sub_resource type="TileSet" id="TileSet_qtxmo"]
+tile_shape = 1
+tile_layout = 4
+tile_size = Vector2i(276, 140)
+sources/0 = SubResource("TileSetAtlasSource_qayry")
+sources/1 = SubResource("TileSetAtlasSource_fdjjd")
+sources/2 = SubResource("TileSetAtlasSource_tcj1j")
+
+[sub_resource type="FontFile" id="FontFile_g68ao"]
+cache/0/variation_coordinates = {}
+cache/0/face_index = 0
+cache/0/embolden = 0.0
+cache/0/transform = Transform2D(1, 0, 0, 1, 0, 0)
+cache/0/spacing_top = 0
+cache/0/spacing_bottom = 0
+cache/0/spacing_space = 0
+cache/0/spacing_glyph = 0
+cache/0/baseline_offset = 0.0
+cache/0/16/0/ascent = 0.0
+cache/0/16/0/descent = 0.0
+cache/0/16/0/underline_position = 0.0
+cache/0/16/0/underline_thickness = 0.0
+cache/0/16/0/scale = 1.0
+
+[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button")]
+script = ExtResource("1_44tld")
+farming_controller = NodePath("FarmingController")
+turn_controller = NodePath("TurnController")
+world_view = NodePath("World")
+tile_inspector = NodePath("HUD/TileInspectorPanel")
+hud_panel = NodePath("HUD/Panel")
+turn_label = NodePath("HUD/Panel/Margin/Controls/TurnLabel")
+selected_crop_label = NodePath("HUD/Panel/Margin/Controls/SelectedCropLabel")
+status_label = NodePath("HUD/Panel/Margin/Controls/StatusLabel")
+sugarcane_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/SugarcaneButton")
+rice_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/RiceButton")
+corn_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/CornButton")
+next_turn_button = NodePath("HUD/Panel/Margin/Controls/NextTurnButton")
+
+[node name="FarmingController" type="Node" parent="." unique_id=889834426]
+script = ExtResource("2_jfjlv")
+crop_database = ExtResource("3_g68ao")
+terrain_database = ExtResource("5_56fpe")
+initial_soil = SubResource("Resource_34f8n")
+initial_abiotic = SubResource("Resource_ql0s4")
+terrain_bands = Array[int]([0, 2, 1])
+
+[node name="TurnController" type="Node" parent="." unique_id=980371109 node_paths=PackedStringArray("farming_controller")]
+script = ExtResource("3_r0odj")
+farming_controller = NodePath("../FarmingController")
+
+[node name="World" type="Node2D" parent="." unique_id=369827757 node_paths=PackedStringArray("terrain_layer", "crop_overlay", "camera")]
+script = ExtResource("4_34f8n")
+terrain_layer = NodePath("Terrain")
+visual_map = ExtResource("5_jfjlv")
+crop_overlay = NodePath("CropOverlay")
+camera = NodePath("Camera2D")
+
+[node name="Terrain" type="TileMapLayer" parent="World" unique_id=103210629]
+tile_set = SubResource("TileSet_qtxmo")
+
+[node name="CropOverlay" type="Node2D" parent="World" unique_id=1543953079 node_paths=PackedStringArray("terrain_layer")]
+script = ExtResource("6_g68ao")
+terrain_layer = NodePath("../Terrain")
+label_font = SubResource("FontFile_g68ao")
+
+[node name="Camera2D" type="Camera2D" parent="World" unique_id=1022865643]
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=222609720]
+
+[node name="Panel" type="PanelContainer" parent="HUD" unique_id=423698777]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -147.0
+offset_right = 454.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="HUD/Panel" unique_id=1575669002]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Controls" type="VBoxContainer" parent="HUD/Panel/Margin" unique_id=2059401905]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TurnLabel" type="Label" parent="HUD/Panel/Margin/Controls" unique_id=2116714348]
+layout_mode = 2
+text = "Turn: 0"
+
+[node name="SelectedCropLabel" type="Label" parent="HUD/Panel/Margin/Controls" unique_id=1290996043]
+layout_mode = 2
+text = "Mode: Inspect"
+
+[node name="CropButtons" type="HBoxContainer" parent="HUD/Panel/Margin/Controls" unique_id=572125762]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SugarcaneButton" type="Button" parent="HUD/Panel/Margin/Controls/CropButtons" unique_id=1320538239]
+layout_mode = 2
+toggle_mode = true
+text = "Sugarcane"
+
+[node name="RiceButton" type="Button" parent="HUD/Panel/Margin/Controls/CropButtons" unique_id=87956307]
+layout_mode = 2
+toggle_mode = true
+text = "Rice"
+
+[node name="CornButton" type="Button" parent="HUD/Panel/Margin/Controls/CropButtons" unique_id=1308369973]
+layout_mode = 2
+toggle_mode = true
+text = "Corn"
+
+[node name="NextTurnButton" type="Button" parent="HUD/Panel/Margin/Controls" unique_id=1080894110]
+layout_mode = 2
+text = "Next Turn"
+
+[node name="StatusLabel" type="Label" parent="HUD/Panel/Margin/Controls" unique_id=1366868233]
+layout_mode = 2
+text = "Click a tile to inspect it."
+
+[node name="TileInspectorPanel" type="PanelContainer" parent="HUD" unique_id=716647788 node_paths=PackedStringArray("close_button", "scroll_container", "title_label", "terrain_label", "soil_ph_label", "macronutrients_label", "crop_name_label", "growth_label", "disease_label", "state_label", "removed_outcome_label", "susceptible_label", "exposed_label", "infected_label", "immune_label", "dead_label", "growth_bar", "susceptible_bar", "exposed_bar", "infected_bar", "immune_bar", "dead_bar")]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -245.0
+offset_bottom = 575.0
+grow_horizontal = 0
+size_flags_horizontal = 3
+script = ExtResource("12_56fpe")
+close_button = NodePath("Margin/Layout/Header/CloseButton")
+scroll_container = NodePath("Margin/Layout/Scroll")
+title_label = NodePath("Margin/Layout/Header/TitleLabel")
+terrain_label = NodePath("Margin/Layout/Scroll/Content/TerrainLabel")
+soil_ph_label = NodePath("Margin/Layout/Scroll/Content/SoilPHLabel")
+macronutrients_label = NodePath("Margin/Layout/Scroll/Content/MacronutrientsLabel")
+crop_name_label = NodePath("Margin/Layout/Scroll/Content/CropNameLabel")
+growth_label = NodePath("Margin/Layout/Scroll/Content/GrowthLabel")
+disease_label = NodePath("Margin/Layout/Scroll/Content/DiseaseLabel")
+state_label = NodePath("Margin/Layout/Scroll/Content/StateLabel")
+removed_outcome_label = NodePath("Margin/Layout/Scroll/Content/RemovedOutcomeLabel")
+susceptible_label = NodePath("Margin/Layout/Scroll/Content/Compartments/SusceptibleLabel")
+exposed_label = NodePath("Margin/Layout/Scroll/Content/Compartments/ExposedLabel")
+infected_label = NodePath("Margin/Layout/Scroll/Content/Compartments/InfectedLabel")
+immune_label = NodePath("Margin/Layout/Scroll/Content/Compartments/ImmuneLabel")
+dead_label = NodePath("Margin/Layout/Scroll/Content/Compartments/DeadLabel")
+growth_bar = NodePath("Margin/Layout/Scroll/Content/GrowthBar")
+susceptible_bar = NodePath("Margin/Layout/Scroll/Content/Compartments/SusceptibleBar")
+exposed_bar = NodePath("Margin/Layout/Scroll/Content/Compartments/ExposedBar")
+infected_bar = NodePath("Margin/Layout/Scroll/Content/Compartments/InfectedBar")
+immune_bar = NodePath("Margin/Layout/Scroll/Content/Compartments/ImmuneBar")
+dead_bar = NodePath("Margin/Layout/Scroll/Content/Compartments/DeadBar")
+
+[node name="Margin" type="MarginContainer" parent="HUD/TileInspectorPanel" unique_id=1843207620]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Layout" type="VBoxContainer" parent="HUD/TileInspectorPanel/Margin" unique_id=836714648]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Header" type="HBoxContainer" parent="HUD/TileInspectorPanel/Margin/Layout" unique_id=1117545395]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="TitleLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Header" unique_id=662054669]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Tile inspector"
+autowrap_mode = 3
+
+[node name="CloseButton" type="Button" parent="HUD/TileInspectorPanel/Margin/Layout/Header" unique_id=817343230]
+custom_minimum_size = Vector2(64, 44)
+layout_mode = 2
+size_flags_horizontal = 8
+text = "Close"
+
+[node name="Scroll" type="ScrollContainer" parent="HUD/TileInspectorPanel/Margin/Layout" unique_id=1361795520]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 0
+mouse_force_pass_scroll_events = false
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll" unique_id=2025552734]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="TerrainHeading" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=1911255130]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Terrain & soil"
+autowrap_mode = 3
+
+[node name="TerrainLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=251803910]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Terrain: --"
+autowrap_mode = 3
+
+[node name="SoilPHLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=656821684]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Soil Ph: --"
+autowrap_mode = 3
+
+[node name="MacronutrientsLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=1577839116]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Macronutrients: --"
+autowrap_mode = 3
+
+[node name="TerrainSeparator" type="HSeparator" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=1060970464]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="CropHeading" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=2002588814]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Crop"
+autowrap_mode = 3
+
+[node name="CropNameLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=414624686]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Crop Name: --"
+autowrap_mode = 3
+
+[node name="GrowthLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=1934741546]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Growth: --"
+autowrap_mode = 3
+
+[node name="GrowthBar" type="ProgressBar" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=129060923]
+custom_minimum_size = Vector2(96, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+step = 0.1
+show_percentage = false
+
+[node name="DiseaseSeparator" type="HSeparator" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=385135721]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="EpidemicHeading" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=1083131636]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Epidemic state"
+autowrap_mode = 3
+
+[node name="DiseaseLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=621632360]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Disease: --"
+autowrap_mode = 3
+
+[node name="StateLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=1861291840]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "State: --"
+autowrap_mode = 3
+
+[node name="RemovedOutcomeLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=1337744060]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Removed Outcome: --"
+autowrap_mode = 3
+
+[node name="FractionsHeading" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=1025731924]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Compartment fractions"
+autowrap_mode = 3
+
+[node name="Compartments" type="GridContainer" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content" unique_id=2010737451]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+columns = 2
+
+[node name="SusceptibleLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/Compartments" unique_id=893368402]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Susceptible: --"
+autowrap_mode = 3
+
+[node name="SusceptibleBar" type="ProgressBar" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/Compartments" unique_id=234288469]
+custom_minimum_size = Vector2(96, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+step = 0.1
+show_percentage = false
+
+[node name="ExposedLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/Compartments" unique_id=355441522]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Exposed: --"
+autowrap_mode = 3
+
+[node name="ExposedBar" type="ProgressBar" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/Compartments" unique_id=1583083482]
+custom_minimum_size = Vector2(96, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+step = 0.1
+show_percentage = false
+
+[node name="InfectedLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/Compartments" unique_id=2017996691]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Infected: --"
+autowrap_mode = 3
+
+[node name="InfectedBar" type="ProgressBar" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/Compartments" unique_id=193050931]
+custom_minimum_size = Vector2(96, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+step = 0.1
+show_percentage = false
+
+[node name="ImmuneLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/Compartments" unique_id=1581015435]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Immune: --"
+autowrap_mode = 3
+
+[node name="ImmuneBar" type="ProgressBar" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/Compartments" unique_id=816722695]
+custom_minimum_size = Vector2(96, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+step = 0.1
+show_percentage = false
+
+[node name="DeadLabel" type="Label" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/Compartments" unique_id=1042514811]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Dead: --"
+autowrap_mode = 3
+
+[node name="DeadBar" type="ProgressBar" parent="HUD/TileInspectorPanel/Margin/Layout/Scroll/Content/Compartments" unique_id=1828871947]
+custom_minimum_size = Vector2(96, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+step = 0.1
+show_percentage = false

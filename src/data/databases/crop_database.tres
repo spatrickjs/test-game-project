@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CropDatabase" format=3 uid="uid://bsijc06et0wly"]
+
+[ext_resource type="Script" uid="uid://cy15hmnrw2rf7" path="res://src/data/resources/crop_data.gd" id="1_bbkwc"]
+[ext_resource type="Script" uid="uid://da4rbriqycuaa" path="res://src/data/databases/crop_database.gd" id="2_lkxyb"]
+[ext_resource type="Resource" uid="uid://dqymjdquxlcns" path="res://src/data/resources/sugarcane_data.tres" id="2_ns6ic"]
+[ext_resource type="Resource" uid="uid://glaqpjpgov6" path="res://src/data/resources/rice_data.tres" id="3_4cki1"]
+[ext_resource type="Resource" uid="uid://7c88bwpyqxio" path="res://src/data/resources/corn_data.tres" id="4_hyoj2"]
+
+[resource]
+script = ExtResource("2_lkxyb")
+crops = Array[ExtResource("1_bbkwc")]([ExtResource("2_ns6ic"), ExtResource("3_4cki1"), ExtResource("4_hyoj2")])
+metadata/_custom_type_script = "uid://da4rbriqycuaa"

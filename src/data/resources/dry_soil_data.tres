@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="TerrainData" format=3 uid="uid://cgnlijkdlel7u"]
+
+[ext_resource type="Script" uid="uid://b8uw70t1ej08g" path="res://src/data/resources/terrain_data.gd" id="1_l31md"]
+
+[resource]
+script = ExtResource("1_l31md")
+display_name = "Dry_Soil"
+is_plantable = true
+allowed_crops = Array[int]([0, 2])

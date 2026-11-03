@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TerrainDatabase" format=3 uid="uid://c7dk6a0ty5b4l"]
+
+[ext_resource type="Script" uid="uid://dm1tyj7ysqmjc" path="res://src/data/databases/terrain_database.gd" id="1_cd373"]
+[ext_resource type="Script" uid="uid://b8uw70t1ej08g" path="res://src/data/resources/terrain_data.gd" id="2_ts425"]
+[ext_resource type="Resource" uid="uid://cgnlijkdlel7u" path="res://src/data/resources/dry_soil_data.tres" id="3_krbne"]
+[ext_resource type="Resource" uid="uid://dy1l4ryl8lfdu" path="res://src/data/resources/grass_data.tres" id="4_j11dg"]
+[ext_resource type="Resource" uid="uid://c01xejcbarce3" path="res://src/data/resources/paddy_mud_data.tres" id="5_eeb7d"]
+
+[resource]
+script = ExtResource("1_cd373")
+terrains = Array[ExtResource("2_ts425")]([ExtResource("3_krbne"), ExtResource("4_j11dg"), ExtResource("5_eeb7d")])

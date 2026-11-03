@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CropData" format=3 uid="uid://7c88bwpyqxio"]
+
+[ext_resource type="Script" uid="uid://bbr8k8k27fpoh" path="res://src/data/resources/abiotic_rule.gd" id="1_tpif2"]
+[ext_resource type="Script" uid="uid://bd8k7muh8e7gn" path="res://src/data/resources/nutrient_rule.gd" id="2_4key8"]
+[ext_resource type="Script" uid="uid://cy15hmnrw2rf7" path="res://src/data/resources/crop_data.gd" id="3_phhmh"]
+
+[resource]
+script = ExtResource("3_phhmh")
+crop_type = 2
+display_name = "Corn"
+growth_ticks = 5
+metadata/_custom_type_script = "uid://cy15hmnrw2rf7"
