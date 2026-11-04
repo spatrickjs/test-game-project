@@ -22,6 +22,8 @@ const NODE_TYPES: Dictionary[String, StringName] = {
 	"HUD/Panel/Margin/Controls/CropButtons/SugarcaneButton": &"Button",
 	"HUD/Panel/Margin/Controls/CropButtons/RiceButton": &"Button",
 	"HUD/Panel/Margin/Controls/CropButtons/CornButton": &"Button",
+	"HUD/Panel/Margin/Controls/CropButtons/RemoveButton": &"Button",
+	"HUD/Panel/Margin/Controls/CropButtons/TransferButton": &"Button",
 	"HUD/TileInspectorPanel": &"PanelContainer",
 	"HUD/TileInspectorPanel/Margin": &"MarginContainer",
 	"HUD/TileInspectorPanel/Margin/Layout": &"VBoxContainer",
@@ -94,6 +96,8 @@ const HUD_BINDINGS: Dictionary[StringName, NodePath] = {
 	&"sugarcane_button": ^"HUD/Panel/Margin/Controls/CropButtons/SugarcaneButton",
 	&"rice_button": ^"HUD/Panel/Margin/Controls/CropButtons/RiceButton",
 	&"corn_button": ^"HUD/Panel/Margin/Controls/CropButtons/CornButton",
+	&"remove_button": ^"HUD/Panel/Margin/Controls/CropButtons/RemoveButton",
+	&"transfer_button": ^"HUD/Panel/Margin/Controls/CropButtons/TransferButton",
 }
 
 var _nodes: Dictionary[String, Node] = {}
@@ -155,7 +159,7 @@ func _run() -> void:
 			var button: Button = node as Button
 			if button.text.is_empty():
 				_record_property(undo, node, &"text", _preview_text(String(node.name)), button.text)
-			if String(node.name) in ["SugarcaneButton", "RiceButton", "CornButton"]:
+			if String(node.name) in ["SugarcaneButton", "RiceButton", "CornButton", "RemoveButton", "TransferButton"]:
 				_record_property(undo, node, &"toggle_mode", true, button.toggle_mode)
 	# An empty action is harmless; it does not replace nodes or reset styles.
 	undo.commit_action()
@@ -299,6 +303,8 @@ func _preview_text(node_name: String) -> String:
 		"SugarcaneButton": return "Sugarcane"
 		"RiceButton": return "Rice"
 		"CornButton": return "Corn"
+		"RemoveButton": return "Shovel"
+		"TransferButton": return "Move"
 		"NextTurnButton": return "Next Turn"
 		"CloseButton": return "Close"
 		"SeedInfectionButton": return "Seed Infection"

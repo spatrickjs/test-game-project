@@ -8,4 +8,5 @@
 script = ExtResource("3_gxv3q")
 display_name = "Sugarcane"
 growth_ticks = 5
+growth_stage_source_ids = Array[int]([8, 9, 10, 11])
 metadata/_custom_type_script = "uid://cy15hmnrw2rf7"

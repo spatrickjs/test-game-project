@@ -4,6 +4,28 @@ Last reviewed: **2026-11-04 (Asia/Shanghai)**. This document combines approved d
 
 ## 1. Overview and continuation checkpoint
 
+**Step 4.2 update:** the saved HUD now includes Shovel (crop destruction) and
+Move (two-click crop transfer). Logic owns validated state mutation; transfer
+preserves growth/disease payload and leaves terrain/soil in place. Empty sprites
+are erased from the crop layer. Nine strict tests and a rendered native-click
+playtest pass. See [STEP_4_2_FIELD_TOOLS.md](STEP_4_2_FIELD_TOOLS.md).
+
+**Step 4.1 update (2026-11-04):** static four-stage crop visuals are implemented
+on the saved `World/Crops` TileMapLayer, with 12 atlas sources. Mature artwork
+appears only at 100% logical maturity; earlier stages split progress into thirds.
+The user approved Presentation-only visual arrays on CropData as an explicit
+exception to the earlier strict data/visual mapping separation. Logic and
+Simulation do not interpret those arrays. The strict suite now has eight tests;
+all passed, and a D3D12 rendered crop-stage playtest passed. See
+[STEP_4_1_CROP_VISUALS.md](STEP_4_1_CROP_VISUALS.md) for setup and verification.
+The Phase 3 checkpoint below remains the simulation checkpoint.
+
+**Step 4.1 visual correction:** setup now trims visible crop bounds, removes tiny
+export specks, scales stages relative to tile size, and bottom-center anchors all
+12 textures. Generated ImageTexture resources under
+`assets/art/tilesets/crops/normalized/` replace the direct padded PNG references;
+original PNGs are preserved. See the Step 4.1 guide for normalization constants.
+
 Undergraduate Computer Science thesis: a 2D isometric educational mobile game explaining how crop diseases spread and how field management can prevent or reduce them. The intended audience is the general public. Development follows incremental prompting and **game-first order**: playable terrain, planting, growth, and inspection precede epidemiological mathematics.
 
 **Current checkpoint:** Phase 1, Phase 2 (including the inspector and persistent UI), and Phase 3 Steps 3.1–3.3 are implemented. Switchable Spatial SIR, Spatial SEIR, stochastic CA-SIR, transactional turn integration, and optional environmental transmission modifiers are complete. The latest strict run passed all seven executable tests with zero warnings/errors. The saved prototype also includes a Rice Blast catalog, patient-zero inspector button, and transactional algorithm selector. Atlas serialization and headless-editor shutdown leaks are resolved. Next work is disease/scenario authoring, calibration and benchmark design, subject to PCI approval; do not reimplement completed mechanics.

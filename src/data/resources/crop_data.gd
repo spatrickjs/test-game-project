@@ -12,6 +12,12 @@ extends Resource
 @export var growth_ticks: int = 1
 @export_range(0.0, 1.0, 0.01) var base_immunity: float = 0.5
 
+@export_group("Growth Visuals (Presentation Only)")
+## Seedling, Vegetative, Reproductive, Mature. -1 means not authored yet.
+## Logic and Simulation must not interpret these TileSet identifiers.
+@export var growth_stage_source_ids: Array[int] = [-1, -1, -1, -1]
+@export var growth_stage_atlas_coords: Array[Vector2i] = [Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO]
+
 @export_group("Optional Rules")
 ## Outside these intervals, crop stress increases. Empty arrays are neutral.
 @export var abiotic_tolerance_rules: Array[AbioticRule] = []
@@ -67,6 +73,8 @@ func copy() -> CropData:
 	result.description = description
 	result.growth_ticks = growth_ticks
 	result.base_immunity = base_immunity
+	result.growth_stage_source_ids = growth_stage_source_ids.duplicate()
+	result.growth_stage_atlas_coords = growth_stage_atlas_coords.duplicate()
 	for rule: AbioticRule in abiotic_tolerance_rules:
 		if rule == null:
 			result.abiotic_tolerance_rules.append(null)

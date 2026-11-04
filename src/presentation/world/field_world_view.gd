@@ -8,6 +8,7 @@ signal cell_clicked(coordinates: Vector2i)
 @export var visual_map: TerrainTileVisualMap
 @export var debug_clicks: bool = true
 @export var crop_overlay: CropDebugOverlay
+@export var crop_layer: TileMapLayer
 @export var camera: Camera2D
 @export var camera_margin_pixels: float = 32.0
 @export var hud_reserved_height: float = 180.0
@@ -57,6 +58,8 @@ func render_field(snapshot: FieldGridState, crops: CropDatabase) -> bool:
 		last_error = "\n".join(errors)
 		return false
 	if not render_grid(snapshot):
+		return false
+	if not render_crops(_snapshot, crops):
 		return false
 	crop_overlay.show_snapshot(_snapshot, crops)
 	camera.enabled = true
@@ -108,8 +111,78 @@ func render_grid(grid_state: FieldGridState) -> bool:
 
 func refresh_crops(snapshot: FieldGridState, crops: CropDatabase) -> void:
 	_snapshot = snapshot
+	render_crops(snapshot, crops)
 	if crop_overlay != null:
 		crop_overlay.show_snapshot(snapshot, crops)
+
+
+## Visual stage only; logical growth/maturity remains owned by Logic/Data.
+static func get_growth_stage(elapsed: int, duration: int) -> int:
+	if duration < 1:
+		return 0
+	if elapsed >= duration:
+		return 3
+	var progress: float = clampf(float(elapsed) / float(duration), 0.0, 1.0)
+	return clampi(int(floor(progress * 3.0)), 0, 2)
+
+
+func validate_crop_visuals(crops: CropDatabase) -> PackedStringArray:
+	var errors: PackedStringArray = PackedStringArray()
+	if crop_layer == null:
+		return errors # Legacy/debug-only scenes remain usable.
+	if crop_layer.tile_set == null or crops == null:
+		errors.append("Crops: assign a TileSet and crop catalog.")
+		return errors
+	for crop: CropData in crops.crops:
+		if crop == null:
+			errors.append("Crops: catalog contains a null crop.")
+			continue
+		if crop.growth_stage_source_ids.size() != 4 or crop.growth_stage_atlas_coords.size() != 4:
+			errors.append("%s: both growth visual arrays must contain four entries." % crop.display_name)
+			continue
+		if crop.growth_ticks < 1:
+			errors.append("%s: growth_ticks must be positive." % crop.display_name)
+		for stage: int in range(4):
+			var source_id: int = crop.growth_stage_source_ids[stage]
+			if not crop_layer.tile_set.has_source(source_id):
+				errors.append("%s stage %d: missing source %d." % [crop.display_name, stage, source_id])
+				continue
+			var atlas: TileSetAtlasSource = crop_layer.tile_set.get_source(source_id) as TileSetAtlasSource
+			if atlas == null or not atlas.has_tile(crop.growth_stage_atlas_coords[stage]):
+				errors.append("%s stage %d: missing atlas tile." % [crop.display_name, stage])
+	return errors
+
+
+## Validate before drawing, erase vacant cells, then refresh occupied tiles.
+func render_crops(snapshot: FieldGridState, crops: CropDatabase) -> bool:
+	if crop_layer == null:
+		return true
+	var errors: PackedStringArray = validate_crop_visuals(crops)
+	if snapshot == null:
+		errors.append("Crops: a snapshot is required.")
+	if not errors.is_empty():
+		last_error = "\n".join(errors)
+		return false
+	for y: int in range(snapshot.height):
+		for x: int in range(snapshot.width):
+			var cell: FieldCellState = snapshot.get_cell(Vector2i(x, y))
+			if cell != null and cell.has_crop and not crops.has_crop(cell.crop_type):
+				last_error = "Crops: occupied cell has no crop definition."
+				return false
+	for coordinates: Vector2i in crop_layer.get_used_cells():
+		var existing: FieldCellState = snapshot.get_cell(coordinates)
+		if existing == null or not existing.has_crop:
+			crop_layer.erase_cell(coordinates)
+	for y: int in range(snapshot.height):
+		for x: int in range(snapshot.width):
+			var cell: FieldCellState = snapshot.get_cell(Vector2i(x, y))
+			if cell == null or not cell.has_crop:
+				continue
+			var crop: CropData = crops.get_crop(cell.crop_type)
+			var stage: int = get_growth_stage(cell.growth_elapsed_ticks, crop.growth_ticks)
+			crop_layer.set_cell(cell.coordinates, crop.growth_stage_source_ids[stage], crop.growth_stage_atlas_coords[stage])
+	last_error = ""
+	return true
 
 
 func set_interaction_enabled(enabled: bool) -> void:

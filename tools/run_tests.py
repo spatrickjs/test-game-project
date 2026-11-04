@@ -18,6 +18,8 @@ tests = [
     "tests/simulation/epidemiology_models_test.gd",
     "tests/simulation/transmission_modifiers_test.gd",
     "tests/presentation/tile_inspector_builder_editor_test.gd",
+    "tests/presentation/crop_growth_visuals_test.gd",
+    "tests/logic/field_management_test.gd",
 ]
 failed = False
 for test in tests:
@@ -26,6 +28,8 @@ for test in tests:
     environment = os.environ.copy()
     environment.pop("GODOT_EDITOR_TEST", None)
     environment.pop("GODOT_PLAYTEST_SETUP", None)
+    environment.pop("GODOT_CROP_VISUAL_SETUP", None)
+    environment.pop("GODOT_FIELD_TOOLS_SETUP", None)
     if test.endswith("editor_test.gd"):
         command = [args.godot, "--headless", "--path", str(root), "--editor",
                    "--log-file", str(logs / (Path(test).stem + ".log"))]

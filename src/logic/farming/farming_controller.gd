@@ -115,6 +115,51 @@ func clear_crop(coordinates: Vector2i) -> bool:
 	return true
 
 
+## Player-facing roguing rejects empty targets; clear_crop remains idempotent.
+func remove_crop(coordinates: Vector2i) -> bool:
+	if _grid == null:
+		return _fail("Initialize the field before removing crops.")
+	var cell: FieldCellState = _grid.get_cell(coordinates)
+	if cell == null or not cell.has_crop:
+		return _fail("Choose a tile containing a crop to remove.")
+	return clear_crop(coordinates)
+
+
+## Atomic payload move. Soil, terrain and coordinates belong to the location.
+## Actions do not advance the clock or alter any crop/disease fractions.
+func transfer_crop(source: Vector2i, destination: Vector2i) -> bool:
+	if _grid == null:
+		return _fail("Initialize the field before moving crops.")
+	if source == destination:
+		return _fail("Choose a different destination tile.")
+	var origin: FieldCellState = _grid.get_cell(source)
+	if origin == null or not origin.has_crop:
+		return _fail("Choose a source tile containing a crop.")
+	var reason: String = _planting_error(destination, origin.crop_type)
+	if not reason.is_empty():
+		return _fail(reason)
+	var candidate: FieldGridState = _grid.copy()
+	var target: FieldCellState = candidate.get_cell(destination)
+	var moved: FieldCellState = origin.copy()
+	moved.coordinates = destination
+	moved.terrain_type = target.terrain_type
+	moved.soil = target.soil
+	if not candidate.set_cell(moved):
+		return _fail("The source crop state is invalid; transfer was cancelled.")
+	var cleared: FieldCellState = candidate.get_cell(source)
+	cleared.has_crop = false
+	cleared.reset_crop_state()
+	var errors: PackedStringArray = FieldGridQueries.validate_terrain_assignments(candidate, crop_database, terrain_database)
+	if not errors.is_empty():
+		return _fail("\n".join(errors))
+	_grid = candidate
+	last_error = ""
+	# Both cells are already committed before any observer receives a signal.
+	cell_changed.emit(source)
+	cell_changed.emit(destination)
+	return true
+
+
 ## Logic-only bridge; no authoritative grid escapes to Presentation.
 func process_simulation(simulation: SimulationController, diseases: DiseaseDatabase) -> bool:
 	simulation.crop_database = crop_database

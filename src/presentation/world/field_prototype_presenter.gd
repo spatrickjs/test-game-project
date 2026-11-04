@@ -19,6 +19,11 @@ extends Node
 @export var corn_button: Button
 @export var next_turn_button: Button
 @export var algorithm_selector: OptionButton
+@export var remove_button: Button
+@export var transfer_button: Button
+enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER }
+var _tool_mode: ToolMode = ToolMode.INSPECT
+var _transfer_source: Vector2i = Vector2i(-1, -1)
 @export var playtest_disease_id: SimulationEnums.DiseaseId = SimulationEnums.DiseaseId.RICE_BLAST
 var _selected_crop: SimulationEnums.CropType = SimulationEnums.CropType.SUGARCANE
 var _running: bool = false
@@ -37,6 +42,10 @@ func _ready() -> void:
 		button.toggle_mode = true
 		button.button_group = null
 		button.set_pressed_no_signal(false)
+	for button: Button in [remove_button, transfer_button]:
+		if button != null:
+			button.toggle_mode = true
+			button.set_pressed_no_signal(false)
 	_connect_signals()
 	errors = world_view.validate_configuration()
 	if not errors.is_empty():
@@ -53,6 +62,10 @@ func _connect_once(source: Signal, callback: Callable) -> void:
 
 
 func _connect_signals() -> void:
+	if remove_button != null:
+		_connect_once(remove_button.pressed, _on_remove_pressed)
+	if transfer_button != null:
+		_connect_once(transfer_button.pressed, _on_transfer_pressed)
 	_connect_once(sugarcane_button.pressed, _on_sugarcane_pressed)
 	_connect_once(rice_button.pressed, _on_rice_pressed)
 	_connect_once(corn_button.pressed, _on_corn_pressed)
@@ -110,6 +123,9 @@ func _on_field_initialized() -> void:
 
 
 func _set_controls_enabled(enabled: bool) -> void:
+	for button: Button in [remove_button, transfer_button]:
+		if button != null:
+			button.disabled = not enabled
 	next_turn_button.disabled = not enabled
 	var catalog: CropDatabase = farming_controller.crop_database
 	sugarcane_button.disabled = not enabled or catalog == null or not catalog.has_crop(SimulationEnums.CropType.SUGARCANE)
@@ -127,6 +143,8 @@ func _select_crop(crop_type: SimulationEnums.CropType) -> void:
 		_enter_inspect_mode()
 		return
 	_planting_enabled = true
+	_tool_mode = ToolMode.PLANT
+	_transfer_source = Vector2i(-1, -1)
 	_selected_crop = crop_type
 	_inspected_coordinates = Vector2i(-1, -1)
 	tile_inspector.clear_display()
@@ -136,6 +154,8 @@ func _select_crop(crop_type: SimulationEnums.CropType) -> void:
 
 
 func _enter_inspect_mode() -> void:
+	_tool_mode = ToolMode.INSPECT
+	_transfer_source = Vector2i(-1, -1)
 	_planting_enabled = false
 	_inspected_coordinates = Vector2i(-1, -1)
 	tile_inspector.clear_display()
@@ -145,6 +165,10 @@ func _enter_inspect_mode() -> void:
 
 
 func _update_crop_buttons() -> void:
+	if remove_button != null:
+		remove_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_REMOVE)
+	if transfer_button != null:
+		transfer_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_TRANSFER)
 	sugarcane_button.set_pressed_no_signal(_planting_enabled and _selected_crop == SimulationEnums.CropType.SUGARCANE)
 	rice_button.set_pressed_no_signal(_planting_enabled and _selected_crop == SimulationEnums.CropType.RICE)
 	corn_button.set_pressed_no_signal(_planting_enabled and _selected_crop == SimulationEnums.CropType.CORN)
@@ -217,6 +241,15 @@ func _on_corn_pressed() -> void:
 func _on_cell_clicked(coordinates: Vector2i) -> void:
 	if not _running:
 		return
+	if _tool_mode == ToolMode.TOOL_REMOVE:
+		if farming_controller.remove_crop(coordinates):
+			status_label.text = "Crop removed. Choose another crop or switch tools."
+		else:
+			status_label.text = farming_controller.last_error
+		return
+	if _tool_mode == ToolMode.TOOL_TRANSFER:
+		_handle_transfer_click(coordinates)
+		return
 	if _planting_enabled:
 		farming_controller.try_plant(coordinates, _selected_crop)
 	else:
@@ -242,14 +275,75 @@ func _on_next_turn_pressed() -> void:
 
 
 func _on_turn_completed(turn_index: int) -> void:
+	_transfer_source = Vector2i(-1, -1)
 	world_view.refresh_crops(farming_controller.get_grid_snapshot(), farming_controller.crop_database)
 	_refresh_inspected_cell()
 	turn_label.text = "Turn: %d" % turn_index
-	status_label.text = "Growth advanced. Gold markers are mature."
+	status_label.text = "Growth advanced. Mature crops have reached 100% growth."
+	if _tool_mode == ToolMode.TOOL_TRANSFER:
+		status_label.text = "Turn advanced. Choose a crop to move."
+	elif _tool_mode == ToolMode.TOOL_REMOVE:
+		status_label.text = "Turn advanced. Choose a crop to remove."
+
+
+func _on_remove_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_REMOVE)
+
+
+func _on_transfer_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_TRANSFER)
+
+
+func _select_management_tool(mode: ToolMode) -> void:
+	if not _running:
+		return
+	if _tool_mode == mode:
+		_enter_inspect_mode()
+		return
+	_planting_enabled = false
+	_tool_mode = mode
+	_transfer_source = Vector2i(-1, -1)
+	_inspected_coordinates = Vector2i(-1, -1)
+	tile_inspector.clear_display()
+	_update_crop_buttons()
+	selected_crop_label.text = "Tool: Shovel" if mode == ToolMode.TOOL_REMOVE else "Tool: Move"
+	status_label.text = "Click a crop to destroy it." if mode == ToolMode.TOOL_REMOVE else "Click a crop, then an empty compatible tile."
+
+
+func _handle_transfer_click(coordinates: Vector2i) -> void:
+	if _transfer_source.x < 0:
+		var snapshot: FieldGridState = farming_controller.get_grid_snapshot()
+		var cell: FieldCellState = snapshot.get_cell(coordinates)
+		if cell == null or not cell.has_crop:
+			status_label.text = "Choose a crop to move first."
+			return
+		_transfer_source = coordinates
+		status_label.text = "Moving (%d, %d): choose an empty compatible tile. Click source to cancel." % [coordinates.x, coordinates.y]
+		return
+	if coordinates == _transfer_source:
+		_transfer_source = Vector2i(-1, -1)
+		status_label.text = "Move cancelled. Choose another crop."
+		return
+	if farming_controller.transfer_crop(_transfer_source, coordinates):
+		_transfer_source = Vector2i(-1, -1)
+		status_label.text = "Crop moved. Choose another crop to move."
+	else:
+		status_label.text = farming_controller.last_error + " Choose another destination or click the source to cancel."
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if _running and event is InputEventKey:
+		var key: InputEventKey = event as InputEventKey
+		if key.pressed and not key.echo and key.keycode == KEY_ESCAPE:
+			_enter_inspect_mode()
+			get_viewport().set_input_as_handled()
 
 
 func _show_failure(message: String) -> void:
 	_running = false
+	for button: Button in [remove_button, transfer_button]:
+		if button != null:
+			button.disabled = true
 	if tile_inspector != null:
 		tile_inspector.clear_display()
 	if world_view != null:
