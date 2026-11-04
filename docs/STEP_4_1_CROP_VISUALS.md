@@ -96,7 +96,7 @@ The strict runner strips this setup flag from test environments.
 
 ## Verification
 
-`python tools/run_tests.py --godot <godot-executable>` now runs eight tests.
+`python tools/run_tests.py --godot <godot-executable>` now runs nine tests (including the subsequent Step 4.2 field-management test).
 The added `tests/presentation/crop_growth_visuals_test.gd` covers exact third
 boundaries, 100%-only maturity, one-tick duration, invalid duration fallback,
 serialized ownership and all twelve sources, planting and Next Turn rendering,

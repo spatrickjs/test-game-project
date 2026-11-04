@@ -1,34 +1,19 @@
 # Project handoff: isometric crop disease education game
 
-Last reviewed: **2026-11-04 (Asia/Shanghai)**. This document combines approved design decisions, files inspected in the workspace, and previously reported test results. Paths below are relative to the project root; `res://` means the directory containing `project.godot`.
+Last reviewed: **2026-11-04 (Asia/Manila)**. This document combines approved design decisions, files inspected in the workspace, and previously reported test results. Paths below are relative to the project root; `res://` means the directory containing `project.godot`.
 
 ## 1. Overview and continuation checkpoint
 
-**Step 4.2 update:** the saved HUD now includes Shovel (crop destruction) and
-Move (two-click crop transfer). Logic owns validated state mutation; transfer
-preserves growth/disease payload and leaves terrain/soil in place. Empty sprites
-are erased from the crop layer. Nine strict tests and a rendered native-click
-playtest pass. See [STEP_4_2_FIELD_TOOLS.md](STEP_4_2_FIELD_TOOLS.md).
+Undergraduate Computer Science thesis: a 2D isometric educational mobile game explaining how crop diseases spread and how field management can prevent or reduce them. The intended audience is the general public. Development follows incremental prompting and **game-first order**.
 
-**Step 4.1 update (2026-11-04):** static four-stage crop visuals are implemented
-on the saved `World/Crops` TileMapLayer, with 12 atlas sources. Mature artwork
-appears only at 100% logical maturity; earlier stages split progress into thirds.
-The user approved Presentation-only visual arrays on CropData as an explicit
-exception to the earlier strict data/visual mapping separation. Logic and
-Simulation do not interpret those arrays. The strict suite now has eight tests;
-all passed, and a D3D12 rendered crop-stage playtest passed. See
-[STEP_4_1_CROP_VISUALS.md](STEP_4_1_CROP_VISUALS.md) for setup and verification.
-The Phase 3 checkpoint below remains the simulation checkpoint.
+**Current checkpoint: Step 4.2 complete.** Phase 1, Phase 2 (including the persistent inspector/HUD), Phase 3 Steps 3.1–3.3, Step 4.1 static crop growth visuals, and Step 4.2 crop removal/transfer are implemented and saved. The prototype includes the Rice Blast demonstration catalog, patient-zero action, transactional algorithm selector, normalized four-stage crop artwork, and Shovel/Move tools. The latest implementation verification passed **all nine strict tests with zero engine warnings/errors**, plus D3D12 rendered crop and field-tool playtests. This documentation refresh inspected current files and existing logs; it did not rerun tests.
 
-**Step 4.1 visual correction:** setup now trims visible crop bounds, removes tiny
-export specks, scales stages relative to tile size, and bottom-center anchors all
-12 textures. Generated ImageTexture resources under
-`assets/art/tilesets/crops/normalized/` replace the direct padded PNG references;
-original PNGs are preserved. See the Step 4.1 guide for normalization constants.
+**Resume here:** reload `field_prototype.tscn` and press F5. Inspect/Plant, Next Turn, Shovel and two-click Move are ready to use. No next feature is approved by this handoff; follow PCI before new implementation. Do not rebuild the inspector, simulation models, crop visuals, or management tools.
 
-Undergraduate Computer Science thesis: a 2D isometric educational mobile game explaining how crop diseases spread and how field management can prevent or reduce them. The intended audience is the general public. Development follows incremental prompting and **game-first order**: playable terrain, planting, growth, and inspection precede epidemiological mathematics.
+Detailed continuation guides:
 
-**Current checkpoint:** Phase 1, Phase 2 (including the inspector and persistent UI), and Phase 3 Steps 3.1–3.3 are implemented. Switchable Spatial SIR, Spatial SEIR, stochastic CA-SIR, transactional turn integration, and optional environmental transmission modifiers are complete. The latest strict run passed all seven executable tests with zero warnings/errors. The saved prototype also includes a Rice Blast catalog, patient-zero inspector button, and transactional algorithm selector. Atlas serialization and headless-editor shutdown leaks are resolved. Next work is disease/scenario authoring, calibration and benchmark design, subject to PCI approval; do not reimplement completed mechanics.
+- [STEP_4_1_CROP_VISUALS.md](STEP_4_1_CROP_VISUALS.md): growth stages, normalization, root anchoring and crop-specific seedling scaling.
+- [STEP_4_2_FIELD_TOOLS.md](STEP_4_2_FIELD_TOOLS.md): removal/transfer state contracts, input cancellation, setup and verification.
 
 ### Stack and entry points
 
@@ -38,8 +23,8 @@ Undergraduate Computer Science thesis: a 2D isometric educational mobile game ex
 - Project name: `Test Game Project`.
 - Main scene: `res://field_prototype.tscn`; configured by UID in `project.godot`.
 - Viewport: 1280 × 720; `canvas_items` stretch with expanding aspect.
-- Current project root: `C:\Users\User\Documents\test-game-project\test-game-project`. The outer folder is the workspace container; run project commands in the inner folder.
-- Previous executable: `C:\Program Files\Godot\Godot.exe.exe` (machine-specific, not a project dependency).
+- Current project root: `C:\Users\ASUS\Downloads\Patrick\test-game-project`. Run project commands in this directory; there is no additional inner project folder on this machine.
+- Current verified executable: `C:\Program Files\Godot\Godot.exe.exe` (machine-specific, not a project dependency).
 
 ## 2. Architecture and mandatory conventions
 
@@ -49,7 +34,7 @@ There are **four layers**. The discrete Simulation layer is now integrated into 
 |---|---|---|---|
 | Data | `src/data/` | Definitions, catalogs, passive state, validation/copy helpers; future persistence schemas | Presentation or gameplay controllers |
 | Simulation | `src/simulation/` | Pure RefCounted geometry, epidemic mathematics, and environmental responses | Logic, UI, Node2D, TileSet |
-| Game Logic | `src/logic/` | Field initialization, planting rules, growth, discrete turns; future actions and outcomes | Tile atlas coordinates or texture paths |
+| Game Logic | `src/logic/` | Field initialization, planting rules, growth, discrete turns, removal and transactional transfer; future rewards/outcomes | Tile atlas coordinates or texture paths |
 | Presentation | `src/presentation/` | Rendering, input intents, HUD, inspector, composition/presenter wiring | Direct mutation of authoritative simulation/game state |
 
 Key rules:
@@ -67,6 +52,8 @@ Key rules:
 
 `TerrainData` and `TerrainDatabase` define plantability and allowed crops. `CropData` and `CropDatabase` define crop identity, growth, immunity, and tolerance requirements. `TerrainTileVisualMap` is exclusively a Presentation mapping from terrain identity to TileSet source ID, atlas coordinates, and alternative tile.
 
+**Approved Step 4.1 exception:** `CropData` carries four-entry `growth_stage_source_ids: Array[int]` and `growth_stage_atlas_coords: Array[Vector2i]` arrays as Presentation metadata. `copy()` duplicates them independently. Their TileSet references are validated by `FieldWorldView`, not interpreted by Logic or Simulation. Keep terrain visual mapping in Presentation.
+
 Changing terrain artwork must never change planting or disease behavior. Changing allowed crops is a data-authoring operation on `TerrainData.allowed_crops`, not an atlas-coordinate conditional in gameplay code.
 
 ## 3. Code inventory
@@ -83,7 +70,7 @@ All paths in this table are under `src/data/`.
 | `resources/float_range.gd` | FloatRange | Inclusive min/max interval; `validate()`, `copy()` |
 | `resources/nutrient_rule.gd` | NutrientRule | Nutrient selector, optimal range, weight; `validate()`, `copy()` |
 | `resources/abiotic_rule.gd` | AbioticRule | Factor selector, optimal range, weight; `validate()`, `copy()` |
-| `resources/crop_data.gd` | CropData | Identity, growth ticks, base immunity, optional tolerance/requirement arrays; `validate()`, `copy()` |
+| `resources/crop_data.gd` | CropData | Identity, growth ticks, base immunity, optional tolerance/requirement arrays, approved four-stage visual metadata; `validate()`, `copy()` |
 | `resources/disease_data.gd` | DiseaseData | Rates, default algorithm, target crop, neighborhood, trigger arrays; `validate()`, `copy()` |
 | `resources/transmission_modifier_profile.gd` | TransmissionModifierProfile | Optional temperature/humidity/N/K response parameters and caps; `validate()`, `copy()` |
 | `resources/terrain_data.gd` | TerrainData | `is_plantable`, `allowed_crops`; `validate()`, `copy()` |
@@ -107,18 +94,21 @@ Authored resources present: crop and terrain catalogs; sugarcane, rice, corn, dr
 | `src/simulation/models/stochastic_ca_sir_model.gd` | StochasticCASIRModel: seeded categorical transitions with synchronized fractions |
 | `src/simulation/models/transmission_modifiers.gd` | TransmissionModifiers: `evaluate()`, `needs_crop()`, typed Result with multipliers/rates/cap flags |
 | `tools/repair_terrain_atlas.gd` | One-time Godot-API repair, already applied; not a routine pre-test operation |
-| `tools/run_tests.py` | Strict seven-test runner; rejects errors, warnings, failures, and missing PASS markers |
+| `tools/run_tests.py` | Strict nine-test runner; rejects errors, warnings, failures, and missing PASS markers |
 | `addons/test_harness/plugin.gd` | Environment-gated editor test harness using normal editor lifecycle |
 | `src/logic/grid/field_grid_queries.gd` | FieldGridQueries: static `can_plant()`, `validate_terrain_assignments()` |
-| `src/logic/farming/farming_controller.gd` | FarmingController: `initialize_field()`, `try_plant()`, `advance_growth()`, `seed_infection()`, `clear_crop()`, `process_simulation()`, `advance_simulated_turn()`, `get_grid_snapshot()`, `is_initialized()` |
+| `src/logic/farming/farming_controller.gd` | FarmingController: `initialize_field()`, `try_plant()`, `advance_growth()`, `seed_infection()`, `clear_crop()`, `remove_crop()`, `transfer_crop()`, `process_simulation()`, `advance_simulated_turn()`, `get_grid_snapshot()`, `is_initialized()` |
 | `src/logic/turns/turn_controller.gd` | TurnController: `advance_turn()`, `reset_clock()`, `try_set_algorithm_override()` |
 | `src/presentation/world/terrain_tile_visual.gd` | TerrainTileVisual: terrain/source/atlas/alternative mapping entry |
 | `src/presentation/world/terrain_tile_visual_map.gd` | TerrainTileVisualMap: `get_visual()`, `validate(tile_set)` |
-| `src/presentation/world/field_world_view.gd` | FieldWorldView: `render_field()`, `render_grid()`, `refresh_crops()`, `frame_field()`, coordinate conversion, `_unhandled_input()` |
+| `src/presentation/world/field_world_view.gd` | FieldWorldView: `render_field()`, `render_grid()`, `render_crops()`, `validate_crop_visuals()`, `get_growth_stage()`, `refresh_crops()`, `frame_field()`, coordinate conversion, `_unhandled_input()` |
 | `src/presentation/world/crop_debug_overlay.gd` | CropDebugOverlay: `show_snapshot()`, `get_cell_draw_position()`, `_draw()` |
-| `src/presentation/world/field_prototype_presenter.gd` | FieldPrototypePresenter: composition root; connects UI intents to Logic and refreshes views |
+| `src/presentation/world/field_prototype_presenter.gd` | FieldPrototypePresenter: composition root; Inspect/Plant/Shovel/Move modes, pending move selection, UI intent routing and snapshot refresh |
 | `src/presentation/ui/inspectors/tile_inspector_view.gd` | TileInspectorView: `display_cell()`, `clear_display()`, `validate_configuration()`, `close_requested`, `seed_infection_requested`, `set_seed_available()` |
 | `tools/setup_disease_playtest.gd` | EditorScript: creates missing demonstration resources, validates existing ones, bakes controls, wires references, saves through Godot APIs |
+| `tools/setup_crop_growth_visuals.gd` | EditorScript: normalizes 12 textures, reuses source IDs, saves crop resources and scene via Godot APIs |
+| `tools/crop_texture_normalizer.gd` | Editor-time cleanup, shared mature-height budget, stage scaling, bottom-center root origin |
+| `tools/setup_field_tools.gd` | EditorScript: runs HUD baker and saves Shovel/Move bindings while preserving scene UID |
 | `tools/bake_ui_to_scene.gd` | EditorScript: complete persistent HUD and inspector baker |
 | `src/presentation/ui/inspectors/build_tile_inspector_scene.gd` | Compatibility entry point inheriting the complete baker |
 
@@ -173,13 +163,14 @@ FieldPrototype (Node; FieldPrototypePresenter)
 ├── TurnController (Node)
 ├── World (Node2D; FieldWorldView)
 │   ├── Terrain (TileMapLayer)
-│   ├── CropOverlay (Node2D; CropDebugOverlay)
+│   ├── Crops (TileMapLayer; normalized growth artwork)
+│   ├── CropOverlay (Node2D; CropDebugOverlay; hidden by default)
 │   └── Camera2D
 └── HUD (CanvasLayer)
     ├── Panel (PanelContainer)
     │   └── Margin / Controls
     │       ├── TurnLabel, SelectedCropLabel, StatusLabel
-    │       ├── CropButtons / SugarcaneButton, RiceButton, CornButton
+    │       ├── CropButtons / SugarcaneButton, RiceButton, CornButton, RemoveButton, TransferButton
     │       ├── NextTurnButton
     │       └── AlgorithmSelector (OptionButton)
     └── TileInspectorPanel (PanelContainer; TileInspectorView)
@@ -196,13 +187,14 @@ Input and update flow:
 
 1. World converts mouse/touch viewport coordinates through the TileMapLayer transform and `local_to_map()`, then emits `cell_clicked(Vector2i)`.
 2. Presenter starts in Inspect mode with no crop button selected. Selecting a crop enters Plant mode and closes the inspector. Clicking that selected crop again returns to Inspect mode.
-3. Plant clicks call FarmingController.try_plant(). Inspect clicks retrieve a fresh detached grid snapshot and selected cell.
+3. Plant clicks call `FarmingController.try_plant()`. Inspect clicks retrieve a fresh detached grid snapshot and selected cell. Shovel calls `remove_crop()`. Move selects a source, then calls `transfer_crop(source, destination)`; an invalid destination leaves the source selected for retry.
 4. Farming signals `field_initialized`, `cell_changed(coordinates)`, or `planting_rejected(coordinates, reason)`; TurnController emits `turn_completed(turn_index)`.
 5. Presenter refreshes crop visuals and an open inspector after relevant changes. Closing the inspector clears selection, preventing later turns from reopening it. Signal connections are guarded against duplicates.
+6. Clicking a selected move source cancels the move. Toggling the active tool off or pressing Escape returns to Inspect; switching tools/crops or completing a turn clears any pending transfer selection.
 
 `TileInspectorView.display_cell(cell_state: FieldCellState, crop_data: CropData)` accepts a **cell**, not FieldGridState. It displays terrain, pH/NPK, crop growth/maturity, optional active disease name, categorical state, removal outcome, and all five fraction percentages. Invalid values are flagged. DiseaseDatabase is optional; unresolved active IDs are shown explicitly. There is no separate crop-health scalar yet.
 
-Overlay positioning uses TileMapLayer.map_to_local() with transforms into overlay space. Snapshot refresh queues redraw; valid fonts/fallback handling and mature-color markers are implemented.
+The debug overlay is hidden in the saved scene; actual crop artwork is rendered on `World/Crops`. Optional overlay positioning uses TileMapLayer.map_to_local() with transforms into overlay space. Snapshot refresh queues redraw; valid fonts/fallback handling and mature-color markers are implemented.
 
 ## 6. Tile assets and resolved atlas issue
 
@@ -219,6 +211,25 @@ Current prototype settings: original images 3500 × 3500, import size limit 512,
 Each image is a separate atlas source. Never use `(0,1)` or `(0,2)` as terrain selectors. Source IDs are presentation-only and may change when reauthoring assets.
 
 **Resolved:** the saved prototype previously contained stale `(0,1)` and `(0,2)` atlas properties. `tools/repair_terrain_atlas.gd` rebuilt its three single-tile sources through Godot APIs and serialized the scene, explicitly preserving main-scene UID `uid://beit4bfuaevfp`. Fresh strict tests now load without atlas errors. The user confirmed reloading the scene in the Editor. This was saved resource data, not test-runner cache; no routine cache deletion is needed.
+
+### Completed Step 4.1 crop artwork
+
+- Separate crop TileSet with 12 atlas sources: Rice IDs 0–3, Corn 4–7, Sugarcane 8–11; all atlas coordinates `(0, 0)`. IDs are saved visual mappings, never gameplay rules.
+- Growth duration is `CropData.growth_ticks`. Stage 0: progress < 1/3; Stage 1: [1/3, 2/3); Stage 2: [2/3, 1); Stage 3 only when elapsed >= duration. The 25%/50%/75% staging proposal was superseded. No `growth_duration` property or stored visual-stage state was added.
+- Sources remain under `assets/art/tilesets/crops/{rice,corn,sugarcane}/`. Generated compressed ImageTexture `.res` files are under `assets/art/tilesets/crops/normalized/`; retain them when copying the project. Original PNGs remain unchanged.
+- Cleanup removes nearly transparent residue and tiny disconnected specks before trimming. One height budget per crop accounts for all four aspect ratios, within 2.8 × tile height and 95% of tile width. Stage scale is **35%, 60%, 85%, 100%**, applied after fitting. **Corn and Sugarcane Stage 0 receive an additional 0.5 multiplier**; do not remove this approved correction or normalize every trimmed sprite back to full size.
+- A shared 270 × 400 canvas does not imply equal artwork size. Current visible heights in pixels: Rice **110/188/266/314**, Corn **68/234/332/392**, Sugarcane **62/214/304/358**. These measurements depend on current art and tile geometry.
+- `texture_origin` derives from the final visible bottom-center minus half the canvas dimensions. Roots land at logical tile center, with at most half-pixel horizontal rounding; the old +14 crop offset is obsolete. Soil/terrain alignment is independent of crop height.
+- Re-run `tools/setup_crop_growth_visuals.gd` only when regenerating visuals. It saves the generated resources, three CropData resources and scene through Godot APIs. It is not an Undo operation. It registers generated resource UIDs before saving scene references and preserves the main-scene UID.
+
+### Completed Step 4.2 management actions
+
+- Shovel (`TOOL_REMOVE`) destroys an occupied crop without advancing time or giving rewards. `remove_crop()` rejects empty/out-of-bounds targets and delegates to `clear_crop()`. Empty cells have zero growth and all five fractions zero, no active disease, and categorical S/NONE. Soil and terrain remain.
+- Move (`TOOL_TRANSFER`) is a two-click, instantaneous transplant. The destination must be empty and permitted by the existing terrain/crop/soil validation. Copy the crop payload, not its soil or location: identity, growth ticks, active disease, categorical state/outcome and exact fractions survive. The visible growth stage is derived again from those same ticks.
+- Transfer stages a copied grid, validates it and commits once. Both endpoints are updated before source/destination `cell_changed` signals fire. Invalid moves do not mutate the grid or emit changes. There is no interpolation animation or automatic growth tick.
+- `FieldWorldView` erases vacant coordinates via `TileMapLayer.erase_cell()` and refreshes occupied coordinates from snapshots. No authoritative state is mutated by Presentation.
+- Removing an infected crop removes that host and its infection contribution; empty ground is not a new geometric barrier to dispersal. Transplanting does not cure disease.
+- Shovel/Move buttons are persistent HUD nodes baked by `tools/bake_ui_to_scene.gd`. `tools/setup_field_tools.gd` runs the baker and saves through the Editor; its setup has already been executed.
 
 ## 7. Step 2.3 persistent UI: current workflow
 
@@ -237,7 +248,7 @@ Reference: `docs/BAKE_UI_SETUP.md` is authoritative for the latest UI workflow. 
 
 ## 8. Verification and new-device startup
 
-Latest observed verification after interactive disease playtest setup: **seven tests pass, with zero engine warnings or errors**. This documentation refresh records that prior run; it does not claim a new code-test execution.
+Latest observed verification after Step 4.2 implementation: **nine tests pass, with zero engine warnings or errors**. Rendered D3D12 crop-stage and native-click management tests also passed. This documentation refresh records that prior run; it does not claim a new code-test execution.
 
 | Executable test | Coverage |
 |---|---|
@@ -248,8 +259,10 @@ Latest observed verification after interactive disease playtest setup: **seven t
 | `tests/simulation/epidemiology_models_test.gd` | Fluxes, staging, conservation, seeded CA, switching, ambiguity, rollback |
 | `tests/simulation/transmission_modifiers_test.gd` | Neutral responses, thresholds, caps/overflow, recipient effects, conservation and reproducibility |
 | `tests/presentation/tile_inspector_builder_editor_test.gd` | Real builder, Undo/Redo, ownership, bindings, serialization and missing-HUD reconstruction |
+| `tests/presentation/crop_growth_visuals_test.gd` | Stage boundaries, saved atlas wiring, normalization, per-crop seedling ratios, root alignment, planting/turn rendering and erasure |
+| `tests/logic/field_management_test.gd` | Native Shovel/Move input, terrain/occupancy rejection, exact payload preservation, soil locality, removal/reset and tool-switch cancellation |
 
-Run from the inner project root:
+Run from the project root:
 
 ```powershell
 python tools/run_tests.py --godot 'C:\Program Files\Godot\Godot.exe.exe'
@@ -257,18 +270,18 @@ python tools/run_tests.py --godot 'C:\Program Files\Godot\Godot.exe.exe'
 
 Replace the executable path on another device. Logs use absolute paths under `.godot`. Ensure project imports are complete and editor settings/log directories are writable.
 
-**Do not launch the editor builder test with `--editor --script`.** A minimal custom SceneTree using that combination reproduced the editor window/dialog shutdown leaks on the tested Godot build. The runner now starts a normal headless editor with `GODOT_EDITOR_TEST=tile_inspector_builder`. The enabled `addons/test_harness` plugin runs only under that exact environment value; ordinary editor sessions do nothing. The separate `GODOT_PLAYTEST_SETUP=1` flag runs the explicitly requested persistent setup; the strict runner clears this flag from test subprocesses. The test is an async RefCounted helper, and the plugin releases it before normal editor-tree shutdown.
+**Do not launch the editor builder test with `--editor --script`.** A minimal custom SceneTree using that combination reproduced the editor window/dialog shutdown leaks on the tested Godot build. The runner now starts a normal headless editor with `GODOT_EDITOR_TEST=tile_inspector_builder`. The enabled `addons/test_harness` plugin runs only under that exact environment value; ordinary editor sessions do nothing. Setup flags are `GODOT_PLAYTEST_SETUP=1` (disease playtest), `GODOT_CROP_VISUAL_SETUP=1` (crop visuals), and `GODOT_FIELD_TOOLS_SETUP=1` (Shovel/Move HUD). Use only one setup/test flag at a time. These intentionally save resources; the strict runner clears all setup flags from test subprocesses. The test is an async RefCounted helper, and the plugin releases it before normal editor-tree shutdown.
 
 Temporary scene instances are freed; undo references are cleared before freeing detached HUD nodes; selection is cleared and deferred updates finish before exit. Grids own cells, cells do not point back to grids, and neighborhood arrays are local. No RefCounted ownership cycle was found. No leak diagnostics are suppressed. See [TESTING.md](TESTING.md).
 
 Transfer checklist:
 
-- Copy the full project, including project.godot, addons, source, `.gd.uid` sidecars, authored scenes/resources, original assets, import settings, tools, tests, and docs.
+- Copy the full project, including project.godot, addons, source, `.gd.uid` sidecars, authored scenes/resources, original assets, all 12 generated normalized crop `.res` textures, import settings, tools, tests, and docs.
 - Preserve relative paths and filename case. `.godot` is normally regenerated, but the current scene contains direct imported `.ctex` paths: verify those resolve after importing the original images. Prefer reassigning source textures in the Editor if regeneration leaves broken references.
 - Open/import the project and let script class registration finish before playtesting.
-- Open the prototype, verify catalogs/visual mappings, run the UI baker only if needed, save, and play with F6.
-- Confirm dry-soil and rice permissions, grass rejection, maturity cap, Inspect/Plant toggling, inspector refresh, and close behavior.
-- No Git repository was detected during an earlier implementation session; current repository status was not rechecked for this documentation update. Do not assume changes were committed or a remote backup exists.
+- Open the prototype, verify catalogs/visual mappings, run the UI baker only if needed, save, and play with F5 (or F6 for the prototype scene).
+- Confirm dry-soil and rice permissions, grass rejection, maturity cap, Inspect/Plant toggling, inspector refresh, close behavior, small seedlings and 100%-only mature art, Shovel removal, and compatible/incompatible Move destinations.
+- Git is initialized. At this review, HEAD was `911994d` (`more feats`) and the worktree was clean before this documentation edit. `origin` is configured as `https://github.com/spatrickjs/test-game-project`; remote reachability and push status were not checked. This documentation update is not a commit or push.
 
 ## 9. Immediate next steps and remaining scope
 
@@ -338,30 +351,30 @@ Saved configuration:
 - Continuous SIR/SEIR patient zero is S=0.8, I=0.2, other fractions zero. CA patient zero is one-hot I=1 with matching categorical state.
 - Seeding requires a clean, fully susceptible, compatible occupied cell with valid state. It rejects repeat seeding and invalid hosts, preserves soil/growth, and does not advance the turn.
 - The HUD selector has Disease Default / Spatial SIR / Spatial SEIR / Stochastic CA-SIR. TurnController validates proposed overrides against the board and restores the previous override on failure; the presenter restores the selector and shows the reason.
-- Crop overlay markers still indicate growth/maturity, not disease intensity. Read disease fractions in the inspector. Stochastic spread is not guaranteed on any individual turn.
+- Crop artwork indicates growth stage, not disease intensity; the optional debug overlay is hidden by default. Read disease fractions in the inspector. Stochastic spread is not guaranteed on any individual turn.
 
 `tools/setup_disease_playtest.gd` can be run from the Script Editor with Ctrl+Shift+X. It creates missing resources and validates existing ones without overwriting them; rerun verification confirmed both resource files remained byte-for-byte unchanged. The general baker reuses existing compatible nodes. Setup wires references and saves via Godot APIs, without raw scene/resource text. Headless saves disable thumbnail generation. Loaded non-tool Resource placeholders are validated using transient script instances.
 
 The environment-gated editor harness also supports automated setup using `GODOT_PLAYTEST_SETUP=1`. Unlike tests, setup intentionally saves resources and the scene. Do not combine setup and test flags. New resources are not covered by editor Undo; the baker's node/ownership operations retain Undo/Redo support.
 
-See [DISEASE_PLAYTEST.md](DISEASE_PLAYTEST.md) for operational instructions. Fresh-process verification covers native button input, saved references/ownership, all algorithm modes, wrong-host/repeat rejection, rollback, and spread. All seven strict tests are green with no resource leaks.
+See [DISEASE_PLAYTEST.md](DISEASE_PLAYTEST.md) for operational instructions. Fresh-process verification covers native button input, saved references/ownership, all algorithm modes, wrong-host/repeat rejection, rollback, and spread. The disease-playtest coverage remains included in the current nine-test green suite.
 
 ### Next work: propose and approve before implementation
 
 1. Playtest the saved Rice Blast setup, calibrate its parameters using documented sources, and author the remaining diseases/profiles. The catalog is already wired to both TurnController and the inspector.
-2. Propose richer scenario initialization/reset and diagnostic UI for weather, modifiers, and caps. Patient-zero seeding and model selection already exist; do not duplicate them.
+2. Propose richer scenario initialization/reset and diagnostic UI for weather, modifiers, and caps. Patient-zero seeding, model selection, four-stage crop visuals, Shovel and Move already exist; do not duplicate them.
 3. Specify benchmark protocols: shared initial state and inputs, time step/horizon, seeded repeated runs, grid scales, timings/memory, and separation of rendering from numerical work. No mobile benchmark results or calibrated accuracy claims exist yet.
 4. Define metrics, research provenance, SaveData and benchmark schemas, and catalog completeness requirements.
 5. Propose harvesting/rewards, treatments, win/loss, broader soil/abiotic interactions, or base-immunity integration as separate approved increments.
 
-Phase numbering shifted in older prompts. Confirm the next step title with the user; do not describe SIR/SEIR/CA or the approved environmental modifiers as pending implementation.
+Phase numbering shifted in older prompts. Confirm the next step title with the user. Steps 4.1 and 4.2 are complete; no Step 4.3 scope is approved. Do not describe SIR/SEIR/CA, approved environmental modifiers, growth visuals, or crop removal/transfer as pending implementation.
 
 ## 10. Coding, assets, and change discipline
 
 Use snake_case files/methods/properties, PascalCase class names, UPPER_SNAKE_CASE enum members/constants, explicit return types, small components, and descriptive signals. Keep validation diagnostics index-prefixed for catalog entries. Treat shared definition Resources as read-only at runtime and use copies for mutable per-tile state/snapshots.
 
-Reserved/planned locations: `src/logic/autoloads/` for a future typed signal bus if needed; `assets/art/models_3d/blender_source/` for possible Blender sources or prerendered meshes. These are approved organizational destinations, not implemented 3D gameplay or singleton systems. Current temporary art lives under `assets/art/tilesets/terrain/`.
+Reserved/planned locations: `src/logic/autoloads/` for a future typed signal bus if needed; `assets/art/models_3d/blender_source/` for possible Blender sources or prerendered meshes. These are approved organizational destinations, not implemented 3D gameplay or singleton systems. Current art lives under `assets/art/tilesets/terrain/` and `assets/art/tilesets/crops/`, including the generated normalized crop textures.
 
-Adopt conventional commits when version control is initialized: `feat(ui): bake persistent inspector controls`, `fix(world): validate atlas source coordinates`, `refactor(simulation): separate neighborhood geometry`, `test(logic): cover terrain planting rules`, `docs: update project handoff`. Use `type(scope): concise imperative description`, document behavior and relevant verification, and avoid claiming unrun tests or calibrated research results.
+Use conventional commits for future changes: `feat(ui): bake persistent inspector controls`, `fix(world): validate atlas source coordinates`, `refactor(simulation): separate neighborhood geometry`, `test(logic): cover terrain planting rules`, `docs: update project handoff`. Use `type(scope): concise imperative description`, document behavior and relevant verification, and avoid claiming unrun tests or calibrated research results.
 
-For the next assistant: read this handoff and current scripts first, follow PCI for new work, keep the four-layer boundary, and continue from the completed Phase 3 models/modifiers and seven-test green checkpoint. Do not rebuild the inspector, restore runtime UI layout overrides, or bypass the normal editor test lifecycle.
+For the next assistant: read this handoff and current scripts first, follow PCI for new work, keep the four-layer boundary, and continue from completed Step 4.2 and the nine-test green checkpoint. Preserve the approved seedling-specific scaling and copied-payload transfer semantics. Do not rebuild the inspector, restore runtime UI layout overrides, or bypass the normal editor test lifecycle.
