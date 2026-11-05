@@ -75,7 +75,6 @@ func run_setup() -> int:
 		var ids: Array[int] = []
 		var coords: Array[Vector2i] = []
 		var stage_frame_sets: Array = []
-		var first_frames: Array[Image] = []
 
 		for stage: int in range(4):
 			var frames: Array[Image] = _load_stage_frames(crop_name, stage)
@@ -83,9 +82,8 @@ func run_setup() -> int:
 				return _fail("Could not load frames or static PNG for %s stage %d" % [crop_name, stage])
 			print("Loaded %d frame(s) for %s stage %d" % [frames.size(), crop_name, stage])
 			stage_frame_sets.append(frames)
-			first_frames.append(frames[0])
 
-		var shared_height: float = Normalizer.shared_mature_height(first_frames, tiles.tile_size)
+		var shared_height: float = Normalizer.shared_strip_mature_height(stage_frame_sets, tiles.tile_size)
 		if shared_height <= 0.0:
 			return _fail("Invalid crop stage images: " + crop_name)
 
@@ -94,7 +92,7 @@ func run_setup() -> int:
 			var source_id: int = _find_source(tiles, source_name)
 			var artwork_scale: float = 0.5 if stage == 0 and crop_name in ["corn", "sugarcane"] else 1.0
 			var frames: Array[Image] = stage_frame_sets[stage]
-			var normalized: Image = Normalizer.normalize_strip(frames, tiles.tile_size, stage, shared_height, artwork_scale)
+			var normalized: Image = Normalizer.normalize_prepared_strip(frames, tiles.tile_size, stage, shared_height, artwork_scale)
 			if normalized == null:
 				return _fail("Empty or invalid crop artwork: " + source_name)
 			var normalized_path: String = GENERATED_DIR + "/" + source_name + ".res"
@@ -134,8 +132,11 @@ func run_setup() -> int:
 	if overlay != null and is_new:
 		overlay.visible = false
 	EditorInterface.mark_scene_as_unsaved()
-	EditorInterface.save_scene()
-	filesystem.scan()
+	var uid_before: int = ResourceLoader.get_resource_uid(SCENE_PATH)
+	EditorInterface.save_scene_as(SCENE_PATH, false)
+	if ResourceLoader.get_resource_uid(SCENE_PATH) != uid_before:
+		return _fail("Main scene UID changed unexpectedly.")
+	filesystem.update_file(SCENE_PATH)
 	print("CROP_GROWTH_SETUP_PASS - Animated strips generated and saved!")
 	return 0
 
@@ -169,7 +170,7 @@ func _load_stage_frames(crop_name: String, stage: int) -> Array[Image]:
 			var static_img: Image = Image.new()
 			if static_img.load_png_from_buffer(FileAccess.get_file_as_bytes(static_path)) == OK:
 				print("Fallback to static PNG: " + static_path)
-				return [static_img]
+				return [Normalizer.prepare_frame(static_img)]
 	return []
 
 
@@ -192,7 +193,7 @@ func _try_read_frames_in_dir(dir_path: String) -> Array[Image]:
 					break
 		if loaded == null:
 			return []
-		frames.append(loaded)
+		frames.append(Normalizer.prepare_frame(loaded))
 	return frames
 
 

@@ -24,6 +24,9 @@ tests = [
     "tests/presentation/camera_ux_test.gd",
     "tests/simulation/crop_growth_test.gd",
     "tests/logic/weather_soil_tools_test.gd",
+    "tests/presentation/terrain_preview_editor_test.gd",
+    "tests/presentation/terrain_preview_runtime_test.gd",
+    "tests/presentation/grass_overlay_test.gd",
 ]
 failed = False
 for test in tests:
@@ -37,7 +40,7 @@ for test in tests:
     if test.endswith("editor_test.gd"):
         command = [args.godot, "--headless", "--path", str(root), "--editor",
                    "--log-file", str(logs / (Path(test).stem + ".log"))]
-        environment["GODOT_EDITOR_TEST"] = "tile_inspector_builder"
+        environment["GODOT_EDITOR_TEST"] = "terrain_preview" if "terrain_preview" in test else "tile_inspector_builder"
     result = subprocess.run(command, cwd=root, env=environment, capture_output=True, text=True, timeout=60)
     output = result.stdout + result.stderr
     diagnostics = [line for line in output.splitlines()

@@ -25,7 +25,9 @@
 [ext_resource type="Texture2D" uid="uid://csfml1v1ks5po" path="res://assets/art/tilesets/crops/normalized/corn_stage_3.res" id="22_iu8er"]
 [ext_resource type="Texture2D" uid="uid://vdgtdhkjf8rs" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_0.res" id="23_aotfg"]
 [ext_resource type="Texture2D" uid="uid://cq8lexkbo264a" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_1.res" id="24_ia13u"]
+[ext_resource type="Script" uid="uid://cp76etb7tv8y4" path="res://src/presentation/world/field_terrain_preview.gd" id="25_gxe8k"]
 [ext_resource type="Script" uid="uid://c7x4cbtfkuilb" path="res://src/presentation/ui/camera_zoom_button.gd" id="26_6a3lw"]
+[ext_resource type="Texture2D" uid="uid://ymbkqy087onx" path="res://assets/art/tilesets/foliage/animated_grass_tuft.png" id="26_dqm82"]
 [ext_resource type="Script" uid="uid://dmwfbudlygvky" path="res://src/logic/environment/weather_manager.gd" id="27_mfnx3"]
 [ext_resource type="Script" uid="uid://c0xjvj7idv2fq" path="res://src/logic/farming/soil_tool_controller.gd" id="28_gxe8k"]
 
@@ -64,13 +66,25 @@ texture_region_size = Vector2i(512, 512)
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(4, -14)
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0n7ni"]
+texture = ExtResource("26_dqm82")
+texture_region_size = Vector2i(875, 875)
+0:0/animation_columns = 4
+0:0/animation_speed = 7.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/0 = 0
+
 [sub_resource type="TileSet" id="TileSet_qtxmo"]
 tile_shape = 1
 tile_layout = 4
 tile_size = Vector2i(276, 140)
-sources/0 = SubResource("TileSetAtlasSource_v286j")
-sources/1 = SubResource("TileSetAtlasSource_fdjjd")
 sources/2 = SubResource("TileSetAtlasSource_tcj1j")
+sources/1 = SubResource("TileSetAtlasSource_fdjjd")
+sources/0 = SubResource("TileSetAtlasSource_v286j")
+sources/3 = SubResource("TileSetAtlasSource_0n7ni")
 
 [sub_resource type="FontFile" id="FontFile_g68ao"]
 subpixel_positioning = 0
@@ -91,7 +105,7 @@ cache/0/16/0/underline_position = 0.0
 cache/0/16/0/underline_thickness = 0.0
 cache/0/16/0/scale = 1.0
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6a3lw"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_gxe8k"]
 resource_name = "rice_stage_0"
 texture = ExtResource("13_5j4ag")
 texture_region_size = Vector2i(270, 400)
@@ -111,7 +125,7 @@ texture_region_size = Vector2i(270, 400)
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(-2, 196)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fbqid"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dqm82"]
 resource_name = "rice_stage_1"
 texture = ExtResource("14_6a3lw")
 texture_region_size = Vector2i(270, 400)
@@ -131,7 +145,7 @@ texture_region_size = Vector2i(270, 400)
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(-1, 196)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mfnx3"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2l5e1"]
 resource_name = "sugarcane_stage_2"
 texture = ExtResource("15_fbqid")
 texture_region_size = Vector2i(270, 400)
@@ -151,7 +165,7 @@ texture_region_size = Vector2i(270, 400)
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(-8, 196)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_gxe8k"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_bct15"]
 resource_name = "sugarcane_stage_3"
 texture = ExtResource("16_mfnx3")
 texture_region_size = Vector2i(270, 400)
@@ -171,7 +185,7 @@ texture_region_size = Vector2i(270, 400)
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(-3, 196)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dqm82"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3wfy2"]
 resource_name = "rice_stage_2"
 texture = ExtResource("17_gxe8k")
 texture_region_size = Vector2i(270, 400)
@@ -189,9 +203,9 @@ texture_region_size = Vector2i(270, 400)
 0:0/animation_frame_9/duration = 1.0
 0:0/animation_frame_10/duration = 1.0
 0:0/0 = 0
-0:0/0/texture_origin = Vector2i(-1, 196)
+0:0/0/texture_origin = Vector2i(0, 196)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2l5e1"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_iu8er"]
 resource_name = "rice_stage_3"
 texture = ExtResource("18_dqm82")
 texture_region_size = Vector2i(270, 400)
@@ -209,9 +223,9 @@ texture_region_size = Vector2i(270, 400)
 0:0/animation_frame_9/duration = 1.0
 0:0/animation_frame_10/duration = 1.0
 0:0/0 = 0
-0:0/0/texture_origin = Vector2i(-23, 196)
+0:0/0/texture_origin = Vector2i(-24, 196)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_bct15"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_aotfg"]
 resource_name = "corn_stage_0"
 texture = ExtResource("19_2l5e1")
 texture_region_size = Vector2i(270, 400)
@@ -229,9 +243,9 @@ texture_region_size = Vector2i(270, 400)
 0:0/animation_frame_9/duration = 1.0
 0:0/animation_frame_10/duration = 1.0
 0:0/0 = 0
-0:0/0/texture_origin = Vector2i(-1, 196)
+0:0/0/texture_origin = Vector2i(-2, 196)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3wfy2"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ia13u"]
 resource_name = "corn_stage_1"
 texture = ExtResource("20_bct15")
 texture_region_size = Vector2i(270, 400)
@@ -251,7 +265,7 @@ texture_region_size = Vector2i(270, 400)
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(-1, 196)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_iu8er"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_m6w0r"]
 resource_name = "corn_stage_2"
 texture = ExtResource("21_3wfy2")
 texture_region_size = Vector2i(270, 400)
@@ -269,9 +283,9 @@ texture_region_size = Vector2i(270, 400)
 0:0/animation_frame_9/duration = 1.0
 0:0/animation_frame_10/duration = 1.0
 0:0/0 = 0
-0:0/0/texture_origin = Vector2i(0, 196)
+0:0/0/texture_origin = Vector2i(-1, 196)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_aotfg"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1vwg7"]
 resource_name = "corn_stage_3"
 texture = ExtResource("22_iu8er")
 texture_region_size = Vector2i(270, 400)
@@ -289,9 +303,9 @@ texture_region_size = Vector2i(270, 400)
 0:0/animation_frame_9/duration = 1.0
 0:0/animation_frame_10/duration = 1.0
 0:0/0 = 0
-0:0/0/texture_origin = Vector2i(-2, 196)
+0:0/0/texture_origin = Vector2i(-4, 196)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ia13u"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jeedr"]
 resource_name = "sugarcane_stage_0"
 texture = ExtResource("23_aotfg")
 texture_region_size = Vector2i(270, 400)
@@ -309,9 +323,9 @@ texture_region_size = Vector2i(270, 400)
 0:0/animation_frame_9/duration = 1.0
 0:0/animation_frame_10/duration = 1.0
 0:0/0 = 0
-0:0/0/texture_origin = Vector2i(-2, 196)
+0:0/0/texture_origin = Vector2i(-3, 196)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_m6w0r"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_7a55d"]
 resource_name = "sugarcane_stage_1"
 texture = ExtResource("24_ia13u")
 texture_region_size = Vector2i(270, 400)
@@ -335,18 +349,18 @@ texture_region_size = Vector2i(270, 400)
 tile_shape = 1
 tile_layout = 4
 tile_size = Vector2i(276, 140)
-sources/0 = SubResource("TileSetAtlasSource_6a3lw")
-sources/1 = SubResource("TileSetAtlasSource_fbqid")
-sources/2 = SubResource("TileSetAtlasSource_dqm82")
-sources/3 = SubResource("TileSetAtlasSource_2l5e1")
-sources/4 = SubResource("TileSetAtlasSource_bct15")
-sources/5 = SubResource("TileSetAtlasSource_3wfy2")
-sources/6 = SubResource("TileSetAtlasSource_iu8er")
-sources/7 = SubResource("TileSetAtlasSource_aotfg")
-sources/8 = SubResource("TileSetAtlasSource_ia13u")
-sources/9 = SubResource("TileSetAtlasSource_m6w0r")
-sources/10 = SubResource("TileSetAtlasSource_mfnx3")
-sources/11 = SubResource("TileSetAtlasSource_gxe8k")
+sources/0 = SubResource("TileSetAtlasSource_gxe8k")
+sources/1 = SubResource("TileSetAtlasSource_dqm82")
+sources/2 = SubResource("TileSetAtlasSource_3wfy2")
+sources/3 = SubResource("TileSetAtlasSource_iu8er")
+sources/4 = SubResource("TileSetAtlasSource_aotfg")
+sources/5 = SubResource("TileSetAtlasSource_ia13u")
+sources/6 = SubResource("TileSetAtlasSource_m6w0r")
+sources/7 = SubResource("TileSetAtlasSource_1vwg7")
+sources/8 = SubResource("TileSetAtlasSource_jeedr")
+sources/9 = SubResource("TileSetAtlasSource_7a55d")
+sources/10 = SubResource("TileSetAtlasSource_2l5e1")
+sources/11 = SubResource("TileSetAtlasSource_bct15")
 
 [node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "soil_tool_controller")]
 script = ExtResource("1_44tld")
@@ -385,15 +399,20 @@ farming_controller = NodePath("../FarmingController")
 weather_manager = NodePath("../WeatherManager")
 disease_database = ExtResource("8_qayry")
 
-[node name="World" type="Node2D" parent="." unique_id=369827757 node_paths=PackedStringArray("terrain_layer", "crop_overlay", "crop_layer", "camera")]
+[node name="World" type="Node2D" parent="." unique_id=369827757 node_paths=PackedStringArray("terrain_layer", "crop_overlay", "crop_layer", "camera", "grass_overlay_layer")]
 script = ExtResource("4_34f8n")
 terrain_layer = NodePath("Terrain")
 visual_map = ExtResource("5_jfjlv")
 crop_overlay = NodePath("CropOverlay")
 crop_layer = NodePath("Crops")
 camera = NodePath("Camera2D")
+grass_overlay_layer = NodePath("GrassOverlayLayer")
+animated_grass_source_id = 3
 
 [node name="Terrain" type="TileMapLayer" parent="World" unique_id=103210629]
+tile_set = SubResource("TileSet_qtxmo")
+
+[node name="GrassOverlayLayer" type="TileMapLayer" parent="World" unique_id=244161567]
 tile_set = SubResource("TileSet_qtxmo")
 
 [node name="CropOverlay" type="Node2D" parent="World" unique_id=1543953079 node_paths=PackedStringArray("terrain_layer")]
@@ -409,6 +428,12 @@ z_index = 1
 y_sort_enabled = true
 tile_set = SubResource("TileSet_k753q")
 metadata/crop_growth_setup = true
+
+[node name="TerrainPreview" type="Node2D" parent="World" unique_id=405278774 node_paths=PackedStringArray("field_configuration", "world_view")]
+visible = false
+script = ExtResource("25_gxe8k")
+field_configuration = NodePath("../../FarmingController")
+world_view = NodePath("..")
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=222609720]
 
@@ -776,10 +801,12 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -148.0
-offset_top = -120.0
-offset_right = -16.0
-offset_bottom = -72.0
+offset_left = -650.0
+offset_top = -53.0
+offset_right = -518.0
+offset_bottom = -5.0
+grow_horizontal = 0
+grow_vertical = 0
 size_flags_horizontal = 8
 mouse_force_pass_scroll_events = false
 toggle_mode = true
@@ -793,10 +820,12 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -148.0
-offset_top = -176.0
-offset_right = -16.0
-offset_bottom = -128.0
+offset_left = -794.0
+offset_top = -54.0
+offset_right = -662.0
+offset_bottom = -6.0
+grow_horizontal = 0
+grow_vertical = 0
 size_flags_horizontal = 8
 mouse_force_pass_scroll_events = false
 toggle_mode = true
@@ -810,10 +839,12 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -148.0
-offset_top = -232.0
-offset_right = -16.0
-offset_bottom = -184.0
+offset_left = -506.0
+offset_top = -52.0
+offset_right = -374.0
+offset_bottom = -4.0
+grow_horizontal = 0
+grow_vertical = 0
 size_flags_horizontal = 8
 mouse_force_pass_scroll_events = false
 toggle_mode = true
@@ -822,8 +853,6 @@ script = ExtResource("26_6a3lw")
 
 [node name="WeatherManager" type="Node" parent="." unique_id=673066105]
 script = ExtResource("27_mfnx3")
-rainfall_per_turn = 0.0
-evaporation_per_turn = 0.152
 fluctuations_enabled = true
 
 [node name="SoilToolController" type="Node" parent="." unique_id=626484259 node_paths=PackedStringArray("farming_controller")]

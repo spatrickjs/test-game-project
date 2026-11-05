@@ -43,6 +43,17 @@ func run_setup() -> int:
 	soil_tools.set("farming_controller", scene.get("farming_controller"))
 	scene.set("soil_tool_controller", soil_tools)
 	(scene.get("turn_controller") as Node).set("weather_manager", weather)
+	var world: Node = scene.get("world_view") as Node
+	var preview: Node = world.get_node_or_null("TerrainPreview")
+	if preview == null:
+		preview = Node2D.new()
+		preview.name = "TerrainPreview"
+		preview.set_script(load("res://src/presentation/world/field_terrain_preview.gd"))
+		world.add_child(preview)
+		preview.owner = scene
+	preview.set("field_configuration", scene.get("farming_controller"))
+	preview.set("world_view", world)
+	preview.call("refresh_preview")
 	var uid_before: int = ResourceLoader.get_resource_uid(SCENE_PATH)
 	EditorInterface.mark_scene_as_unsaved()
 	EditorInterface.save_scene_as(SCENE_PATH, false)

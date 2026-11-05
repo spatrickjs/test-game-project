@@ -1,6 +1,6 @@
 # Project handoff: isometric crop disease education game
 
-Last reviewed: **2026-11-05 (Asia/Shanghai)**. This document combines approved design decisions, files inspected in the workspace, and previously reported test results. Paths below are relative to the project root; `res://` means the directory containing `project.godot`.
+Last reviewed: **2026-11-06 (Asia/Shanghai)**. This document combines approved design decisions, files inspected in the workspace, and previously reported test results. Paths below are relative to the project root; `res://` means the directory containing `project.godot`.
 
 ## 1. Overview and continuation checkpoint
 
@@ -8,9 +8,9 @@ Undergraduate Computer Science thesis: a 2D isometric educational mobile game ex
 
 **Current checkpoint: Step 4.4 lifecycle plus approved weather and soil tools implemented.** Steps 4.3/4.3B camera work and the shadowed-parameter fix remain complete. The approved Step 4.4 scope is N/K, pH and local-moisture effects on growth, vitality and yield quality, with mature-crop harvesting. Inspector-adjustable WeatherManager and SoilToolController scene nodes now support turn-based hydration, Water and Fertilize. Disease formulas and configuration were not changed. See the lifecycle and weather guides for exact contracts and defaults.
 
-**Verification status:** twelve of thirteen strict tests pass. The crop-visual test reports 35 failures; an isolated copy of committed HEAD `6ff33f3` reproduces exactly the same failures. These are pre-existing animation/static-art test issues, not a fully green baseline. Earlier 10/11 and 30-failure records below refer to prior runs.
+**Verification status: the latest full strict run is failing.** The prior 15/15 green checkpoint is historical. The November 6 FieldWorldView repair compiles, and the new standalone grass-overlay test passes without errors. Scene-loading tests report invalid grass-atlas tile coordinates; the crop-visual test additionally reports twelve saved animation-speed mismatches. The runner now lists sixteen tests; the new test was run separately after the fifteen-test regression run. See section 15 before claiming a clean suite.
 
-**Resume here:** reload `field_prototype.tscn`. Harvest mode is available above Zoom/Reset; inspect a crop to see vitality and quality. Preserve committed crop-animation work, and reconcile its visual tests separately. Watering and fertilizing are now implemented following a separate approval. Terrain tilling, currency/inventory rewards and additional disease-model changes remain outside scope.
+**Resume here:** preserve the FieldWorldView repair and investigate the saved grass TileSet in `field_prototype.tscn` through Godot APIs. Reconcile intended crop animation speeds with the eight-FPS test contract before changing either. Preserve the user's artwork and Inspector edits; do not regenerate all resources or revert the worktree blindly. Lifecycle, harvest, weather, soil tools and camera controls remain implemented. Terrain tilling and inventory/currency rewards remain outside scope.
 
 Detailed continuation guides:
 
@@ -99,7 +99,7 @@ Authored resources present: crop and terrain catalogs; sugarcane, rice, corn, dr
 | `src/simulation/models/stochastic_ca_sir_model.gd` | StochasticCASIRModel: seeded categorical transitions with synchronized fractions |
 | `src/simulation/models/transmission_modifiers.gd` | TransmissionModifiers: `evaluate()`, `needs_crop()`, typed Result with multipliers/rates/cap flags |
 | `tools/repair_terrain_atlas.gd` | One-time Godot-API repair, already applied; not a routine pre-test operation |
-| `tools/run_tests.py` | Strict thirteen-test runner; rejects errors, warnings, failures, and missing PASS markers |
+| `tools/run_tests.py` | Strict sixteen-test runner; rejects errors, warnings, failures, and missing PASS markers |
 | `addons/test_harness/plugin.gd` | Environment-gated editor test harness using normal editor lifecycle |
 | `src/logic/grid/field_grid_queries.gd` | FieldGridQueries: static `can_plant()`, `validate_terrain_assignments()` |
 | `src/logic/farming/farming_controller.gd` | FarmingController: `initialize_field()`, `try_plant()`, `advance_growth()`, `seed_infection()`, `clear_crop()`, `remove_crop()`, `transfer_crop()`, `process_simulation()`, `advance_simulated_turn()`, `get_grid_snapshot()`, `is_initialized()` |
@@ -255,7 +255,7 @@ Reference: `docs/BAKE_UI_SETUP.md` is authoritative for the latest UI workflow. 
 
 ## 8. Verification and new-device startup
 
-Verification history: Step 4.2 passed nine tests and rendered D3D12 playtests. Step 4.3B subsequently passed all eleven strict tests with zero engine warnings/errors. The latest warning-fix run passed ten of eleven, with the 30 pre-existing crop-visual failures described in section 1. The fresh editor test emitted no warnings; the live Output panel was not accessible through the connector. Physical Android gesture/safe-area testing remains outstanding. No tests were rerun for this documentation-only refresh.
+Verification history: Step 4.2 passed nine tests; Step 4.3B passed eleven. The subsequent lifecycle/weather/preview and crop-animation checkpoint passed fifteen. The latest November 6 run is no longer green: see section 15 for the current atlas errors and animation-speed mismatches. Physical Android gesture/safe-area testing remains outstanding. No tests were rerun for this documentation-only refresh.
 
 | Executable test | Coverage |
 |---|---|
@@ -270,6 +270,11 @@ Verification history: Step 4.2 passed nine tests and rendered D3D12 playtests. S
 | `tests/logic/field_management_test.gd` | Native Shovel/Move input, terrain/occupancy rejection, exact payload preservation, soil locality, removal/reset and tool-switch cancellation |
 | `tests/presentation/camera_zoom_test.gd` | Zoom limits, wheel/pinch ratios, single-tap release, multi-touch and drag suppression |
 | `tests/presentation/camera_ux_test.gd` | Pan scaling/bounds, focal anchoring, PC/touch drags, UI gesture isolation, saved Zoom/Reset action, and resize |
+| `tests/simulation/crop_growth_test.gd` | Nutrient/pH/moisture growth stress, vitality and harvest |
+| `tests/logic/weather_soil_tools_test.gd` | Weather turn ordering, moisture bounds, rollback and soil actions |
+| `tests/presentation/terrain_preview_editor_test.gd` | Editor preview generation and refresh |
+| `tests/presentation/terrain_preview_runtime_test.gd` | Runtime isolation of editor preview |
+| `tests/presentation/grass_overlay_test.gd` | Grass-only placement, stable redraws, clearing and invalid optional configuration |
 
 Run from the project root:
 
@@ -390,7 +395,7 @@ Reserved/planned locations: `src/logic/autoloads/` for a future typed signal bus
 
 Use conventional commits for future changes: `feat(ui): bake persistent inspector controls`, `fix(world): validate atlas source coordinates`, `refactor(simulation): separate neighborhood geometry`, `test(logic): cover terrain planting rules`, `docs: update project handoff`. Use `type(scope): concise imperative description`, document behavior and relevant verification, and avoid claiming unrun tests or calibrated research results.
 
-For the next assistant: read this handoff and current scripts first, follow PCI for new work, keep the four-layer boundary, and continue from implemented lifecycle/weather/soil tools with twelve of thirteen tests passing and the independently reproduced crop-visual baseline failure. Preserve the approved seedling-specific scaling and copied-payload transfer semantics. Do not rebuild the inspector, restore runtime UI layout overrides, or bypass the normal editor test lifecycle.
+For the next assistant: read this handoff and current scripts first, follow PCI for new work, keep the four-layer boundary, and continue from implemented lifecycle/weather/soil tools and the FieldWorldView repair, with the outstanding regression failures described in section 15. Preserve the approved seedling-specific scaling and copied-payload transfer semantics. Do not rebuild the inspector, restore runtime UI layout overrides, or bypass the normal editor test lifecycle.
 
 
 ## 11. Current connection and workspace context
@@ -403,3 +408,38 @@ For the next assistant: read this handoff and current scripts first, follow PCI 
 ## 12. Weather and soil management continuation
 
 The user explicitly approved weather/moisture updates and watering/fertilizing after the earlier exclusions. Root-level WeatherManager and SoilToolController nodes are saved and wired in the prototype; their values are Inspector exports. Water/Fertilize controls are persistent and operate through FarmingController transactions. Weather runs before lifecycle growth and rolls back with a failed turn. Balanced weather defaults preserve baseline moisture; enable fluctuations or change rainfall/evaporation to demonstrate shifts. External climate sources are future hooks with explicit unsupported-mode errors. See [WEATHER_AND_SOIL_TOOLS.md](WEATHER_AND_SOIL_TOOLS.md).
+
+
+## 13. Editor terrain preview
+
+An editor-only preview is now saved as `World/TerrainPreview`, using `src/presentation/world/field_terrain_preview.gd`. Reload `field_prototype.tscn` in the Editor to see the configured terrain without running the game. Change FarmingController `field_size` or `terrain_bands`; the preview refreshes within 0.25 seconds. Terrain visual mapping and TileSet changes also refresh it. Select TerrainPreview for the `Preview Enabled` checkbox and `Refresh terrain preview` Inspector button.
+
+The tool reads exported configuration from non-tool Node placeholders; gameplay controllers are not executed in the editor. Only the two Presentation mapping Resources are additionally marked `@tool`. It draws into an internal, ownerless TileMapLayer, never the real Terrain layer. Generated cells are excluded from scene serialization and no preview layer or polling is created at runtime. Runtime field generation remains authoritative. Invalid configuration clears the preview and displays a configuration warning; previews above 10,000 cells are refused to keep the editor responsive.
+
+`tools/setup_field_tools.gd` adds/wires the preview through Godot APIs. Two new tests verify editor rendering and automatic refresh, band matching, disabling/invalid configurations, no duplicate or serialized generated layers, and runtime isolation. The preview checkpoint initially passed 14/15; the subsequent crop-animation checkpoint passed 15/15. These are historical results; section 15 supersedes them.
+
+
+## 14. Crop-animation test failures resolved
+
+The 35 reported failures combined obsolete static-image assumptions with a real scale-budget problem. Each texture is an 11-frame, 2970 x 400 strip, containing 270 x 400 atlas frames. Tests had treated the entire strip as a single crop. They now inspect all 132 frames for region dimensions, bounded artwork, eight-FPS timing, stem-base anchoring, stable root footprints and growth-stage proportions.
+
+`tools/crop_texture_normalizer.gd` now derives the shared mature-height budget from the union of every frame in every growth stage. The previous first-frame-only budget allowed a wider later corn seedling frame to impose an independent width reduction. The common budget preserves stage ratios, including the extra 0.5 seedling scale for corn and sugarcane. Root origin uses the first frame's bottom four-pixel stem band rather than the moving canopy bounding box; every saved frame is checked to keep the anchor within its stem base.
+
+`tools/setup_crop_growth_visuals.gd` cleans/reduces each large source frame once, reuses prepared frames, regenerates derived strips and serializes atlas resources through Godot APIs while preserving the scene UID. Source PNG frames are unchanged. Its final full filesystem scan was replaced with a targeted scene update to avoid aborting an unnecessary scan during headless shutdown.
+
+Current maximum visible heights across each animation: Rice 108/188/266/312 px; Corn 58/202/288/338 px; Sugarcane 62/214/302/356 px. Earlier static-art measurements are historical. Synthetic regressions cover a later frame wider than frame zero, seedling-ratio preservation, and rejection of mismatched frame canvases.
+
+Historical verification at this checkpoint: all fifteen strict tests passed, with zero engine warnings/errors. Section 15 supersedes this as the current status. An additional hidden rendered run of the crop-visual test passed; seedling and mature screenshots were visually inspected. Reload the scene/resources if the editor still shows cached artwork.
+
+
+## 15. November 6 FieldWorldView repair and current blockers
+
+The user requested a fix to `src/presentation/world/field_world_view.gd`. An added untyped `render_grid(grid_data)` duplicated the existing typed method, preventing compilation. Its placeholder `cell.is_grass`/`cell.position` assumptions also did not match `FieldGridState`/`FieldCellState`.
+
+The duplicate was removed. The existing `render_grid(grid_state: FieldGridState) -> bool` now calls `_render_grass_overlay()` after drawing terrain. The helper reads `cell.terrain_type == SimulationEnums.TerrainType.GRASS` and `cell.coordinates`. The exported overlay/source/atlas/chance settings are preserved, with a 0..1 Inspector range for spawn chance. Decorations use a separate seed-zero RandomNumberGenerator so redraws are repeatable and do not consume the simulation's global random stream. Missing optional layers/sources/tiles safely skip decoration. A mistakenly assigned terrain or crop layer is never cleared. This repair changes Presentation only and does not wire or repair the scene's optional grass overlay.
+
+`tests/presentation/grass_overlay_test.gd` passed (`GRASS_OVERLAY_PASS`), with no engine errors. It covers grass-only placement at full chance, stable redraws, zero-chance clearing, unchanged soil, missing source/tile handling and protection of base terrain. It is registered as the sixteenth test in `tools/run_tests.py`.
+
+The immediately preceding full fifteen-test run exited 1. `field_scene_integration.gd` and `camera_zoom_test.gd` reached their PASS markers, but scene loading emitted atlas errors, so strict validation correctly rejected them. The camera and crop-visual logs each contain 516 `ERROR:` records about out-of-texture/overlapping tiles and missing atlas coordinates (for example `(27, 21)`). `crop_growth_visuals_test.gd` also reports twelve `Saved animation speed` failures; the saved scene contains 20-FPS entries while tests expect eight. Do not equate an individual PASS marker with a clean strict result.
+
+Pending work: inspect the new grass atlas/texture dimensions, tile regions and animation setup, then repair via Godot Editor APIs and serialization. The saved `World` node also contains null exported values and no assigned `grass_overlay_layer`; inspect these rather than assuming the grass feature is wired. Confirm intended crop animation speed before reconciling the scene and tests. No scene, texture or crop resource was changed during the FieldWorldView repair. Preserve unrelated worktree changes. Run all sixteen strict tests after these follow-ups; do not claim zero regressions until they pass. Logs are under `.godot/`, including `grass_overlay_test.log`, `field_scene_integration.log`, `camera_zoom_test.log` and `crop_growth_visuals_test.log`.

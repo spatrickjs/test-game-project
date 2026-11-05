@@ -14,21 +14,55 @@ static func normalize(source: Image, tile_size: Vector2i, stage: int, shared_hei
 ## Normalizes 1 or more animation frames into a horizontal sprite strip using a
 ## locked union bounding box so roots never jitter or shift between frames.
 static func normalize_strip(frames: Array[Image], tile_size: Vector2i, stage: int, shared_height: float = -1.0, artwork_scale: float = 1.0) -> Image:
-	if frames.is_empty() or stage < 0 or stage > 3 or tile_size.x < 1 or tile_size.y < 1:
-		return null
-	var cleaned_frames: Array[Image] = []
-	var union_bounds: Rect2i = Rect2i()
-	for idx: int in range(frames.size()):
-		var frame: Image = frames[idx]
-		if frame == null or frame.is_empty():
+	var prepared: Array[Image] = []
+	for frame: Image in frames:
+		var cleaned: Image = prepare_frame(frame)
+		if cleaned == null:
 			return null
-		var cleaned: Image = _visible_art(frame)
-		var bounds: Rect2i = cleaned.get_used_rect()
-		if not bounds.has_area():
-			return null
-		cleaned_frames.append(cleaned)
-		union_bounds = bounds if idx == 0 else union_bounds.merge(bounds)
+		prepared.append(cleaned)
+	return normalize_prepared_strip(prepared, tile_size, stage, shared_height, artwork_scale)
 
+
+## Setup cleans each large source once, retaining only reduced-size frames.
+static func prepare_frame(source: Image) -> Image:
+	if source == null or source.is_empty():
+		return null
+	return _visible_art(source)
+
+
+static func prepared_union_bounds(frames: Array[Image]) -> Rect2i:
+	var bounds: Rect2i = Rect2i()
+	var canvas_size: Vector2i = Vector2i.ZERO
+	for frame: Image in frames:
+		if frame == null or frame.is_empty():
+			return Rect2i()
+		if canvas_size == Vector2i.ZERO:
+			canvas_size = frame.get_size()
+		if frame.get_size() != canvas_size or not frame.get_used_rect().has_area():
+			return Rect2i()
+		bounds = bounds.merge(frame.get_used_rect()) if bounds.has_area() else frame.get_used_rect()
+	return bounds
+
+
+static func shared_strip_mature_height(stage_frames: Array, tile_size: Vector2i) -> float:
+	if stage_frames.size() != 4 or tile_size.x < 1 or tile_size.y < 1:
+		return -1.0
+	var height: float = float(tile_size.y) * MATURE_HEIGHT_RATIO
+	var max_width: float = float(maxi(2, int(round(float(tile_size.x) * 0.95))))
+	for frames: Array[Image] in stage_frames:
+		var bounds: Rect2i = prepared_union_bounds(frames)
+		if not bounds.has_area():
+			return -1.0
+		height = minf(height, max_width * float(bounds.size.y) / float(bounds.size.x))
+	return height
+
+
+static func normalize_prepared_strip(cleaned_frames: Array[Image], tile_size: Vector2i, stage: int, shared_height: float = -1.0, artwork_scale: float = 1.0) -> Image:
+	if cleaned_frames.is_empty() or stage < 0 or stage > 3 or tile_size.x < 1 or tile_size.y < 1:
+		return null
+	var union_bounds: Rect2i = prepared_union_bounds(cleaned_frames)
+	if not union_bounds.has_area() or not is_finite(artwork_scale) or artwork_scale <= 0.0:
+		return null
 	var max_width: int = maxi(2, int(round(float(tile_size.x) * 0.95)))
 	var mature_height: float = float(tile_size.y) * MATURE_HEIGHT_RATIO
 	var target_height: float = minf(mature_height, shared_height) if shared_height > 0.0 else mature_height
@@ -124,11 +158,15 @@ static func _visible_art(source: Image) -> Image:
 	return Image.create_from_data(width, height, false, Image.FORMAT_RGBA8, data)
 
 
+## Anchor the stem base, not the moving canopy's bounding-box center.
 static func root_origin(normalized: Image, cell_width: int = -1) -> Vector2i:
 	var target_width: int = cell_width if cell_width > 0 else normalized.get_width()
 	var first_cell: Image = normalized.get_region(Rect2i(0, 0, target_width, normalized.get_height()))
 	var used: Rect2i = first_cell.get_used_rect()
+	var foot_height: int = mini(4, used.size.y)
+	var foot: Image = first_cell.get_region(Rect2i(0, used.end.y - foot_height, target_width, foot_height))
+	var base: Rect2i = foot.get_used_rect()
 	return Vector2i(
-		used.position.x + int(used.size.x / 2.0) - int(target_width / 2.0),
+		base.position.x + int(base.size.x / 2.0) - int(target_width / 2.0),
 		used.end.y - int(normalized.get_height() / 2.0)
 	)

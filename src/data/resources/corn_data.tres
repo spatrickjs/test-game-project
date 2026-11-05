@@ -2,12 +2,18 @@
 
 [ext_resource type="Script" uid="uid://bbr8k8k27fpoh" path="res://src/data/resources/abiotic_rule.gd" id="1_tpif2"]
 [ext_resource type="Script" uid="uid://bd8k7muh8e7gn" path="res://src/data/resources/nutrient_rule.gd" id="2_4key8"]
+[ext_resource type="Script" uid="uid://ce0gays3wdad0" path="res://src/data/resources/crop_growth_profile.gd" id="2_phhmh"]
 [ext_resource type="Script" uid="uid://cy15hmnrw2rf7" path="res://src/data/resources/crop_data.gd" id="3_phhmh"]
+
+[sub_resource type="Resource" id="Resource_kk45f"]
+script = ExtResource("2_phhmh")
+metadata/_custom_type_script = "uid://ce0gays3wdad0"
 
 [resource]
 script = ExtResource("3_phhmh")
 crop_type = 2
 display_name = "Corn"
 growth_ticks = 5
+growth_profile = SubResource("Resource_kk45f")
 growth_stage_source_ids = Array[int]([4, 5, 6, 7])
 metadata/_custom_type_script = "uid://cy15hmnrw2rf7"

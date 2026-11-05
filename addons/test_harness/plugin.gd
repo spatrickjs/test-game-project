@@ -12,12 +12,13 @@ func _enter_tree() -> void:
 	if OS.get_environment("GODOT_PLAYTEST_SETUP") == "1":
 		_run_setup.call_deferred()
 		return
-	if OS.get_environment("GODOT_EDITOR_TEST") == "tile_inspector_builder":
+	if OS.get_environment("GODOT_EDITOR_TEST") in ["tile_inspector_builder", "terrain_preview"]:
 		_run_test.call_deferred()
 
 
 func _run_test() -> void:
-	var test_script: Script = load("res://tests/presentation/tile_inspector_builder_editor_test.gd") as Script
+	var test_path: String = "res://tests/presentation/terrain_preview_editor_test.gd" if OS.get_environment("GODOT_EDITOR_TEST") == "terrain_preview" else "res://tests/presentation/tile_inspector_builder_editor_test.gd"
+	var test_script: Script = load(test_path) as Script
 	var test: RefCounted = test_script.new() as RefCounted
 	var result: int = await test.run(get_tree())
 	test = null

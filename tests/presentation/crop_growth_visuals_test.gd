@@ -26,6 +26,21 @@ func _run() -> void:
 	var empty: Image = Image.create(16, 16, false, Image.FORMAT_RGBA8)
 	empty.fill(Color.TRANSPARENT)
 	_check(Normalizer.normalize(empty, Vector2i(276, 140), 0) == null, "Empty artwork rejected")
+	var narrow: Image = Image.create(120, 120, false, Image.FORMAT_RGBA8)
+	narrow.fill(Color.TRANSPARENT)
+	narrow.fill_rect(Rect2i(45, 10, 20, 100), Color.GREEN)
+	var wide: Image = narrow.duplicate() as Image
+	wide.fill_rect(Rect2i(5, 10, 110, 60), Color.GREEN)
+	var seed_frames: Array[Image] = [narrow, wide]
+	var mature_frames: Array[Image] = [narrow, narrow]
+	var all_stages: Array = [seed_frames, mature_frames, mature_frames, mature_frames]
+	var shared: float = Normalizer.shared_strip_mature_height(all_stages, Vector2i(276, 140))
+	_check(shared < 250.0, "Shared budget includes wider later animation frames")
+	var seed_strip: Image = Normalizer.normalize_prepared_strip(seed_frames, Vector2i(276, 140), 0, shared, 0.5)
+	var mature_strip: Image = Normalizer.normalize_prepared_strip(mature_frames, Vector2i(276, 140), 3, shared)
+	_check(absf(float(seed_strip.get_used_rect().size.y) / float(mature_strip.get_used_rect().size.y) - 0.175) < 0.02, "Animation-wide budget preserves seedling ratio")
+	var different_canvas: Array[Image] = [narrow, small]
+	_check(Normalizer.normalize_prepared_strip(different_canvas, Vector2i(276, 140), 0) == null, "Mismatched frame canvases rejected")
 	var ticks: Array[int] = [-1, 0, 2, 3, 5, 6, 8, 9, 10]
 	var stages: Array[int] = [0, 0, 0, 1, 1, 2, 2, 3, 3]
 	for index: int in range(ticks.size()):
@@ -50,20 +65,39 @@ func _run() -> void:
 	_check(not world.crop_overlay.visible, "Debug markers hidden")
 	for crop: CropData in farming.crop_database.crops:
 		var mature_atlas: TileSetAtlasSource = world.crop_layer.tile_set.get_source(crop.growth_stage_source_ids[3]) as TileSetAtlasSource
-		var mature_height: int = mature_atlas.texture.get_image().get_used_rect().size.y
+		var mature_height: int = _animation_bounds(mature_atlas).size.y
 		var previous_height: int = 0
 		for stage: int in range(4):
 			var atlas: TileSetAtlasSource = world.crop_layer.tile_set.get_source(crop.growth_stage_source_ids[stage]) as TileSetAtlasSource
 			var pixels: Image = atlas.texture.get_image()
-			if OS.get_cmdline_user_args().has("--capture"):
-				pixels.save_png("res://.godot/normalized_%d_%d.png" % [crop.crop_type, stage])
-			var bounds: Rect2i = pixels.get_used_rect()
-			var visible_base: Vector2 = Vector2(bounds.position) + Vector2(float(bounds.size.x) * 0.5, bounds.size.y)
-			var drawn_base: Vector2 = visible_base - Vector2(pixels.get_size()) * 0.5 - Vector2(atlas.get_tile_data(Vector2i.ZERO, 0).texture_origin)
-			_check(absf(drawn_base.x) <= 0.5 and drawn_base.y == 0.0, "%s stage %d root at tile center" % [crop.display_name, stage])
-			_check(pixels.get_size() == Vector2i(270, 400), "Consistent normalized canvas")
-			_check(bounds.size.x <= 262 and bounds.size.y <= 392, "Art fits tile-relative limits")
-			_check(bounds.size.y >= 50, "Readable crop height")
+			var frame_count: int = atlas.get_tile_animation_frames_count(Vector2i.ZERO)
+			var frame_size: Vector2i = atlas.texture_region_size
+			_check(frame_size == Vector2i(270, 400), "Consistent per-frame canvas")
+			_check(frame_count == 11 and atlas.get_tile_animation_columns(Vector2i.ZERO) == 11, "Saved eleven-frame animation configured")
+			_check(is_equal_approx(atlas.get_tile_animation_speed(Vector2i.ZERO), 8.0), "Saved animation speed")
+			_check(pixels.get_size() == Vector2i(frame_size.x * frame_count, frame_size.y), "Strip dimensions match frame count")
+			var bounds: Rect2i = _animation_bounds(atlas)
+			var reference_root: Rect2i = Rect2i()
+			for frame: int in range(frame_count):
+				var region: Rect2i = atlas.get_tile_texture_region(Vector2i.ZERO, frame)
+				_check(region == Rect2i(frame * frame_size.x, 0, frame_size.x, frame_size.y), "Animation frames address separate cells")
+				var single: Image = pixels.get_region(region)
+				var used: Rect2i = single.get_used_rect()
+				_check(used.has_area() and used.size.x <= 262 and used.size.y <= 392, "Each frame fits tile-relative limits")
+				_check(used.size.y >= 50, "Readable animated crop height")
+				var origin: Vector2i = atlas.get_tile_data(Vector2i.ZERO, 0).texture_origin
+				_check(used.end.y - frame_size.y / 2.0 - origin.y == 0.0, "%s stage %d frame %d root height" % [crop.display_name, stage, frame])
+				# A wind-swaying crown may move horizontally; the soil anchor must
+				# remain inside the actual stem base, not the entire canopy box.
+				var base: Rect2i = single.get_region(Rect2i(0, used.end.y - 4, frame_size.x, 4)).get_used_rect()
+				var anchor_x: int = int(frame_size.x / 2.0) + origin.x
+				_check(anchor_x >= base.position.x and anchor_x < base.end.x, "%s stage %d frame %d stem anchored" % [crop.display_name, stage, frame])
+				_check(is_equal_approx(atlas.get_tile_animation_frame_duration(Vector2i.ZERO, frame), 1.0), "Uniform frame duration")
+				if frame == 0:
+					reference_root = base
+				else:
+					_check(base.intersects(reference_root), "Root footprint remains stable through animation")
+			_check(bounds.size.x <= 262 and bounds.size.y <= 392, "Animation union fits tile envelope")
 			_check(bounds.size.y > previous_height, "%s stage heights strictly increase" % crop.display_name)
 			previous_height = bounds.size.y
 			var expected_ratios: Array[float] = [0.35, 0.60, 0.85, 1.0]
@@ -137,3 +171,13 @@ func _finish() -> void:
 	if _failures.is_empty():
 		print("CROP_GROWTH_VISUALS_PASS")
 	quit(0 if _failures.is_empty() else 1)
+
+
+func _animation_bounds(atlas: TileSetAtlasSource) -> Rect2i:
+	var pixels: Image = atlas.texture.get_image()
+	var result: Rect2i = Rect2i()
+	for frame: int in range(atlas.get_tile_animation_frames_count(Vector2i.ZERO)):
+		var region: Rect2i = atlas.get_tile_texture_region(Vector2i.ZERO, frame)
+		var bounds: Rect2i = pixels.get_region(region).get_used_rect()
+		result = result.merge(bounds) if result.has_area() else bounds
+	return result

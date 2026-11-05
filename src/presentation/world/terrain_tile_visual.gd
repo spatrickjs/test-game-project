@@ -1,3 +1,4 @@
+@tool
 class_name TerrainTileVisual
 extends Resource
 ## Rendering identifiers only; never used for planting or simulation decisions.

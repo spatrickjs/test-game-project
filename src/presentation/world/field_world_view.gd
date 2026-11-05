@@ -16,6 +16,10 @@ signal camera_view_changed
 @export_range(1.0, 10.0) var max_zoom_multiplier: float = 2.5
 @export_range(1.01, 2.0) var wheel_zoom_factor: float = 1.15
 @export var tap_drag_threshold: float = 10.0
+@export var grass_overlay_layer: TileMapLayer
+@export var animated_grass_source_id: int = 1       # The Source ID of your animated strip in the TileSet
+@export var grass_tuft_atlas_coords: Vector2i = Vector2i(0, 0) # Coordinate of the first frame (usually 0,0)
+@export_range(0.0, 1.0) var tuft_spawn_chance: float = 0.25
 
 var min_zoom: float = 1.0
 var max_zoom: float = 2.5
@@ -38,7 +42,6 @@ var _input_enabled: bool = false
 
 func _ready() -> void:
 	set_process_unhandled_input(_input_enabled)
-
 
 func validate_configuration() -> PackedStringArray:
 	var errors: PackedStringArray = _validate_terrain_configuration()
@@ -121,10 +124,31 @@ func render_grid(grid_state: FieldGridState) -> bool:
 			var cell: FieldCellState = grid_state.get_cell(Vector2i(x, y))
 			var visual: TerrainTileVisual = visual_map.get_visual(cell.terrain_type)
 			terrain_layer.set_cell(cell.coordinates, visual.source_id, visual.atlas_coords, visual.alternative_tile)
+	_render_grass_overlay(grid_state)
 	_snapshot = grid_state.copy()
 	last_error = ""
 	set_interaction_enabled(true)
 	return true
+
+
+## Optional decoration only: use an independent, repeatable random stream.
+func _render_grass_overlay(grid_state: FieldGridState) -> void:
+	if grass_overlay_layer == null or grass_overlay_layer == terrain_layer or grass_overlay_layer == crop_layer:
+		return
+	grass_overlay_layer.clear()
+	var tiles: TileSet = grass_overlay_layer.tile_set
+	if tiles == null or not tiles.has_source(animated_grass_source_id):
+		return
+	var atlas: TileSetAtlasSource = tiles.get_source(animated_grass_source_id) as TileSetAtlasSource
+	if atlas == null or not atlas.has_tile(grass_tuft_atlas_coords):
+		return
+	var decoration_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	decoration_rng.seed = 0
+	for y: int in range(grid_state.height):
+		for x: int in range(grid_state.width):
+			var cell: FieldCellState = grid_state.get_cell(Vector2i(x, y))
+			if cell.terrain_type == SimulationEnums.TerrainType.GRASS and decoration_rng.randf() < tuft_spawn_chance:
+				grass_overlay_layer.set_cell(cell.coordinates, animated_grass_source_id, grass_tuft_atlas_coords)
 
 
 func refresh_crops(snapshot: FieldGridState, crops: CropDatabase) -> void:

@@ -38,9 +38,12 @@ The updated UI baker and `tools/setup_field_tools.gd` save through Godot editor 
 
 `tests/simulation/crop_growth_test.gd` covers optimal/deficient conditions, pH extremes, drought/over-saturation, inclusive thresholds, fractional growth, accumulated penalties, maturity, profile/soil validation, pure evaluation, copy/transfer/reset, staged rollback, harvest rejection and duplicate prevention, and native saved-scene Harvest input.
 
-The full strict suite has twelve tests. Eleven pass; the crop-visual test has 35 failures. An isolated archive of committed HEAD `6ff33f3` reproduced exactly the same 35 failures, confirming they predate this lifecycle implementation. Resolve the animation-versus-static-art test expectations separately; do not report the whole suite as green. Physical Android validation remains outstanding.
+At the original lifecycle checkpoint, the suite had twelve tests. Eleven passed; the crop-visual test had 35 failures. An isolated archive of committed HEAD `6ff33f3` reproduced exactly the same 35 failures, confirming they predate this lifecycle implementation. Those animation/static-art issues were subsequently fixed; that checkpoint passed all fifteen tests. The November 6 run is failing on scene grass-atlas errors and twelve animation-speed mismatches; section 15 of `PROJECT_HANDOFF.md` records the current status and the separately passing new grass-overlay test. Physical Android validation remains outstanding.
 
 
 ## Subsequent approved weather/tools increment
 
-Watering, fertilizing and a turn-based hydration service were subsequently approved and implemented. See [WEATHER_AND_SOIL_TOOLS.md](WEATHER_AND_SOIL_TOOLS.md) for controls and turn ordering. The latest suite now passes twelve of thirteen tests, retaining the identical 35 crop-visual baseline failures. The earlier twelve-test result above records the lifecycle checkpoint.
+Watering, fertilizing and a turn-based hydration service were subsequently approved and implemented. See [WEATHER_AND_SOIL_TOOLS.md](WEATHER_AND_SOIL_TOOLS.md) for controls and turn ordering. That weather checkpoint passed twelve of thirteen tests. Subsequent editor-preview and crop-animation work brought the current suite to fifteen of fifteen passing. The earlier twelve-test result above records the lifecycle checkpoint.
+
+
+The animation regression fix is documented in section 14 of `PROJECT_HANDOFF.md`: per-frame checks, all-frame shared sizing and stem-base anchoring now replace the failing static-strip assumptions. No lifecycle formulas were changed by that fix.

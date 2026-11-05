@@ -53,7 +53,7 @@ No nutrient consumption, irrigation animation, terrain tilling, inventory costs,
 
 `tests/logic/weather_soil_tools_test.gd` verifies configured rainfall/evaporation, warm/dry evaporation factors and caps, normalized bounds, all soil tiles, disabled weather, live configuration changes, unsupported sources, deterministic cycles, weather-before-growth ordering, full failed-turn rollback, local tool additions/no-ops/rejections, signals, saved wiring and native HUD/Next Turn input.
 
-Latest full strict result: 12/13 tests pass, with no engine warnings/errors in the run. The crop-visual test retains the same 35 assertion failures independently reproduced against committed HEAD `6ff33f3` during the preceding lifecycle work. No new regression was found. The full suite is not green.
+Historical result after the crop-animation fixes: all 15 tests passed with zero engine warnings/errors. The November 6 full run is failing on scene grass-atlas errors and crop-animation speed mismatches; see section 15 of `PROJECT_HANDOFF.md` for current status. The runner now includes sixteen tests; the new grass-overlay test passed separately.
 
 
 ## Static-moisture troubleshooting
