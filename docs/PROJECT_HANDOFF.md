@@ -6,17 +6,19 @@ Last reviewed: **2026-11-05 (Asia/Shanghai)**. This document combines approved d
 
 Undergraduate Computer Science thesis: a 2D isometric educational mobile game explaining how crop diseases spread and how field management can prevent or reduce them. The intended audience is the general public. Development follows incremental prompting and **game-first order**.
 
-**Current checkpoint: Steps 4.3 and 4.3B implemented; shadowed-parameter fix saved.** The prior Step 4.2 systems remain in place. Presentation now supports bounded camera zoom/pan, focal-point zoom, tap-versus-drag handling, and a persistent Zoom in / Reset view HUD button. See the camera continuation guide below.
+**Current checkpoint: Step 4.4 lifecycle plus approved weather and soil tools implemented.** Steps 4.3/4.3B camera work and the shadowed-parameter fix remain complete. The approved Step 4.4 scope is N/K, pH and local-moisture effects on growth, vitality and yield quality, with mature-crop harvesting. Inspector-adjustable WeatherManager and SoilToolController scene nodes now support turn-based hydration, Water and Fertilize. Disease formulas and configuration were not changed. See the lifecycle and weather guides for exact contracts and defaults.
 
-**Verification status:** all 11 strict tests passed after Step 4.3B. The later warning-fix run passed 10/11; `crop_growth_visuals_test.gd` reported 30 failures involving canvas dimensions, artwork limits, root alignment, and seedling height. A controlled before/after check reproduced the identical 30 failures with the original parameter name, then restored the fix. Do not describe the current workspace as fully green. This documentation refresh did not rerun tests.
+**Verification status:** twelve of thirteen strict tests pass. The crop-visual test reports 35 failures; an isolated copy of committed HEAD `6ff33f3` reproduces exactly the same failures. These are pre-existing animation/static-art test issues, not a fully green baseline. Earlier 10/11 and 30-failure records below refer to prior runs.
 
-**Resume here:** reload `field_prototype.tscn` before playtesting. Preserve existing camera, inspector, crop-management, and simulation work. The user's Step 4.4 request is pending, not implemented; no concrete new formulas or state schema have been agreed in this chat. Terrain tilling/watering is explicitly excluded. Inspect the current uncommitted crop-animation work before changing assets or visual tests.
+**Resume here:** reload `field_prototype.tscn`. Harvest mode is available above Zoom/Reset; inspect a crop to see vitality and quality. Preserve committed crop-animation work, and reconcile its visual tests separately. Watering and fertilizing are now implemented following a separate approval. Terrain tilling, currency/inventory rewards and additional disease-model changes remain outside scope.
 
 Detailed continuation guides:
 
 - [STEP_4_1_CROP_VISUALS.md](STEP_4_1_CROP_VISUALS.md): growth stages, normalization, root anchoring and crop-specific seedling scaling.
 - [STEP_4_2_FIELD_TOOLS.md](STEP_4_2_FIELD_TOOLS.md): removal/transfer state contracts, input cancellation, setup and verification.
 - [STEP_4_3_CAMERA_UX.md](STEP_4_3_CAMERA_UX.md): implemented camera/input contracts, HUD wiring, verification, and remaining device checks.
+- [STEP_4_4_CROP_LIFECYCLE.md](STEP_4_4_CROP_LIFECYCLE.md): growth/stress formulas, lifecycle state, harvest receipts and UI setup.
+- [WEATHER_AND_SOIL_TOOLS.md](WEATHER_AND_SOIL_TOOLS.md): Inspector tuning, hydration equations, Water/Fertilize actions, transaction order and latest test status.
 
 ### Stack and entry points
 
@@ -97,7 +99,7 @@ Authored resources present: crop and terrain catalogs; sugarcane, rice, corn, dr
 | `src/simulation/models/stochastic_ca_sir_model.gd` | StochasticCASIRModel: seeded categorical transitions with synchronized fractions |
 | `src/simulation/models/transmission_modifiers.gd` | TransmissionModifiers: `evaluate()`, `needs_crop()`, typed Result with multipliers/rates/cap flags |
 | `tools/repair_terrain_atlas.gd` | One-time Godot-API repair, already applied; not a routine pre-test operation |
-| `tools/run_tests.py` | Strict eleven-test runner; rejects errors, warnings, failures, and missing PASS markers |
+| `tools/run_tests.py` | Strict thirteen-test runner; rejects errors, warnings, failures, and missing PASS markers |
 | `addons/test_harness/plugin.gd` | Environment-gated editor test harness using normal editor lifecycle |
 | `src/logic/grid/field_grid_queries.gd` | FieldGridQueries: static `can_plant()`, `validate_terrain_assignments()` |
 | `src/logic/farming/farming_controller.gd` | FarmingController: `initialize_field()`, `try_plant()`, `advance_growth()`, `seed_infection()`, `clear_crop()`, `remove_crop()`, `transfer_crop()`, `process_simulation()`, `advance_simulated_turn()`, `get_grid_snapshot()`, `is_initialized()` |
@@ -158,7 +160,7 @@ The same DiseaseData must support `SPATIAL_SIR = 0`, `SPATIAL_SEIR = 1`, and `ST
 
 Initial field: 9 × 6, three configurable uniform terrain bands. Intended permissions: dry soil supports sugarcane/corn; paddy mud supports rice; grass is unplantable and has null soil. Plantable cells require independent valid SoilState instances. Inspect the scene's exported `terrain_bands` for visual order rather than assuming enum order.
 
-Planting is free on eligible empty cells. Next Turn advances discrete growth, capped at CropData.growth_ticks. Maturity is derived with `is_mature(crop_data)`. Epidemic progression runs after growth. Harvesting/rewards, treatments, and win/loss are not implemented. `clear_crop()` resets state without granting harvest rewards.
+Planting is free on eligible empty cells. Next Turn advances discrete growth, capped at CropData.growth_ticks. Maturity is derived with `is_mature(crop_data)`. Epidemic progression runs after growth. Step 4.4 adds mature-crop harvesting with a yield-quality receipt. Inventory/currency rewards, treatments and win/loss remain unimplemented. `clear_crop()` resets state without harvesting.
 
 ```text
 FieldPrototype (Node; FieldPrototypePresenter)
@@ -170,20 +172,20 @@ FieldPrototype (Node; FieldPrototypePresenter)
 │   ├── CropOverlay (Node2D; CropDebugOverlay; hidden by default)
 │   └── Camera2D
 └── HUD (CanvasLayer)
-    ├── Panel (PanelContainer)
-    │   └── Margin / Controls
-    │       ├── TurnLabel, SelectedCropLabel, StatusLabel
-    │       ├── CropButtons / SugarcaneButton, RiceButton, CornButton, RemoveButton, TransferButton
-    │       ├── NextTurnButton
-    │       └── AlgorithmSelector (OptionButton)
-    └── TileInspectorPanel (PanelContainer; TileInspectorView)
-        └── Margin / Layout
-            ├── Header / TitleLabel, CloseButton
-            ├── SeedInfectionButton
-            └── Scroll / Content
-                ├── Terrain, soil, crop, growth, disease and state labels
-                ├── GrowthBar
-                └── Compartments (GridContainer): five label/bar pairs
+	├── Panel (PanelContainer)
+	│   └── Margin / Controls
+	│       ├── TurnLabel, SelectedCropLabel, StatusLabel
+	│       ├── CropButtons / SugarcaneButton, RiceButton, CornButton, RemoveButton, TransferButton
+	│       ├── NextTurnButton
+	│       └── AlgorithmSelector (OptionButton)
+	└── TileInspectorPanel (PanelContainer; TileInspectorView)
+		└── Margin / Layout
+			├── Header / TitleLabel, CloseButton
+			├── SeedInfectionButton
+			└── Scroll / Content
+				├── Terrain, soil, crop, growth, disease and state labels
+				├── GrowthBar
+				└── Compartments (GridContainer): five label/bar pairs
 ```
 
 Input and update flow:
@@ -195,7 +197,7 @@ Input and update flow:
 5. Presenter refreshes crop visuals and an open inspector after relevant changes. Closing the inspector clears selection, preventing later turns from reopening it. Signal connections are guarded against duplicates.
 6. Clicking a selected move source cancels the move. Toggling the active tool off or pressing Escape returns to Inspect; switching tools/crops or completing a turn clears any pending transfer selection.
 
-`TileInspectorView.display_cell(cell_state: FieldCellState, crop_data: CropData)` accepts a **cell**, not FieldGridState. It displays terrain, pH/NPK, crop growth/maturity, optional active disease name, categorical state, removal outcome, and all five fraction percentages. Invalid values are flagged. DiseaseDatabase is optional; unresolved active IDs are shown explicitly. There is no separate crop-health scalar yet.
+`TileInspectorView.display_cell(cell_state: FieldCellState, crop_data: CropData)` accepts a **cell**, not FieldGridState. It displays terrain, pH/NPK, crop growth/maturity, optional active disease name, categorical state, removal outcome, and all five fraction percentages. Invalid values are flagged. DiseaseDatabase is optional; unresolved active IDs are shown explicitly. Step 4.4 adds separate vitality and yield-quality scalars and displays them with crop growth; local soil moisture is also displayed.
 
 The debug overlay is hidden in the saved scene; actual crop artwork is rendered on `World/Crops`. Optional overlay positioning uses TileMapLayer.map_to_local() with transforms into overlay space. Snapshot refresh queues redraw; valid fonts/fallback handling and mature-color markers are implemented.
 
@@ -230,7 +232,7 @@ Each image is a separate atlas source. Never use `(0,1)` or `(0,2)` as terrain s
 ### Completed Step 4.2 management actions
 
 - Shovel (`TOOL_REMOVE`) destroys an occupied crop without advancing time or giving rewards. `remove_crop()` rejects empty/out-of-bounds targets and delegates to `clear_crop()`. Empty cells have zero growth and all five fractions zero, no active disease, and categorical S/NONE. Soil and terrain remain.
-- Move (`TOOL_TRANSFER`) is a two-click, instantaneous transplant. The destination must be empty and permitted by the existing terrain/crop/soil validation. Copy the crop payload, not its soil or location: identity, growth ticks, active disease, categorical state/outcome and exact fractions survive. The visible growth stage is derived again from those same ticks.
+- Move (`TOOL_TRANSFER`) is a two-click, instantaneous transplant. The destination must be empty and permitted by the existing terrain/crop/soil validation. Copy the crop payload, not its soil or location: identity, growth ticks/remainder, vitality, yield-quality loss, active disease, categorical state/outcome and exact fractions survive. The visible growth stage is derived again from those same ticks.
 - Transfer stages a copied grid, validates it and commits once. Both endpoints are updated before source/destination `cell_changed` signals fire. Invalid moves do not mutate the grid or emit changes. There is no interpolation animation or automatic growth tick.
 - `FieldWorldView` erases vacant coordinates via `TileMapLayer.erase_cell()` and refreshes occupied coordinates from snapshots. No authoritative state is mutated by Presentation.
 - Removing an infected crop removes that host and its infection contribution; empty ground is not a new geometric barrier to dispersal. Transplanting does not cure disease.
@@ -372,15 +374,13 @@ See [DISEASE_PLAYTEST.md](DISEASE_PLAYTEST.md) for operational instructions. Fre
 2. Propose richer scenario initialization/reset and diagnostic UI for weather, modifiers, and caps. Patient-zero seeding, model selection, four-stage crop visuals, Shovel and Move already exist; do not duplicate them.
 3. Specify benchmark protocols: shared initial state and inputs, time step/horizon, seeded repeated runs, grid scales, timings/memory, and separation of rendering from numerical work. No mobile benchmark results or calibrated accuracy claims exist yet.
 4. Define metrics, research provenance, SaveData and benchmark schemas, and catalog completeness requirements.
-5. Propose harvesting/rewards, treatments, win/loss, broader soil/abiotic interactions, or base-immunity integration as separate approved increments.
+5. Harvest collection and yield quality are implemented in Step 4.4. Propose inventory/currency rewards, treatments, win/loss, or further interactions as separate increments.
 
 Steps 4.1, 4.2, 4.3 and 4.3B have been implemented. Do not describe existing simulation models, environmental modifiers, crop management, or camera controls as pending implementation.
 
-### Pending Step 4.4 context
+### Approved Step 4.4 implementation
 
-The user requested additional runtime environmental-metric and health/stress integration, followed by a request to refresh the handoff. No Step 4.4 implementation or new tests were performed in this chat. Its data semantics and implementation scope still need review against current code; do not treat the request's proposed behavior as an existing feature or a calibrated scientific relationship. Further discussion can cover abstract game-state design and validation without introducing pathogen-specific acceleration or spread-optimization guidance.
-
-The request names `FieldGrid.gd`, but the actual project uses `src/data/state/field_grid_state.gd` and `src/simulation/simulation_controller.gd`. Existing optional environmental responses are already documented in this handoff and `ENVIRONMENTAL_MODIFIERS.md`; avoid duplicating them. The previous handoff records no separate crop-health scalar. Preserve the distinction between shared field environment and per-cell soil state, and verify present schemas before proposing additions. Terrain tilling/watering remains outside scope.
+The user approved the crop-lifecycle proposal and harvest operation. `CropGrowthProfile`, `CropGrowthModel`, `HarvestResult`, local moisture and per-cell vitality/fractional growth/quality loss are implemented. The actual logic entry point is `src/logic/farming/farming_controller.gd`; there is no `FieldGrid.gd`. See [STEP_4_4_CROP_LIFECYCLE.md](STEP_4_4_CROP_LIFECYCLE.md). This replaces the earlier pending disease-propagation request with the approved growth/harvest scope.
 
 ## 10. Coding, assets, and change discipline
 
@@ -390,11 +390,16 @@ Reserved/planned locations: `src/logic/autoloads/` for a future typed signal bus
 
 Use conventional commits for future changes: `feat(ui): bake persistent inspector controls`, `fix(world): validate atlas source coordinates`, `refactor(simulation): separate neighborhood geometry`, `test(logic): cover terrain planting rules`, `docs: update project handoff`. Use `type(scope): concise imperative description`, document behavior and relevant verification, and avoid claiming unrun tests or calibrated research results.
 
-For the next assistant: read this handoff and current scripts first, follow PCI for new work, keep the four-layer boundary, and continue from implemented Step 4.3B with the latest 10/11 test result and pending Step 4.4 request. Preserve the approved seedling-specific scaling and copied-payload transfer semantics. Do not rebuild the inspector, restore runtime UI layout overrides, or bypass the normal editor test lifecycle.
+For the next assistant: read this handoff and current scripts first, follow PCI for new work, keep the four-layer boundary, and continue from implemented lifecycle/weather/soil tools with twelve of thirteen tests passing and the independently reproduced crop-visual baseline failure. Preserve the approved seedling-specific scaling and copied-payload transfer semantics. Do not rebuild the inspector, restore runtime UI layout overrides, or bypass the normal editor test lifecycle.
 
 
 ## 11. Current connection and workspace context
 
 - Last connector check: Godot `4.7.2.stable.official.ed1daf0bf` responded and read this project successfully. The connector reported no tracked active Godot process; that does not establish whether a separately launched editor is open.
 - `_is_over_ui(screen_pos: Vector2)` in `src/presentation/world/field_world_view.gd` replaces the parameter `position` and its internal reference, avoiding Node2D property shadowing. No behavior was intentionally changed.
-- The worktree contains uncommitted camera/UI changes and separate crop-art/animation changes. Preserve them; do not reset, regenerate, commit, or push as part of a handoff refresh. Old HEAD/clean-worktree notes above are historical, not current status.
+- Current HEAD observed during Step 4.4: `6ff33f3` (`implement animations`). Preserve the committed animation work. Lifecycle changes are uncommitted; no commit or push was performed. Earlier worktree notes are historical.
+
+
+## 12. Weather and soil management continuation
+
+The user explicitly approved weather/moisture updates and watering/fertilizing after the earlier exclusions. Root-level WeatherManager and SoilToolController nodes are saved and wired in the prototype; their values are Inspector exports. Water/Fertilize controls are persistent and operate through FarmingController transactions. Weather runs before lifecycle growth and rolls back with a failed turn. Balanced weather defaults preserve baseline moisture; enable fluctuations or change rainfall/evaporation to demonstrate shifts. External climate sources are future hooks with explicit unsupported-mode errors. See [WEATHER_AND_SOIL_TOOLS.md](WEATHER_AND_SOIL_TOOLS.md).

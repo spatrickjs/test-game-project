@@ -5,6 +5,7 @@ extends Node
 signal turn_completed(turn_index: int)
 
 @export var farming_controller: FarmingController
+@export var weather_manager: WeatherManager
 ## Empty catalog supports authoring; explicitly null is a configuration error.
 @export var disease_database: DiseaseDatabase = DiseaseDatabase.new()
 ## RefCounted dependency: may be injected from code, not a scene node.
@@ -51,7 +52,7 @@ func advance_turn() -> bool:
 		last_error = "\n".join(errors)
 		return false
 	_advancing = true
-	if not farming_controller.advance_simulated_turn(simulation_controller, disease_database):
+	if not farming_controller.advance_simulated_turn(simulation_controller, disease_database, weather_manager, turn_index):
 		last_error = farming_controller.last_error
 		_advancing = false
 		return false

@@ -10,7 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://c4fpifar6lrnd" path="res://assets/art/tilesets/terrain/paddy_mud.png.png" id="5_ql0s4"]
 [ext_resource type="Script" uid="uid://clvmxcrluptf4" path="res://src/presentation/world/crop_debug_overlay.gd" id="6_g68ao"]
 [ext_resource type="Script" uid="uid://jt23o8e58cda" path="res://src/data/resources/soil_state.gd" id="7_p35bb"]
-[ext_resource type="Resource" path="res://src/data/databases/default_disease_database.tres" id="8_qayry"]
+[ext_resource type="Resource" uid="uid://dfb1u1g6nryvu" path="res://src/data/databases/default_disease_database.tres" id="8_qayry"]
 [ext_resource type="Script" uid="uid://ddq1k2v5ci1j1" path="res://src/data/resources/abiotic_state.gd" id="8_yhesb"]
 [ext_resource type="Script" uid="uid://dphgo78jfmxeh" path="res://src/presentation/ui/inspectors/tile_inspector_view.gd" id="12_56fpe"]
 [ext_resource type="Texture2D" uid="uid://jba8xq3unjak" path="res://assets/art/tilesets/crops/normalized/rice_stage_0.res" id="13_5j4ag"]
@@ -26,6 +26,8 @@
 [ext_resource type="Texture2D" uid="uid://vdgtdhkjf8rs" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_0.res" id="23_aotfg"]
 [ext_resource type="Texture2D" uid="uid://cq8lexkbo264a" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_1.res" id="24_ia13u"]
 [ext_resource type="Script" uid="uid://c7x4cbtfkuilb" path="res://src/presentation/ui/camera_zoom_button.gd" id="26_6a3lw"]
+[ext_resource type="Script" uid="uid://dmwfbudlygvky" path="res://src/logic/environment/weather_manager.gd" id="27_mfnx3"]
+[ext_resource type="Script" uid="uid://c0xjvj7idv2fq" path="res://src/logic/farming/soil_tool_controller.gd" id="28_gxe8k"]
 
 [sub_resource type="Resource" id="Resource_34f8n"]
 script = ExtResource("7_p35bb")
@@ -346,7 +348,7 @@ sources/9 = SubResource("TileSetAtlasSource_m6w0r")
 sources/10 = SubResource("TileSetAtlasSource_mfnx3")
 sources/11 = SubResource("TileSetAtlasSource_gxe8k")
 
-[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button")]
+[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "soil_tool_controller")]
 script = ExtResource("1_44tld")
 farming_controller = NodePath("FarmingController")
 turn_controller = NodePath("TurnController")
@@ -364,6 +366,10 @@ algorithm_selector = NodePath("HUD/Panel/Margin/Controls/AlgorithmSelector")
 remove_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/RemoveButton")
 transfer_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/TransferButton")
 camera_zoom_button = NodePath("HUD/CameraZoomButton")
+harvest_button = NodePath("HUD/HarvestButton")
+water_button = NodePath("HUD/WaterButton")
+fertilize_button = NodePath("HUD/FertilizeButton")
+soil_tool_controller = NodePath("SoilToolController")
 
 [node name="FarmingController" type="Node" parent="." unique_id=889834426]
 script = ExtResource("2_jfjlv")
@@ -373,9 +379,10 @@ initial_soil = SubResource("Resource_34f8n")
 initial_abiotic = SubResource("Resource_ql0s4")
 terrain_bands = Array[int]([0, 2, 1])
 
-[node name="TurnController" type="Node" parent="." unique_id=980371109 node_paths=PackedStringArray("farming_controller")]
+[node name="TurnController" type="Node" parent="." unique_id=980371109 node_paths=PackedStringArray("farming_controller", "weather_manager")]
 script = ExtResource("3_r0odj")
 farming_controller = NodePath("../FarmingController")
+weather_manager = NodePath("../WeatherManager")
 disease_database = ExtResource("8_qayry")
 
 [node name="World" type="Node2D" parent="." unique_id=369827757 node_paths=PackedStringArray("terrain_layer", "crop_overlay", "crop_layer", "camera")]
@@ -761,3 +768,64 @@ size_flags_horizontal = 8
 mouse_force_pass_scroll_events = false
 text = "Zoom in"
 script = ExtResource("26_6a3lw")
+
+[node name="HarvestButton" type="Button" parent="HUD" unique_id=1397664447]
+custom_minimum_size = Vector2(132, 48)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -148.0
+offset_top = -120.0
+offset_right = -16.0
+offset_bottom = -72.0
+size_flags_horizontal = 8
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Harvest"
+script = ExtResource("26_6a3lw")
+
+[node name="WaterButton" type="Button" parent="HUD" unique_id=330012234]
+custom_minimum_size = Vector2(132, 48)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -148.0
+offset_top = -176.0
+offset_right = -16.0
+offset_bottom = -128.0
+size_flags_horizontal = 8
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Water"
+script = ExtResource("26_6a3lw")
+
+[node name="FertilizeButton" type="Button" parent="HUD" unique_id=29001628]
+custom_minimum_size = Vector2(132, 48)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -148.0
+offset_top = -232.0
+offset_right = -16.0
+offset_bottom = -184.0
+size_flags_horizontal = 8
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Fertilize"
+script = ExtResource("26_6a3lw")
+
+[node name="WeatherManager" type="Node" parent="." unique_id=673066105]
+script = ExtResource("27_mfnx3")
+rainfall_per_turn = 0.0
+evaporation_per_turn = 0.152
+fluctuations_enabled = true
+
+[node name="SoilToolController" type="Node" parent="." unique_id=626484259 node_paths=PackedStringArray("farming_controller")]
+script = ExtResource("28_gxe8k")
+farming_controller = NodePath("../FarmingController")

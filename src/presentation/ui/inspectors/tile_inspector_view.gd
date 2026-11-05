@@ -120,6 +120,7 @@ func display_cell(cell_state: FieldCellState, crop_data: CropData) -> void:
 			_normalized_text(soil.nitrogen), _normalized_text(soil.phosphorus),
 			_normalized_text(soil.potassium),
 		]
+		macronutrients_label.text += "\nSoil moisture: " + _normalized_text(soil.moisture)
 	if not cell_state.has_crop:
 		_show_empty_crop()
 	else:
@@ -172,6 +173,7 @@ func _show_crop(cell: FieldCellState, crop: CropData) -> void:
 		]
 		growth_bar.value = minf(100.0, 100.0 * float(cell.growth_elapsed_ticks) / float(crop.growth_ticks))
 		growth_bar.show()
+	growth_label.text += "\nVitality: %s | Yield quality: %s" % [_normalized_text(cell.vitality), _normalized_text(1.0 - cell.yield_quality_loss)]
 	disease_label.text = "Active disease: None"
 	if cell.has_active_disease:
 		var disease: DiseaseData = null

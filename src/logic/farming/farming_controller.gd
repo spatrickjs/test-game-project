@@ -89,14 +89,24 @@ func advance_growth() -> bool:
 	)
 	if not errors.is_empty():
 		return _fail("\n".join(errors))
-	for y: int in range(_grid.height):
-		for x: int in range(_grid.width):
-			var cell: FieldCellState = _grid.get_cell(Vector2i(x, y))
+	var candidate: FieldGridState = _grid.copy()
+	for y: int in range(candidate.height):
+		for x: int in range(candidate.width):
+			var cell: FieldCellState = candidate.get_cell(Vector2i(x, y))
 			if not cell.has_crop:
 				continue
 			var crop: CropData = crop_database.get_crop(cell.crop_type)
-			if cell.growth_elapsed_ticks < crop.growth_ticks:
-				cell.growth_elapsed_ticks += 1
+			var result: CropGrowthModel.Result = CropGrowthModel.evaluate(cell, crop)
+			if not result.errors.is_empty():
+				return _fail("\n".join(result.errors))
+			cell.growth_elapsed_ticks = result.growth_elapsed_ticks
+			cell.growth_remainder = result.growth_remainder
+			cell.vitality = result.vitality
+			cell.yield_quality_loss = result.yield_quality_loss
+	errors = candidate.validate()
+	if not errors.is_empty():
+		return _fail("\n".join(errors))
+	_grid = candidate
 	last_error = ""
 	return true
 
@@ -167,17 +177,25 @@ func process_simulation(simulation: SimulationController, diseases: DiseaseDatab
 
 
 ## Transaction boundary: no growth or epidemic state survives a failed turn.
-func advance_simulated_turn(simulation: SimulationController, diseases: DiseaseDatabase) -> bool:
+func advance_simulated_turn(simulation: SimulationController, diseases: DiseaseDatabase, weather: WeatherManager = null, turn_index: int = 0) -> bool:
 	simulation.crop_database = crop_database
 	var errors: PackedStringArray = simulation.validate_turn(_grid, diseases)
 	if not errors.is_empty():
 		return _fail("\n".join(errors))
 	var before: FieldGridState = _grid.copy()
+	if weather != null:
+		var candidate: FieldGridState = _grid.copy()
+		if not weather.apply_to_grid(candidate, turn_index):
+			return _fail(weather.last_error)
+		_grid = candidate
 	if not advance_growth():
+		_grid = before
 		return false
 	if not process_simulation(simulation, diseases):
 		_grid = before
 		return _fail(simulation.last_error)
+	if weather != null:
+		weather.report_committed_moisture(before, _grid, turn_index + 1)
 	return true
 
 
@@ -248,3 +266,62 @@ func _planting_error(coordinates: Vector2i, crop_type: SimulationEnums.CropType)
 func _fail(message: String) -> bool:
 	last_error = message
 	return false
+
+
+## Mature-only collection. Commit the clearing before observers receive a signal.
+func harvest_crop(coordinates: Vector2i) -> HarvestResult:
+	var result: HarvestResult = HarvestResult.new()
+	result.coordinates = coordinates
+	if _grid == null or crop_database == null or terrain_database == null:
+		result.reason = "Initialize the field before harvesting."
+	else:
+		var cell: FieldCellState = _grid.get_cell(coordinates)
+		if cell == null or not cell.has_crop:
+			result.reason = "Choose a crop to harvest."
+		else:
+			var crop: CropData = crop_database.get_crop(cell.crop_type)
+			if crop == null or not cell.is_mature(crop):
+				result.reason = "This crop is not mature yet."
+			else:
+				var errors: PackedStringArray = FieldGridQueries.validate_terrain_assignments(_grid, crop_database, terrain_database)
+				if not errors.is_empty():
+					result.reason = "\n".join(errors)
+				else:
+					result.crop_type = cell.crop_type
+					result.quality_multiplier = 1.0 - cell.yield_quality_loss
+					var candidate: FieldGridState = _grid.copy()
+					var cleared: FieldCellState = candidate.get_cell(coordinates)
+					cleared.has_crop = false
+					cleared.reset_crop_state()
+					_grid = candidate
+					result.success = true
+	last_error = result.reason
+	if result.success:
+		cell_changed.emit(coordinates)
+	return result
+
+
+## Atomic local soil edit. Vector components are moisture, nitrogen, potassium.
+func apply_soil_additions(coordinates: Vector2i, additions: Vector3) -> bool:
+	if _grid == null:
+		return _fail("Initialize the field before using soil tools.")
+	if not additions.is_finite() or additions.x < 0.0 or additions.y < 0.0 or additions.z < 0.0 or additions.x > 1.0 or additions.y > 1.0 or additions.z > 1.0:
+		return _fail("Soil additions must be finite and in [0, 1].")
+	var errors: PackedStringArray = FieldGridQueries.validate_terrain_assignments(_grid, crop_database, terrain_database)
+	if not errors.is_empty():
+		return _fail("\n".join(errors))
+	var cell: FieldCellState = _grid.get_cell(coordinates)
+	if cell == null or cell.soil == null:
+		return _fail("Choose a tile with soil.")
+	var candidate: FieldGridState = _grid.copy()
+	var soil: SoilState = candidate.get_cell(coordinates).soil
+	soil.moisture = minf(1.0, soil.moisture + additions.x)
+	soil.nitrogen = minf(1.0, soil.nitrogen + additions.y)
+	soil.potassium = minf(1.0, soil.potassium + additions.z)
+	if soil.moisture == cell.soil.moisture and soil.nitrogen == cell.soil.nitrogen and soil.potassium == cell.soil.potassium:
+		last_error = ""
+		return true
+	_grid = candidate
+	last_error = ""
+	cell_changed.emit(coordinates)
+	return true

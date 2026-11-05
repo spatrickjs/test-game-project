@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="DiseaseDatabase" format=3]
+[gd_resource type="Resource" script_class="DiseaseDatabase" format=3 uid="uid://dfb1u1g6nryvu"]
 
-[ext_resource type="Script" path="res://src/data/resources/disease_data.gd" id="1_m8dav"]
-[ext_resource type="Resource" path="res://src/data/resources/diseases/rice_blast.tres" id="2_38dqp"]
-[ext_resource type="Script" path="res://src/data/databases/disease_database.gd" id="5_ki5jm"]
+[ext_resource type="Script" uid="uid://c1gf75cap2tvc" path="res://src/data/resources/disease_data.gd" id="1_m8dav"]
+[ext_resource type="Resource" uid="uid://ddom17amr62dv" path="res://src/data/resources/diseases/rice_blast.tres" id="2_38dqp"]
+[ext_resource type="Script" uid="uid://c7p2k0ftei1dk" path="res://src/data/databases/disease_database.gd" id="5_ki5jm"]
 
 [resource]
 script = ExtResource("5_ki5jm")

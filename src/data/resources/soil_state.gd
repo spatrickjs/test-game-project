@@ -19,6 +19,10 @@ extends Resource
 @export_range(0.0, 1.0, 0.01) var nickel: float = 0.5
 @export_range(0.0, 1.0, 0.01) var zinc: float = 0.5
 
+@export_group("Hydration")
+## Local normalized moisture; distinct from field-wide atmospheric humidity.
+@export_range(0.0, 1.0, 0.01) var moisture: float = 0.5
+
 @export_group("Soil Chemistry")
 @export_range(0.0, 14.0, 0.01) var soil_ph: float = 7.0
 
@@ -168,6 +172,7 @@ func validate() -> PackedStringArray:
 	_validate_range("molybdenum", molybdenum, 0.0, 1.0, errors)
 	_validate_range("nickel", nickel, 0.0, 1.0, errors)
 	_validate_range("zinc", zinc, 0.0, 1.0, errors)
+	_validate_range("moisture", moisture, 0.0, 1.0, errors)
 	_validate_range("soil_ph", soil_ph, 0.0, 14.0, errors)
 	return errors
 
@@ -187,6 +192,7 @@ func copy() -> SoilState:
 	result.nickel = nickel
 	result.zinc = zinc
 	result.soil_ph = soil_ph
+	result.moisture = moisture
 	return result
 
 

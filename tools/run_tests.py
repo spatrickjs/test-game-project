@@ -22,6 +22,8 @@ tests = [
     "tests/logic/field_management_test.gd",
     "tests/presentation/camera_zoom_test.gd",
     "tests/presentation/camera_ux_test.gd",
+    "tests/simulation/crop_growth_test.gd",
+    "tests/logic/weather_soil_tools_test.gd",
 ]
 failed = False
 for test in tests:

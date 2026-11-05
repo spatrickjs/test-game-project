@@ -15,6 +15,10 @@ var has_crop: bool = false
 ## Ignored when has_crop is false.
 var crop_type: SimulationEnums.CropType = SimulationEnums.CropType.SUGARCANE
 var growth_elapsed_ticks: int = 0
+var growth_remainder: float = 0.0
+## Neutral defaults also apply to empty cells; meaningful only when occupied.
+var vitality: float = 1.0
+var yield_quality_loss: float = 0.0
 
 ## Categorical fields are not a thresholded representation of continuous values.
 var sir_state: SimulationEnums.SIRState = SimulationEnums.SIRState.S
@@ -33,6 +37,9 @@ var dead_fraction: float = 0.0
 ## Reset crop state after setting has_crop/crop_type. Preserve soil and terrain.
 func reset_crop_state() -> void:
 	growth_elapsed_ticks = 0
+	growth_remainder = 0.0
+	vitality = 1.0
+	yield_quality_loss = 0.0
 	sir_state = SimulationEnums.SIRState.S
 	removed_outcome = SimulationEnums.RemovedOutcome.NONE
 	has_active_disease = false
@@ -57,6 +64,10 @@ func is_mature(crop_data: CropData) -> bool:
 ## Structural validation only; terrain permissions need the terrain catalog.
 func validate() -> PackedStringArray:
 	var errors: PackedStringArray = PackedStringArray()
+	_validate_fraction("vitality", vitality, errors)
+	_validate_fraction("yield_quality_loss", yield_quality_loss, errors)
+	if not is_finite(growth_remainder) or growth_remainder < 0.0 or growth_remainder >= 1.0:
+		errors.append("growth_remainder must be finite and in [0, 1).")
 	if coordinates.x < 0 or coordinates.y < 0:
 		errors.append("coordinates must be nonnegative.")
 	if not SimulationEnums.TerrainType.values().has(terrain_type):
@@ -93,6 +104,8 @@ func validate() -> PackedStringArray:
 			if absf(total - 1.0) > FRACTION_SUM_TOLERANCE:
 				errors.append("occupied cell compartment fractions must sum to 1.0.")
 	else:
+		if growth_remainder != 0.0 or vitality != 1.0 or yield_quality_loss != 0.0:
+			errors.append("empty cells must reset lifecycle state.")
 		if growth_elapsed_ticks != 0:
 			errors.append("empty cells must have zero growth_elapsed_ticks.")
 		if has_active_disease:
@@ -112,6 +125,9 @@ func copy() -> FieldCellState:
 	result.has_crop = has_crop
 	result.crop_type = crop_type
 	result.growth_elapsed_ticks = growth_elapsed_ticks
+	result.growth_remainder = growth_remainder
+	result.vitality = vitality
+	result.yield_quality_loss = yield_quality_loss
 	result.sir_state = sir_state
 	result.removed_outcome = removed_outcome
 	result.has_active_disease = has_active_disease

@@ -10,6 +10,8 @@ extends Resource
 
 @export_group("Growth and Immunity")
 @export var growth_ticks: int = 1
+## Null disables soil stress, preserving legacy growth behavior.
+@export var growth_profile: CropGrowthProfile = CropGrowthProfile.new()
 @export_range(0.0, 1.0, 0.01) var base_immunity: float = 0.5
 
 @export_group("Growth Visuals (Presentation Only)")
@@ -38,6 +40,9 @@ func validate() -> PackedStringArray:
 		errors.append("base_immunity must be finite.")
 	elif base_immunity < 0.0 or base_immunity > 1.0:
 		errors.append("base_immunity must be in [0.0, 1.0].")
+	if growth_profile != null:
+		for error: String in growth_profile.validate():
+			errors.append("growth_profile: " + error)
 	var seen_factors: Array[SimulationEnums.AbioticFactor] = []
 	for index: int in range(abiotic_tolerance_rules.size()):
 		var rule: AbioticRule = abiotic_tolerance_rules[index]
@@ -72,6 +77,7 @@ func copy() -> CropData:
 	result.display_name = display_name
 	result.description = description
 	result.growth_ticks = growth_ticks
+	result.growth_profile = growth_profile.copy() if growth_profile != null else null
 	result.base_immunity = base_immunity
 	result.growth_stage_source_ids = growth_stage_source_ids.duplicate()
 	result.growth_stage_atlas_coords = growth_stage_atlas_coords.duplicate()

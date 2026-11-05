@@ -1,5 +1,5 @@
 extends Button
-## Only the new camera action adapts its insets; existing HUD layout stays authored.
+## Standalone camera/harvest actions adapt their insets; existing HUD layout stays authored.
 
 var _authored_offsets: Vector4 = Vector4.ZERO
 

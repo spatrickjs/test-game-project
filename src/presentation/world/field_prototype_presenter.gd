@@ -22,7 +22,11 @@ extends Node
 @export var remove_button: Button
 @export var transfer_button: Button
 @export var camera_zoom_button: Button
-enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER }
+@export var harvest_button: Button
+@export var water_button: Button
+@export var fertilize_button: Button
+@export var soil_tool_controller: SoilToolController
+enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE }
 var _tool_mode: ToolMode = ToolMode.INSPECT
 var _transfer_source: Vector2i = Vector2i(-1, -1)
 @export var playtest_disease_id: SimulationEnums.DiseaseId = SimulationEnums.DiseaseId.RICE_BLAST
@@ -43,7 +47,7 @@ func _ready() -> void:
 		button.toggle_mode = true
 		button.button_group = null
 		button.set_pressed_no_signal(false)
-	for button: Button in [remove_button, transfer_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button]:
 		if button != null:
 			button.toggle_mode = true
 			button.set_pressed_no_signal(false)
@@ -63,6 +67,15 @@ func _connect_once(source: Signal, callback: Callable) -> void:
 
 
 func _connect_signals() -> void:
+	if water_button != null:
+		world_view.register_ui_input_root(water_button)
+		_connect_once(water_button.pressed, _on_water_pressed)
+	if fertilize_button != null:
+		world_view.register_ui_input_root(fertilize_button)
+		_connect_once(fertilize_button.pressed, _on_fertilize_pressed)
+	if harvest_button != null:
+		world_view.register_ui_input_root(harvest_button)
+		_connect_once(harvest_button.pressed, _on_harvest_pressed)
 	world_view.register_ui_input_root(hud_panel)
 	world_view.register_ui_input_root(tile_inspector)
 	if camera_zoom_button != null:
@@ -131,7 +144,7 @@ func _on_field_initialized() -> void:
 
 
 func _set_controls_enabled(enabled: bool) -> void:
-	for button: Button in [remove_button, transfer_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button]:
 		if button != null:
 			button.disabled = not enabled
 	next_turn_button.disabled = not enabled
@@ -173,6 +186,12 @@ func _enter_inspect_mode() -> void:
 
 
 func _update_crop_buttons() -> void:
+	if water_button != null:
+		water_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_WATER)
+	if fertilize_button != null:
+		fertilize_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_FERTILIZE)
+	if harvest_button != null:
+		harvest_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_HARVEST)
 	if remove_button != null:
 		remove_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_REMOVE)
 	if transfer_button != null:
@@ -249,6 +268,17 @@ func _on_corn_pressed() -> void:
 func _on_cell_clicked(coordinates: Vector2i) -> void:
 	if not _running:
 		return
+	if _tool_mode in [ToolMode.TOOL_WATER, ToolMode.TOOL_FERTILIZE]:
+		if soil_tool_controller == null:
+			status_label.text = "Assign the soil tool controller."
+			return
+		var success: bool = soil_tool_controller.water(coordinates) if _tool_mode == ToolMode.TOOL_WATER else soil_tool_controller.fertilize(coordinates)
+		status_label.text = "Soil updated." if success else soil_tool_controller.last_error
+		return
+	if _tool_mode == ToolMode.TOOL_HARVEST:
+		var result: HarvestResult = farming_controller.harvest_crop(coordinates)
+		status_label.text = "Harvested: %.0f%% yield quality." % (100.0 * result.quality_multiplier) if result.success else result.reason
+		return
 	if _tool_mode == ToolMode.TOOL_REMOVE:
 		if farming_controller.remove_crop(coordinates):
 			status_label.text = "Crop removed. Choose another crop or switch tools."
@@ -294,6 +324,18 @@ func _on_turn_completed(turn_index: int) -> void:
 		status_label.text = "Turn advanced. Choose a crop to remove."
 
 
+func _on_water_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_WATER)
+
+
+func _on_fertilize_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_FERTILIZE)
+
+
+func _on_harvest_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_HARVEST)
+
+
 func _on_remove_pressed() -> void:
 	_select_management_tool(ToolMode.TOOL_REMOVE)
 
@@ -314,6 +356,14 @@ func _select_management_tool(mode: ToolMode) -> void:
 	_inspected_coordinates = Vector2i(-1, -1)
 	tile_inspector.clear_display()
 	_update_crop_buttons()
+	if mode in [ToolMode.TOOL_WATER, ToolMode.TOOL_FERTILIZE]:
+		selected_crop_label.text = "Tool: Water" if mode == ToolMode.TOOL_WATER else "Tool: Fertilize"
+		status_label.text = "Click a soil tile to apply the selected tool."
+		return
+	if mode == ToolMode.TOOL_HARVEST:
+		selected_crop_label.text = "Tool: Harvest"
+		status_label.text = "Click a mature crop to collect its yield quality."
+		return
 	selected_crop_label.text = "Tool: Shovel" if mode == ToolMode.TOOL_REMOVE else "Tool: Move"
 	status_label.text = "Click a crop to destroy it." if mode == ToolMode.TOOL_REMOVE else "Click a crop, then an empty compatible tile."
 
@@ -349,7 +399,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _show_failure(message: String) -> void:
 	_running = false
-	for button: Button in [remove_button, transfer_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button]:
 		if button != null:
 			button.disabled = true
 	if tile_inspector != null:

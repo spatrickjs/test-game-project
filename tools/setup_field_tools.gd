@@ -23,9 +23,26 @@ func run_setup() -> int:
 		return 1
 	var baker: EditorScript = Baker.new() as EditorScript
 	baker._run()
-	if scene.get("remove_button") == null or scene.get("transfer_button") == null:
+	if scene.get("remove_button") == null or scene.get("transfer_button") == null or scene.get("harvest_button") == null:
 		push_error("Field tools could not be baked; scene not saved.")
 		return 1
+	var weather: Node = scene.get_node_or_null("WeatherManager")
+	if weather == null:
+		weather = Node.new()
+		weather.name = "WeatherManager"
+		weather.set_script(load("res://src/logic/environment/weather_manager.gd"))
+		scene.add_child(weather)
+		weather.owner = scene
+	var soil_tools: Node = scene.get_node_or_null("SoilToolController")
+	if soil_tools == null:
+		soil_tools = Node.new()
+		soil_tools.name = "SoilToolController"
+		soil_tools.set_script(load("res://src/logic/farming/soil_tool_controller.gd"))
+		scene.add_child(soil_tools)
+		soil_tools.owner = scene
+	soil_tools.set("farming_controller", scene.get("farming_controller"))
+	scene.set("soil_tool_controller", soil_tools)
+	(scene.get("turn_controller") as Node).set("weather_manager", weather)
 	var uid_before: int = ResourceLoader.get_resource_uid(SCENE_PATH)
 	EditorInterface.mark_scene_as_unsaved()
 	EditorInterface.save_scene_as(SCENE_PATH, false)
