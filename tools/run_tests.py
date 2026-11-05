@@ -20,6 +20,8 @@ tests = [
     "tests/presentation/tile_inspector_builder_editor_test.gd",
     "tests/presentation/crop_growth_visuals_test.gd",
     "tests/logic/field_management_test.gd",
+    "tests/presentation/camera_zoom_test.gd",
+    "tests/presentation/camera_ux_test.gd",
 ]
 failed = False
 for test in tests:

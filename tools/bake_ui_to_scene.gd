@@ -5,11 +5,13 @@ extends EditorScript
 ## one Undo/Redo action. Never writes raw scene text, changes UIDs, or auto-saves.
 ## Runtime signals remain the responsibility of the view and presenter.
 
+const CAMERA_BUTTON_SCRIPT: Script = preload("res://src/presentation/ui/camera_zoom_button.gd")
 const VIEW_SCRIPT: Script = preload("res://src/presentation/ui/inspectors/tile_inspector_view.gd")
 const PANEL_PATH: NodePath = ^"HUD/TileInspectorPanel"
 ## Parent-before-child order is intentional.
 const NODE_TYPES: Dictionary[String, StringName] = {
 	"HUD": &"CanvasLayer",
+	"HUD/CameraZoomButton": &"Button",
 	"HUD/Panel": &"PanelContainer",
 	"HUD/Panel/Margin": &"MarginContainer",
 	"HUD/Panel/Margin/Controls": &"VBoxContainer",
@@ -87,6 +89,7 @@ const BINDINGS: Dictionary[StringName, NodePath] = {
 }
 
 const HUD_BINDINGS: Dictionary[StringName, NodePath] = {
+	&"camera_zoom_button": ^"HUD/CameraZoomButton",
 	&"algorithm_selector": ^"HUD/Panel/Margin/Controls/AlgorithmSelector",
 	&"hud_panel": ^"HUD/Panel",
 	&"turn_label": ^"HUD/Panel/Margin/Controls/TurnLabel",
@@ -151,8 +154,12 @@ func _run() -> void:
 		var node: Node = _nodes[path]
 		if node is Control:
 			var control: Control = node as Control
-			var blocks: bool = node == panel or node is Button or node is ScrollContainer
+			var blocks: bool = node is PanelContainer or node is Button or node is ScrollContainer
 			_record_property(undo, node, &"mouse_filter", Control.MOUSE_FILTER_STOP if blocks else Control.MOUSE_FILTER_IGNORE, control.mouse_filter)
+		if node is Control and (node is PanelContainer or node is Button or node is ScrollContainer):
+			_record_property(undo, node, &"mouse_force_pass_scroll_events", false, (node as Control).mouse_force_pass_scroll_events)
+		if node.name == &"CameraZoomButton":
+			_record_property(undo, node, &"script", CAMERA_BUTTON_SCRIPT, node.get_script())
 		if node is Label and (node as Label).text.is_empty():
 			_record_property(undo, node, &"text", _preview_text(String(node.name)), (node as Label).text)
 		if node is Button:
@@ -263,6 +270,13 @@ func _configure_new_node(node: Node) -> void:
 		button.custom_minimum_size = Vector2(64.0, 44.0)
 		button.size_flags_horizontal = Control.SIZE_SHRINK_END
 		button.mouse_filter = Control.MOUSE_FILTER_STOP
+		if node.name == &"CameraZoomButton":
+			button.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+			button.offset_left = -148.0
+			button.offset_top = -64.0
+			button.offset_right = -16.0
+			button.offset_bottom = -16.0
+			button.custom_minimum_size = Vector2(132.0, 48.0)
 	elif node is ProgressBar:
 		var bar: ProgressBar = node as ProgressBar
 		bar.min_value = 0.0
@@ -306,6 +320,7 @@ func _preview_text(node_name: String) -> String:
 		"RemoveButton": return "Shovel"
 		"TransferButton": return "Move"
 		"NextTurnButton": return "Next Turn"
+		"CameraZoomButton": return "Zoom in"
 		"CloseButton": return "Close"
 		"SeedInfectionButton": return "Seed Infection"
 		"TurnLabel": return "Turn: 0"

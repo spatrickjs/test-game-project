@@ -21,6 +21,7 @@ extends Node
 @export var algorithm_selector: OptionButton
 @export var remove_button: Button
 @export var transfer_button: Button
+@export var camera_zoom_button: Button
 enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER }
 var _tool_mode: ToolMode = ToolMode.INSPECT
 var _transfer_source: Vector2i = Vector2i(-1, -1)
@@ -62,6 +63,13 @@ func _connect_once(source: Signal, callback: Callable) -> void:
 
 
 func _connect_signals() -> void:
+	world_view.register_ui_input_root(hud_panel)
+	world_view.register_ui_input_root(tile_inspector)
+	if camera_zoom_button != null:
+		world_view.register_ui_input_root(camera_zoom_button)
+		_connect_once(camera_zoom_button.pressed, world_view.toggle_inspection_zoom)
+		_connect_once(world_view.camera_view_changed, _refresh_camera_button)
+
 	if remove_button != null:
 		_connect_once(remove_button.pressed, _on_remove_pressed)
 	if transfer_button != null:
@@ -359,3 +367,8 @@ func _show_failure(message: String) -> void:
 	if status_label != null:
 		status_label.text = message
 	push_error(message)
+
+
+func _refresh_camera_button() -> void:
+	if camera_zoom_button != null:
+		camera_zoom_button.text = "Reset view" if world_view.camera.zoom.x > world_view.min_zoom + 0.00001 else "Zoom in"

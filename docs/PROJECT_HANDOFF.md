@@ -1,19 +1,22 @@
 # Project handoff: isometric crop disease education game
 
-Last reviewed: **2026-11-04 (Asia/Manila)**. This document combines approved design decisions, files inspected in the workspace, and previously reported test results. Paths below are relative to the project root; `res://` means the directory containing `project.godot`.
+Last reviewed: **2026-11-05 (Asia/Shanghai)**. This document combines approved design decisions, files inspected in the workspace, and previously reported test results. Paths below are relative to the project root; `res://` means the directory containing `project.godot`.
 
 ## 1. Overview and continuation checkpoint
 
 Undergraduate Computer Science thesis: a 2D isometric educational mobile game explaining how crop diseases spread and how field management can prevent or reduce them. The intended audience is the general public. Development follows incremental prompting and **game-first order**.
 
-**Current checkpoint: Step 4.2 complete.** Phase 1, Phase 2 (including the persistent inspector/HUD), Phase 3 Steps 3.1–3.3, Step 4.1 static crop growth visuals, and Step 4.2 crop removal/transfer are implemented and saved. The prototype includes the Rice Blast demonstration catalog, patient-zero action, transactional algorithm selector, normalized four-stage crop artwork, and Shovel/Move tools. The latest implementation verification passed **all nine strict tests with zero engine warnings/errors**, plus D3D12 rendered crop and field-tool playtests. This documentation refresh inspected current files and existing logs; it did not rerun tests.
+**Current checkpoint: Steps 4.3 and 4.3B implemented; shadowed-parameter fix saved.** The prior Step 4.2 systems remain in place. Presentation now supports bounded camera zoom/pan, focal-point zoom, tap-versus-drag handling, and a persistent Zoom in / Reset view HUD button. See the camera continuation guide below.
 
-**Resume here:** reload `field_prototype.tscn` and press F5. Inspect/Plant, Next Turn, Shovel and two-click Move are ready to use. No next feature is approved by this handoff; follow PCI before new implementation. Do not rebuild the inspector, simulation models, crop visuals, or management tools.
+**Verification status:** all 11 strict tests passed after Step 4.3B. The later warning-fix run passed 10/11; `crop_growth_visuals_test.gd` reported 30 failures involving canvas dimensions, artwork limits, root alignment, and seedling height. A controlled before/after check reproduced the identical 30 failures with the original parameter name, then restored the fix. Do not describe the current workspace as fully green. This documentation refresh did not rerun tests.
+
+**Resume here:** reload `field_prototype.tscn` before playtesting. Preserve existing camera, inspector, crop-management, and simulation work. The user's Step 4.4 request is pending, not implemented; no concrete new formulas or state schema have been agreed in this chat. Terrain tilling/watering is explicitly excluded. Inspect the current uncommitted crop-animation work before changing assets or visual tests.
 
 Detailed continuation guides:
 
 - [STEP_4_1_CROP_VISUALS.md](STEP_4_1_CROP_VISUALS.md): growth stages, normalization, root anchoring and crop-specific seedling scaling.
 - [STEP_4_2_FIELD_TOOLS.md](STEP_4_2_FIELD_TOOLS.md): removal/transfer state contracts, input cancellation, setup and verification.
+- [STEP_4_3_CAMERA_UX.md](STEP_4_3_CAMERA_UX.md): implemented camera/input contracts, HUD wiring, verification, and remaining device checks.
 
 ### Stack and entry points
 
@@ -23,7 +26,7 @@ Detailed continuation guides:
 - Project name: `Test Game Project`.
 - Main scene: `res://field_prototype.tscn`; configured by UID in `project.godot`.
 - Viewport: 1280 × 720; `canvas_items` stretch with expanding aspect.
-- Current project root: `C:\Users\ASUS\Downloads\Patrick\test-game-project`. Run project commands in this directory; there is no additional inner project folder on this machine.
+- Current project root: `C:\Users\User\Documents\test-game-project\test-game-project`. Run project commands in this directory, which contains `project.godot`.
 - Current verified executable: `C:\Program Files\Godot\Godot.exe.exe` (machine-specific, not a project dependency).
 
 ## 2. Architecture and mandatory conventions
@@ -94,7 +97,7 @@ Authored resources present: crop and terrain catalogs; sugarcane, rice, corn, dr
 | `src/simulation/models/stochastic_ca_sir_model.gd` | StochasticCASIRModel: seeded categorical transitions with synchronized fractions |
 | `src/simulation/models/transmission_modifiers.gd` | TransmissionModifiers: `evaluate()`, `needs_crop()`, typed Result with multipliers/rates/cap flags |
 | `tools/repair_terrain_atlas.gd` | One-time Godot-API repair, already applied; not a routine pre-test operation |
-| `tools/run_tests.py` | Strict nine-test runner; rejects errors, warnings, failures, and missing PASS markers |
+| `tools/run_tests.py` | Strict eleven-test runner; rejects errors, warnings, failures, and missing PASS markers |
 | `addons/test_harness/plugin.gd` | Environment-gated editor test harness using normal editor lifecycle |
 | `src/logic/grid/field_grid_queries.gd` | FieldGridQueries: static `can_plant()`, `validate_terrain_assignments()` |
 | `src/logic/farming/farming_controller.gd` | FarmingController: `initialize_field()`, `try_plant()`, `advance_growth()`, `seed_infection()`, `clear_crop()`, `remove_crop()`, `transfer_crop()`, `process_simulation()`, `advance_simulated_turn()`, `get_grid_snapshot()`, `is_initialized()` |
@@ -214,6 +217,8 @@ Each image is a separate atlas source. Never use `(0,1)` or `(0,2)` as terrain s
 
 ### Completed Step 4.1 crop artwork
 
+**Historical static-art baseline:** the measurements and single-image canvas assumptions below describe the previously verified Step 4.1 implementation. The current worktree also contains animation-strip changes in `tools/crop_texture_normalizer.gd`, `tools/setup_crop_growth_visuals.gd`, crop resources, normalized textures, the scene, and untracked `assets/art/tilesets/crops_raw/`. Inspection found an 11-frame, 8 FPS setup and union-bounds strip normalization. This refresh does not certify that work as complete or establish it as the cause of every visual-test failure. Preserve it and reconcile intended animation behavior with the tests before regenerating assets; do not blindly restore the static baseline.
+
 - Separate crop TileSet with 12 atlas sources: Rice IDs 0–3, Corn 4–7, Sugarcane 8–11; all atlas coordinates `(0, 0)`. IDs are saved visual mappings, never gameplay rules.
 - Growth duration is `CropData.growth_ticks`. Stage 0: progress < 1/3; Stage 1: [1/3, 2/3); Stage 2: [2/3, 1); Stage 3 only when elapsed >= duration. The 25%/50%/75% staging proposal was superseded. No `growth_duration` property or stored visual-stage state was added.
 - Sources remain under `assets/art/tilesets/crops/{rice,corn,sugarcane}/`. Generated compressed ImageTexture `.res` files are under `assets/art/tilesets/crops/normalized/`; retain them when copying the project. Original PNGs remain unchanged.
@@ -248,7 +253,7 @@ Reference: `docs/BAKE_UI_SETUP.md` is authoritative for the latest UI workflow. 
 
 ## 8. Verification and new-device startup
 
-Latest observed verification after Step 4.2 implementation: **nine tests pass, with zero engine warnings or errors**. Rendered D3D12 crop-stage and native-click management tests also passed. This documentation refresh records that prior run; it does not claim a new code-test execution.
+Verification history: Step 4.2 passed nine tests and rendered D3D12 playtests. Step 4.3B subsequently passed all eleven strict tests with zero engine warnings/errors. The latest warning-fix run passed ten of eleven, with the 30 pre-existing crop-visual failures described in section 1. The fresh editor test emitted no warnings; the live Output panel was not accessible through the connector. Physical Android gesture/safe-area testing remains outstanding. No tests were rerun for this documentation-only refresh.
 
 | Executable test | Coverage |
 |---|---|
@@ -261,6 +266,8 @@ Latest observed verification after Step 4.2 implementation: **nine tests pass, w
 | `tests/presentation/tile_inspector_builder_editor_test.gd` | Real builder, Undo/Redo, ownership, bindings, serialization and missing-HUD reconstruction |
 | `tests/presentation/crop_growth_visuals_test.gd` | Stage boundaries, saved atlas wiring, normalization, per-crop seedling ratios, root alignment, planting/turn rendering and erasure |
 | `tests/logic/field_management_test.gd` | Native Shovel/Move input, terrain/occupancy rejection, exact payload preservation, soil locality, removal/reset and tool-switch cancellation |
+| `tests/presentation/camera_zoom_test.gd` | Zoom limits, wheel/pinch ratios, single-tap release, multi-touch and drag suppression |
+| `tests/presentation/camera_ux_test.gd` | Pan scaling/bounds, focal anchoring, PC/touch drags, UI gesture isolation, saved Zoom/Reset action, and resize |
 
 Run from the project root:
 
@@ -357,7 +364,7 @@ Saved configuration:
 
 The environment-gated editor harness also supports automated setup using `GODOT_PLAYTEST_SETUP=1`. Unlike tests, setup intentionally saves resources and the scene. Do not combine setup and test flags. New resources are not covered by editor Undo; the baker's node/ownership operations retain Undo/Redo support.
 
-See [DISEASE_PLAYTEST.md](DISEASE_PLAYTEST.md) for operational instructions. Fresh-process verification covers native button input, saved references/ownership, all algorithm modes, wrong-host/repeat rejection, rollback, and spread. The disease-playtest coverage remains included in the current nine-test green suite.
+See [DISEASE_PLAYTEST.md](DISEASE_PLAYTEST.md) for operational instructions. Fresh-process verification covers native button input, saved references/ownership, all algorithm modes, wrong-host/repeat rejection, rollback, and spread. The disease-playtest coverage remains included in the eleven-test suite; see section 1 for the latest partial failure status.
 
 ### Next work: propose and approve before implementation
 
@@ -367,7 +374,13 @@ See [DISEASE_PLAYTEST.md](DISEASE_PLAYTEST.md) for operational instructions. Fre
 4. Define metrics, research provenance, SaveData and benchmark schemas, and catalog completeness requirements.
 5. Propose harvesting/rewards, treatments, win/loss, broader soil/abiotic interactions, or base-immunity integration as separate approved increments.
 
-Phase numbering shifted in older prompts. Confirm the next step title with the user. Steps 4.1 and 4.2 are complete; no Step 4.3 scope is approved. Do not describe SIR/SEIR/CA, approved environmental modifiers, growth visuals, or crop removal/transfer as pending implementation.
+Steps 4.1, 4.2, 4.3 and 4.3B have been implemented. Do not describe existing simulation models, environmental modifiers, crop management, or camera controls as pending implementation.
+
+### Pending Step 4.4 context
+
+The user requested additional runtime environmental-metric and health/stress integration, followed by a request to refresh the handoff. No Step 4.4 implementation or new tests were performed in this chat. Its data semantics and implementation scope still need review against current code; do not treat the request's proposed behavior as an existing feature or a calibrated scientific relationship. Further discussion can cover abstract game-state design and validation without introducing pathogen-specific acceleration or spread-optimization guidance.
+
+The request names `FieldGrid.gd`, but the actual project uses `src/data/state/field_grid_state.gd` and `src/simulation/simulation_controller.gd`. Existing optional environmental responses are already documented in this handoff and `ENVIRONMENTAL_MODIFIERS.md`; avoid duplicating them. The previous handoff records no separate crop-health scalar. Preserve the distinction between shared field environment and per-cell soil state, and verify present schemas before proposing additions. Terrain tilling/watering remains outside scope.
 
 ## 10. Coding, assets, and change discipline
 
@@ -377,4 +390,11 @@ Reserved/planned locations: `src/logic/autoloads/` for a future typed signal bus
 
 Use conventional commits for future changes: `feat(ui): bake persistent inspector controls`, `fix(world): validate atlas source coordinates`, `refactor(simulation): separate neighborhood geometry`, `test(logic): cover terrain planting rules`, `docs: update project handoff`. Use `type(scope): concise imperative description`, document behavior and relevant verification, and avoid claiming unrun tests or calibrated research results.
 
-For the next assistant: read this handoff and current scripts first, follow PCI for new work, keep the four-layer boundary, and continue from completed Step 4.2 and the nine-test green checkpoint. Preserve the approved seedling-specific scaling and copied-payload transfer semantics. Do not rebuild the inspector, restore runtime UI layout overrides, or bypass the normal editor test lifecycle.
+For the next assistant: read this handoff and current scripts first, follow PCI for new work, keep the four-layer boundary, and continue from implemented Step 4.3B with the latest 10/11 test result and pending Step 4.4 request. Preserve the approved seedling-specific scaling and copied-payload transfer semantics. Do not rebuild the inspector, restore runtime UI layout overrides, or bypass the normal editor test lifecycle.
+
+
+## 11. Current connection and workspace context
+
+- Last connector check: Godot `4.7.2.stable.official.ed1daf0bf` responded and read this project successfully. The connector reported no tracked active Godot process; that does not establish whether a separately launched editor is open.
+- `_is_over_ui(screen_pos: Vector2)` in `src/presentation/world/field_world_view.gd` replaces the parameter `position` and its internal reference, avoiding Node2D property shadowing. No behavior was intentionally changed.
+- The worktree contains uncommitted camera/UI changes and separate crop-art/animation changes. Preserve them; do not reset, regenerate, commit, or push as part of a handoff refresh. Old HEAD/clean-worktree notes above are historical, not current status.

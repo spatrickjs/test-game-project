@@ -8,38 +8,57 @@ const PADDING: int = 4
 
 
 static func normalize(source: Image, tile_size: Vector2i, stage: int, shared_height: float = -1.0, artwork_scale: float = 1.0) -> Image:
-	if source == null or source.is_empty() or stage < 0 or stage > 3 or tile_size.x < 1 or tile_size.y < 1:
+	return normalize_strip([source], tile_size, stage, shared_height, artwork_scale)
+
+
+## Normalizes 1 or more animation frames into a horizontal sprite strip using a
+## locked union bounding box so roots never jitter or shift between frames.
+static func normalize_strip(frames: Array[Image], tile_size: Vector2i, stage: int, shared_height: float = -1.0, artwork_scale: float = 1.0) -> Image:
+	if frames.is_empty() or stage < 0 or stage > 3 or tile_size.x < 1 or tile_size.y < 1:
 		return null
-	var cleaned: Image = _visible_art(source)
-	var bounds: Rect2i = cleaned.get_used_rect()
-	if not bounds.has_area():
-		return null
-	var trimmed: Image = cleaned.get_region(bounds)
-	trimmed.convert(Image.FORMAT_RGBA8)
+	var cleaned_frames: Array[Image] = []
+	var union_bounds: Rect2i = Rect2i()
+	for idx: int in range(frames.size()):
+		var frame: Image = frames[idx]
+		if frame == null or frame.is_empty():
+			return null
+		var cleaned: Image = _visible_art(frame)
+		var bounds: Rect2i = cleaned.get_used_rect()
+		if not bounds.has_area():
+			return null
+		cleaned_frames.append(cleaned)
+		union_bounds = bounds if idx == 0 else union_bounds.merge(bounds)
+
 	var max_width: int = maxi(2, int(round(float(tile_size.x) * 0.95)))
 	var mature_height: float = float(tile_size.y) * MATURE_HEIGHT_RATIO
 	var target_height: float = minf(mature_height, shared_height) if shared_height > 0.0 else mature_height
-	# Fit into the mature envelope FIRST, then apply the stage multiplier to
-	# both dimensions. Trimming or a width limit must not cancel stage scaling.
-	var scale_factor: float = minf(float(max_width) / bounds.size.x, target_height / bounds.size.y) * STAGE_SCALE[stage] * artwork_scale
-	# Even dimensions allow exact integer bottom-center anchoring in TileData.
-	var width: int = maxi(2, int(floor(float(bounds.size.x) * scale_factor / 2.0)) * 2)
-	var height: int = maxi(2, int(floor(float(bounds.size.y) * scale_factor / 2.0)) * 2)
-	trimmed.resize(width, height, Image.INTERPOLATE_LANCZOS)
-	var resized_bounds: Rect2i = trimmed.get_used_rect()
-	if not resized_bounds.has_area():
-		return null
-	# Fixed, even canvas for all stages; only artwork changes size.
-	var canvas_width: int = int(ceil(float(max_width + PADDING * 2) / 2.0)) * 2
-	var canvas_height: int = int(ceil((mature_height + PADDING * 2) / 2.0)) * 2
-	var canvas: Image = Image.create(canvas_width, canvas_height, false, Image.FORMAT_RGBA8)
-	canvas.fill(Color.TRANSPARENT)
-	var destination: Vector2i = Vector2i(
-		int(canvas_width / 2.0) - int(resized_bounds.size.x / 2.0),
-		canvas_height - PADDING - resized_bounds.size.y
-	)
-	canvas.blit_rect(trimmed, resized_bounds, destination)
-	return canvas
+	var scale_factor: float = minf(float(max_width) / union_bounds.size.x, target_height / union_bounds.size.y) * STAGE_SCALE[stage] * artwork_scale
+
+	var width: int = maxi(2, int(floor(float(union_bounds.size.x) * scale_factor / 2.0)) * 2)
+	var height: int = maxi(2, int(floor(float(union_bounds.size.y) * scale_factor / 2.0)) * 2)
+
+	var cell_width: int = int(ceil(float(max_width + PADDING * 2) / 2.0)) * 2
+	var cell_height: int = int(ceil((mature_height + PADDING * 2) / 2.0)) * 2
+	var strip_canvas: Image = Image.create(cell_width * cleaned_frames.size(), cell_height, false, Image.FORMAT_RGBA8)
+	strip_canvas.fill(Color.TRANSPARENT)
+
+	for idx: int in range(cleaned_frames.size()):
+		var trimmed: Image = cleaned_frames[idx].get_region(union_bounds)
+		trimmed.convert(Image.FORMAT_RGBA8)
+		trimmed.resize(width, height, Image.INTERPOLATE_LANCZOS)
+		var dest_x: int = idx * cell_width + int(cell_width / 2.0) - int(width / 2.0)
+		var dest_y: int = cell_height - PADDING - height
+		strip_canvas.blit_rect(trimmed, Rect2i(Vector2i.ZERO, Vector2i(width, height)), Vector2i(dest_x, dest_y))
+
+	return strip_canvas
+
+
+static func single_cell_size(tile_size: Vector2i) -> Vector2i:
+	var max_width: int = maxi(2, int(round(float(tile_size.x) * 0.95)))
+	var mature_height: float = float(tile_size.y) * MATURE_HEIGHT_RATIO
+	var cell_width: int = int(ceil(float(max_width + PADDING * 2) / 2.0)) * 2
+	var cell_height: int = int(ceil((mature_height + PADDING * 2) / 2.0)) * 2
+	return Vector2i(cell_width, cell_height)
 
 
 ## All four stages share one height budget, including the mature image's
@@ -57,8 +76,7 @@ static func shared_mature_height(sources: Array[Image], tile_size: Vector2i) -> 
 	return height
 
 
-## Ignore nearly transparent export residue and isolated tiny specks. These
-## otherwise make get_used_rect include empty space below the actual roots.
+## Ignore nearly transparent export residue and isolated tiny specks.
 static func _visible_art(source: Image) -> Image:
 	var working: Image = source.duplicate() as Image
 	working.convert(Image.FORMAT_RGBA8)
@@ -106,12 +124,11 @@ static func _visible_art(source: Image) -> Image:
 	return Image.create_from_data(width, height, false, Image.FORMAT_RGBA8, data)
 
 
-static func root_origin(normalized: Image) -> Vector2i:
-	var used: Rect2i = normalized.get_used_rect()
-	# Draw position = cell center - texture_size/2 - texture_origin.
-	# Therefore this places the visible bottom-center exactly at cell center
-	# (within half a pixel for an odd visible width).
+static func root_origin(normalized: Image, cell_width: int = -1) -> Vector2i:
+	var target_width: int = cell_width if cell_width > 0 else normalized.get_width()
+	var first_cell: Image = normalized.get_region(Rect2i(0, 0, target_width, normalized.get_height()))
+	var used: Rect2i = first_cell.get_used_rect()
 	return Vector2i(
-		used.position.x + int(used.size.x / 2.0) - int(normalized.get_width() / 2.0),
+		used.position.x + int(used.size.x / 2.0) - int(target_width / 2.0),
 		used.end.y - int(normalized.get_height() / 2.0)
 	)

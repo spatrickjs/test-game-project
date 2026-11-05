@@ -39,7 +39,7 @@ func _run() -> void:
 	var view: FieldWorldView = presenter.world_view
 	_check(farming.is_initialized(), "Farming initialized")
 	_check(view.is_processing_unhandled_input(), "World input enabled")
-	_check(presenter.hud_panel.mouse_filter == Control.MOUSE_FILTER_IGNORE, "Decorative HUD ignores input")
+	_check(presenter.hud_panel.mouse_filter == Control.MOUSE_FILTER_STOP, "HUD panel blocks world input")
 	_check(presenter.hud_panel.position == Vector2(12.0, 12.0), "Authored HUD position preserved")
 	_check(not presenter.rice_button.button_pressed, "Starts with no planting selection")
 	var inspect_position: Vector2i = _find_empty(farming.get_grid_snapshot(), SimulationEnums.TerrainType.DRY_SOIL)
