@@ -27,6 +27,8 @@ tests = [
     "tests/presentation/terrain_preview_editor_test.gd",
     "tests/presentation/terrain_preview_runtime_test.gd",
     "tests/presentation/grass_overlay_test.gd",
+    "tests/logic/queued_field_actions_test.gd",
+    "tests/presentation/background_layers_test.gd",
 ]
 failed = False
 for test in tests:
@@ -37,6 +39,7 @@ for test in tests:
     environment.pop("GODOT_PLAYTEST_SETUP", None)
     environment.pop("GODOT_CROP_VISUAL_SETUP", None)
     environment.pop("GODOT_FIELD_TOOLS_SETUP", None)
+    environment.pop("GODOT_MANUAL_WORLD_SETUP", None)
     if test.endswith("editor_test.gd"):
         command = [args.godot, "--headless", "--path", str(root), "--editor",
                    "--log-file", str(logs / (Path(test).stem + ".log"))]

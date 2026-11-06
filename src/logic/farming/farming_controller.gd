@@ -5,6 +5,9 @@ extends Node
 signal field_initialized
 signal cell_changed(coordinates: Vector2i)
 signal planting_rejected(coordinates: Vector2i, reason: String)
+signal action_queue_changed
+signal action_finished(action_id: int, success: bool, reason: String)
+signal queued_harvest_completed(result: HarvestResult)
 
 @export var crop_database: CropDatabase
 @export var terrain_database: TerrainDatabase
@@ -19,6 +22,9 @@ signal planting_rejected(coordinates: Vector2i, reason: String)
 
 var last_error: String = ""
 var _grid: FieldGridState = null
+var _actions: Array[FieldAction] = []
+var _next_action_id: int = 1
+var _revisions: Dictionary[Vector2i, int] = {}
 
 
 func is_initialized() -> bool:
@@ -60,6 +66,9 @@ func initialize_field() -> bool:
 	if not errors.is_empty():
 		return _fail("\n".join(errors))
 	_grid = candidate
+	_actions.clear()
+	_revisions.clear()
+	action_queue_changed.emit()
 	field_initialized.emit()
 	return true
 
@@ -75,13 +84,15 @@ func try_plant(coordinates: Vector2i, crop_type: SimulationEnums.CropType) -> bo
 	cell.crop_type = crop_type
 	cell.reset_crop_state()
 	last_error = ""
-	cell_changed.emit(coordinates)
+	_emit_cell_changed(coordinates)
 	return true
 
 
 ## One discrete healthy-growth step. Validate before mutation to avoid partial turns.
 ## Batch rendering is triggered by TurnController after completion.
 func advance_growth() -> bool:
+	if has_pending_actions():
+		return _fail("Wait for the farmer to finish queued actions before advancing time.")
 	if _grid == null:
 		return _fail("Initialize the field before advancing turns.")
 	var errors: PackedStringArray = FieldGridQueries.validate_terrain_assignments(
@@ -121,7 +132,7 @@ func clear_crop(coordinates: Vector2i) -> bool:
 	cell.has_crop = false
 	cell.reset_crop_state()
 	last_error = ""
-	cell_changed.emit(coordinates)
+	_emit_cell_changed(coordinates)
 	return true
 
 
@@ -165,8 +176,8 @@ func transfer_crop(source: Vector2i, destination: Vector2i) -> bool:
 	_grid = candidate
 	last_error = ""
 	# Both cells are already committed before any observer receives a signal.
-	cell_changed.emit(source)
-	cell_changed.emit(destination)
+	_emit_cell_changed(source)
+	_emit_cell_changed(destination)
 	return true
 
 
@@ -178,6 +189,8 @@ func process_simulation(simulation: SimulationController, diseases: DiseaseDatab
 
 ## Transaction boundary: no growth or epidemic state survives a failed turn.
 func advance_simulated_turn(simulation: SimulationController, diseases: DiseaseDatabase, weather: WeatherManager = null, turn_index: int = 0) -> bool:
+	if has_pending_actions():
+		return _fail("Wait for the farmer to finish queued actions before advancing time.")
 	simulation.crop_database = crop_database
 	var errors: PackedStringArray = simulation.validate_turn(_grid, diseases)
 	if not errors.is_empty():
@@ -228,7 +241,7 @@ func seed_infection(coordinates: Vector2i, disease_id: SimulationEnums.DiseaseId
 		return _fail("\n".join(errors))
 	_grid = candidate
 	last_error = ""
-	cell_changed.emit(coordinates)
+	_emit_cell_changed(coordinates)
 	return true
 
 
@@ -268,6 +281,158 @@ func _fail(message: String) -> bool:
 	return false
 
 
+func _emit_cell_changed(coordinates: Vector2i) -> void:
+	_revisions[coordinates] = _revisions.get(coordinates, 0) + 1
+	cell_changed.emit(coordinates)
+
+
+func has_pending_actions() -> bool:
+	return not _actions.is_empty()
+
+
+func get_current_action() -> FieldAction:
+	return null if _actions.is_empty() else _actions[0].copy()
+
+
+func get_queued_coordinates() -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+	for action: FieldAction in _actions:
+		result.append(action.target)
+		if action.kind == SimulationEnums.FieldActionKind.MOVE_CROP:
+			result.append(action.source)
+	return result
+
+
+## Shared read-only validation for indicators, enqueue and arrival.
+func action_error(action: FieldAction, check_reservations: bool = true) -> String:
+	if action == null or _grid == null:
+		return "Initialize the field before selecting an action."
+	var cell: FieldCellState = _grid.get_cell(action.target)
+	if cell == null:
+		return "Choose a tile inside the field."
+	if check_reservations:
+		var reserved: Array[Vector2i] = get_queued_coordinates()
+		if reserved.has(action.target) or (action.kind == SimulationEnums.FieldActionKind.MOVE_CROP and reserved.has(action.source)):
+			return "This plot already has a queued action."
+	match action.kind:
+		SimulationEnums.FieldActionKind.REMOVE_CROP:
+			return "Choose a crop to remove." if not cell.has_crop else ""
+		SimulationEnums.FieldActionKind.DIG_GRASS:
+			if cell.has_crop or cell.terrain_type != SimulationEnums.TerrainType.GRASS:
+				return "Shovel conversion requires empty grass."
+			if initial_soil == null or not initial_soil.validate().is_empty():
+				return "Configure valid initial soil before digging."
+			return _conversion_catalog_error(SimulationEnums.TerrainType.DRY_SOIL)
+		SimulationEnums.FieldActionKind.MAKE_PADDY:
+			if cell.has_crop or cell.terrain_type != SimulationEnums.TerrainType.DRY_SOIL:
+				return "Water Bucket requires empty dry soil. Dig grass first."
+			return _conversion_catalog_error(SimulationEnums.TerrainType.PADDY_MUD)
+		SimulationEnums.FieldActionKind.PLANT:
+			return _planting_error(action.target, action.crop_type)
+		SimulationEnums.FieldActionKind.MOVE_CROP:
+			var origin: FieldCellState = _grid.get_cell(action.source)
+			if origin == null or not origin.has_crop or action.source == action.target:
+				return "Choose a crop and a different compatible empty plot."
+			return _planting_error(action.target, origin.crop_type)
+		SimulationEnums.FieldActionKind.HARVEST:
+			return "Choose a mature crop." if not cell.is_mature(crop_database.get_crop(cell.crop_type)) else ""
+		SimulationEnums.FieldActionKind.WATER_SOIL, SimulationEnums.FieldActionKind.FERTILIZE:
+			if cell.soil == null:
+				return "Choose a tile with soil."
+			var amount: Vector3 = action.additions
+			if not amount.is_finite() or amount.x < 0.0 or amount.y < 0.0 or amount.z < 0.0 or amount.x > 1.0 or amount.y > 1.0 or amount.z > 1.0:
+				return "Soil additions must be finite and in [0, 1]."
+			return ""
+	return "Unknown action."
+
+
+func _conversion_catalog_error(terrain_type: SimulationEnums.TerrainType) -> String:
+	var terrain: TerrainData = terrain_database.get_terrain(terrain_type) if terrain_database != null else null
+	return "Conversion requires a valid plantable terrain definition." if terrain == null or not terrain.is_plantable or not terrain.validate().is_empty() else ""
+
+
+## Enqueue a copied intent. Reserving coordinates never changes field state.
+func enqueue_action(request: FieldAction) -> bool:
+	var reason: String = action_error(request)
+	if not reason.is_empty():
+		return _fail(reason)
+	var action: FieldAction = request.copy()
+	action.id = _next_action_id
+	_next_action_id += 1
+	action.source_visited = false
+	action.target_revision = _revisions.get(action.target, 0)
+	action.source_revision = _revisions.get(action.source, 0)
+	_actions.append(action)
+	last_error = ""
+	action_queue_changed.emit()
+	return true
+
+
+## Presentation reports only a completed stop, never edits a cell.
+## Move pickup is a visit, not a destructive removal: commit both ends at delivery.
+func arrive_at_action(action_id: int, stop: Vector2i) -> bool:
+	if _actions.is_empty() or _actions[0].id != action_id or _actions[0].stop_coordinates() != stop:
+		return _fail("Ignored an outdated arrival.")
+	var action: FieldAction = _actions[0]
+	var reason: String = action_error(action, false)
+	if action.target_revision != _revisions.get(action.target, 0) or (action.kind == SimulationEnums.FieldActionKind.MOVE_CROP and action.source_revision != _revisions.get(action.source, 0)):
+		reason = "The plot changed while the farmer was walking; action cancelled."
+	if not reason.is_empty():
+		_actions.pop_front()
+		last_error = reason
+		action_finished.emit(action.id, false, reason)
+		action_queue_changed.emit()
+		return false
+	if action.kind == SimulationEnums.FieldActionKind.MOVE_CROP and not action.source_visited:
+		action.source_visited = true
+		action_queue_changed.emit()
+		return true
+	var success: bool = false
+	var harvest: HarvestResult = null
+	match action.kind:
+		SimulationEnums.FieldActionKind.REMOVE_CROP:
+			success = remove_crop(action.target)
+		SimulationEnums.FieldActionKind.DIG_GRASS, SimulationEnums.FieldActionKind.MAKE_PADDY:
+			success = _convert_terrain(action)
+		SimulationEnums.FieldActionKind.PLANT:
+			success = try_plant(action.target, action.crop_type)
+		SimulationEnums.FieldActionKind.MOVE_CROP:
+			success = transfer_crop(action.source, action.target)
+		SimulationEnums.FieldActionKind.HARVEST:
+			harvest = harvest_crop(action.target)
+			success = harvest.success
+		SimulationEnums.FieldActionKind.WATER_SOIL, SimulationEnums.FieldActionKind.FERTILIZE:
+			success = apply_soil_additions(action.target, action.additions)
+	_actions.pop_front()
+	action_finished.emit(action.id, success, last_error)
+	if harvest != null:
+		queued_harvest_completed.emit(harvest)
+	action_queue_changed.emit()
+	return success
+
+
+func cancel_actions() -> void:
+	_actions.clear()
+	action_queue_changed.emit()
+
+
+func _convert_terrain(action: FieldAction) -> bool:
+	var candidate: FieldGridState = _grid.copy()
+	var cell: FieldCellState = candidate.get_cell(action.target)
+	if action.kind == SimulationEnums.FieldActionKind.DIG_GRASS:
+		cell.terrain_type = SimulationEnums.TerrainType.DRY_SOIL
+		cell.soil = initial_soil.copy()
+	else:
+		cell.terrain_type = SimulationEnums.TerrainType.PADDY_MUD
+	var errors: PackedStringArray = FieldGridQueries.validate_terrain_assignments(candidate, crop_database, terrain_database)
+	if not errors.is_empty():
+		return _fail("\n".join(errors))
+	_grid = candidate
+	last_error = ""
+	_emit_cell_changed(action.target)
+	return true
+
+
 ## Mature-only collection. Commit the clearing before observers receive a signal.
 func harvest_crop(coordinates: Vector2i) -> HarvestResult:
 	var result: HarvestResult = HarvestResult.new()
@@ -297,7 +462,7 @@ func harvest_crop(coordinates: Vector2i) -> HarvestResult:
 					result.success = true
 	last_error = result.reason
 	if result.success:
-		cell_changed.emit(coordinates)
+		_emit_cell_changed(coordinates)
 	return result
 
 
@@ -323,5 +488,5 @@ func apply_soil_additions(coordinates: Vector2i, additions: Vector3) -> bool:
 		return true
 	_grid = candidate
 	last_error = ""
-	cell_changed.emit(coordinates)
+	_emit_cell_changed(coordinates)
 	return true

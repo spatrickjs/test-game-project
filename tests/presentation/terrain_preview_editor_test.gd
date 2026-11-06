@@ -17,10 +17,20 @@ func run(tree: SceneTree) -> int:
 	var original_size: Vector2i = configuration.get("field_size")
 	var original_bands: Array = configuration.get("terrain_bands")
 	preview.refresh_preview()
+	_check(original_size == Vector2i(9, 9) and preview.get_preview_cell_count() == 81, "Saved editor guide is the 9 by 9 playable field")
+	_check(not world.get("automatic_background_enabled") and not preview.background_preview_enabled, "Saved editor guide excludes automatic surroundings")
+	# Exercise the optional backdrop separately from the manual-world defaults.
+	world.set("automatic_background_enabled", true)
+	preview.background_preview_enabled = true
+	preview.refresh_preview()
 	_check(preview.last_error.is_empty(), "Valid scene preview")
 	_check(preview.get_preview_cell_count() == original_size.x * original_size.y, "Configured field appears in editor")
 	var generated: TileMapLayer = preview.get("_preview_layer") as TileMapLayer
 	_check(generated != null and generated.owner == null, "Generated layer is transient")
+	var background: TileMapLayer = preview.get("_background_preview_layer") as TileMapLayer
+	_check(background != null and background.owner == null and background.get_used_cells().size() > 0, "Grass background is visible as transient editor tiles")
+	_check(background.get_cell_source_id(Vector2i.ZERO) == -1 and background.get_cell_source_id(Vector2i(-1, 0)) >= 0, "Editor grass surrounds the playable field")
+	_check(preview.y_sort_enabled and background.y_sort_enabled and background.z_index == generated.z_index, "Editor ground shares isometric depth ordering")
 	var mapping: TerrainTileVisualMap = world.get("visual_map") as TerrainTileVisualMap
 	for x: int in range(original_size.x):
 		var band_index: int = mini(floori(float(x) * float(original_bands.size()) / float(original_size.x)), original_bands.size() - 1)
@@ -32,6 +42,7 @@ func run(tree: SceneTree) -> int:
 	preview.preview_enabled = false
 	preview.refresh_preview()
 	_check(preview.get_preview_cell_count() == 0, "Preview can be disabled")
+	_check(background.get_used_cells().is_empty(), "Disabling preview also clears background")
 	preview.preview_enabled = true
 	configuration.set("field_size", Vector2i(-1, 3))
 	preview.refresh_preview()
@@ -42,13 +53,14 @@ func run(tree: SceneTree) -> int:
 	configuration.set("field_size", original_size)
 	preview.refresh_preview()
 	preview.refresh_preview()
-	_check(preview.get_child_count(true) == 1, "Repeated refresh does not duplicate layers")
+	_check(preview.get_child_count(true) == 2, "Repeated refresh does not duplicate either preview layer")
 	_check(terrain.get_used_cells() == original_cells, "Runtime terrain layer remains untouched")
 	var packed: PackedScene = PackedScene.new()
 	_check(packed.pack(scene) == OK, "Preview-equipped scene packs")
 	var state: SceneState = packed.get_state()
 	for index: int in range(state.get_node_count()):
 		_check(state.get_node_name(index) != &"GeneratedTerrainPreview", "Generated tile layer is not serialized")
+		_check(state.get_node_name(index) != &"GeneratedBackgroundPreview", "Generated background is not serialized")
 	var instance: Node = packed.instantiate()
 	_check(instance.get_node("World/TerrainPreview").get_child_count(true) == 0, "Packed scene has no generated preview cells")
 	instance.free()

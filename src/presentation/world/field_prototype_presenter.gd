@@ -26,7 +26,8 @@ extends Node
 @export var water_button: Button
 @export var fertilize_button: Button
 @export var soil_tool_controller: SoilToolController
-enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE }
+@export var water_bucket_button: Button
+enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE, TOOL_WATER_BUCKET }
 var _tool_mode: ToolMode = ToolMode.INSPECT
 var _transfer_source: Vector2i = Vector2i(-1, -1)
 @export var playtest_disease_id: SimulationEnums.DiseaseId = SimulationEnums.DiseaseId.RICE_BLAST
@@ -47,7 +48,7 @@ func _ready() -> void:
 		button.toggle_mode = true
 		button.button_group = null
 		button.set_pressed_no_signal(false)
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, water_bucket_button]:
 		if button != null:
 			button.toggle_mode = true
 			button.set_pressed_no_signal(false)
@@ -67,6 +68,15 @@ func _connect_once(source: Signal, callback: Callable) -> void:
 
 
 func _connect_signals() -> void:
+	if water_bucket_button != null:
+		world_view.register_ui_input_root(water_bucket_button)
+		_connect_once(water_bucket_button.pressed, _on_water_bucket_pressed)
+	if world_view.farmer_agent != null:
+		_connect_once(world_view.farmer_agent.arrived, _on_farmer_arrived)
+	_connect_once(world_view.cells_selected, _on_cells_selected)
+	_connect_once(farming_controller.action_queue_changed, _on_action_queue_changed)
+	_connect_once(farming_controller.action_finished, _on_action_finished)
+	_connect_once(farming_controller.queued_harvest_completed, _on_queued_harvest_completed)
 	if water_button != null:
 		world_view.register_ui_input_root(water_button)
 		_connect_once(water_button.pressed, _on_water_pressed)
@@ -135,6 +145,8 @@ func _on_field_initialized() -> void:
 		_show_failure(world_view.last_error)
 		return
 	_running = true
+	if world_view.farmer_agent != null:
+		world_view.farmer_agent.global_position = world_view.standing_point(Vector2i.ZERO, world_view.terrain_layer.to_global(world_view.terrain_layer.map_to_local(Vector2i(-1, 0))))
 	_set_controls_enabled(true)
 	_enter_inspect_mode()
 	turn_label.text = "Turn: 0"
@@ -144,7 +156,7 @@ func _on_field_initialized() -> void:
 
 
 func _set_controls_enabled(enabled: bool) -> void:
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, water_bucket_button]:
 		if button != null:
 			button.disabled = not enabled
 	next_turn_button.disabled = not enabled
@@ -186,6 +198,9 @@ func _enter_inspect_mode() -> void:
 
 
 func _update_crop_buttons() -> void:
+	_refresh_tool_targets(true)
+	if water_bucket_button != null:
+		water_bucket_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_WATER_BUCKET)
 	if water_button != null:
 		water_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_WATER)
 	if fertilize_button != null:
@@ -268,35 +283,21 @@ func _on_corn_pressed() -> void:
 func _on_cell_clicked(coordinates: Vector2i) -> void:
 	if not _running:
 		return
-	if _tool_mode in [ToolMode.TOOL_WATER, ToolMode.TOOL_FERTILIZE]:
-		if soil_tool_controller == null:
-			status_label.text = "Assign the soil tool controller."
-			return
-		var success: bool = soil_tool_controller.water(coordinates) if _tool_mode == ToolMode.TOOL_WATER else soil_tool_controller.fertilize(coordinates)
-		status_label.text = "Soil updated." if success else soil_tool_controller.last_error
-		return
-	if _tool_mode == ToolMode.TOOL_HARVEST:
-		var result: HarvestResult = farming_controller.harvest_crop(coordinates)
-		status_label.text = "Harvested: %.0f%% yield quality." % (100.0 * result.quality_multiplier) if result.success else result.reason
-		return
-	if _tool_mode == ToolMode.TOOL_REMOVE:
-		if farming_controller.remove_crop(coordinates):
-			status_label.text = "Crop removed. Choose another crop or switch tools."
-		else:
-			status_label.text = farming_controller.last_error
-		return
 	if _tool_mode == ToolMode.TOOL_TRANSFER:
 		_handle_transfer_click(coordinates)
 		return
-	if _planting_enabled:
-		farming_controller.try_plant(coordinates, _selected_crop)
+	if _tool_mode != ToolMode.INSPECT:
+		_queue_at(coordinates)
 	else:
 		_inspected_coordinates = coordinates
 		_refresh_inspected_cell()
 
 
 func _on_cell_changed(coordinates: Vector2i) -> void:
-	world_view.refresh_crops(farming_controller.get_grid_snapshot(), farming_controller.crop_database)
+	var snapshot: FieldGridState = farming_controller.get_grid_snapshot()
+	world_view.render_grid(snapshot)
+	world_view.refresh_crops(snapshot, farming_controller.crop_database)
+	_refresh_tool_targets()
 	if coordinates == _inspected_coordinates:
 		_refresh_inspected_cell()
 	if _planting_enabled:
@@ -315,6 +316,7 @@ func _on_next_turn_pressed() -> void:
 func _on_turn_completed(turn_index: int) -> void:
 	_transfer_source = Vector2i(-1, -1)
 	world_view.refresh_crops(farming_controller.get_grid_snapshot(), farming_controller.crop_database)
+	_refresh_tool_targets()
 	_refresh_inspected_cell()
 	turn_label.text = "Turn: %d" % turn_index
 	status_label.text = "Growth advanced. Mature crops have reached 100% growth."
@@ -326,6 +328,10 @@ func _on_turn_completed(turn_index: int) -> void:
 
 func _on_water_pressed() -> void:
 	_select_management_tool(ToolMode.TOOL_WATER)
+
+
+func _on_water_bucket_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_WATER_BUCKET)
 
 
 func _on_fertilize_pressed() -> void:
@@ -356,6 +362,10 @@ func _select_management_tool(mode: ToolMode) -> void:
 	_inspected_coordinates = Vector2i(-1, -1)
 	tile_inspector.clear_display()
 	_update_crop_buttons()
+	if mode == ToolMode.TOOL_WATER_BUCKET:
+		selected_crop_label.text = "Tool: Water Bucket"
+		status_label.text = "Drag over empty dry soil to queue paddy conversion."
+		return
 	if mode in [ToolMode.TOOL_WATER, ToolMode.TOOL_FERTILIZE]:
 		selected_crop_label.text = "Tool: Water" if mode == ToolMode.TOOL_WATER else "Tool: Fertilize"
 		status_label.text = "Click a soil tile to apply the selected tool."
@@ -365,7 +375,7 @@ func _select_management_tool(mode: ToolMode) -> void:
 		status_label.text = "Click a mature crop to collect its yield quality."
 		return
 	selected_crop_label.text = "Tool: Shovel" if mode == ToolMode.TOOL_REMOVE else "Tool: Move"
-	status_label.text = "Click a crop to destroy it." if mode == ToolMode.TOOL_REMOVE else "Click a crop, then an empty compatible tile."
+	status_label.text = "Drag over crops to remove, or empty grass to dig. The first eligible plot locks the action." if mode == ToolMode.TOOL_REMOVE else "Click a crop, then an empty compatible tile."
 
 
 func _handle_transfer_click(coordinates: Vector2i) -> void:
@@ -376,15 +386,18 @@ func _handle_transfer_click(coordinates: Vector2i) -> void:
 			status_label.text = "Choose a crop to move first."
 			return
 		_transfer_source = coordinates
+		_refresh_tool_targets(true)
 		status_label.text = "Moving (%d, %d): choose an empty compatible tile. Click source to cancel." % [coordinates.x, coordinates.y]
 		return
 	if coordinates == _transfer_source:
 		_transfer_source = Vector2i(-1, -1)
+		_refresh_tool_targets(true)
 		status_label.text = "Move cancelled. Choose another crop."
 		return
-	if farming_controller.transfer_crop(_transfer_source, coordinates):
+	if _queue_at(coordinates):
 		_transfer_source = Vector2i(-1, -1)
-		status_label.text = "Crop moved. Choose another crop to move."
+		_refresh_tool_targets(true)
+		status_label.text = "Move queued. The farmer will visit both plots."
 	else:
 		status_label.text = farming_controller.last_error + " Choose another destination or click the source to cancel."
 
@@ -399,7 +412,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _show_failure(message: String) -> void:
 	_running = false
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, water_bucket_button]:
 		if button != null:
 			button.disabled = true
 	if tile_inspector != null:
@@ -422,3 +435,98 @@ func _show_failure(message: String) -> void:
 func _refresh_camera_button() -> void:
 	if camera_zoom_button != null:
 		camera_zoom_button.text = "Reset view" if world_view.camera.zoom.x > world_view.min_zoom + 0.00001 else "Zoom in"
+
+
+func _make_action(coordinates: Vector2i, known_cell: FieldCellState = null) -> FieldAction:
+	var action: FieldAction = FieldAction.new()
+	action.target = coordinates
+	action.crop_type = _selected_crop
+	action.source = _transfer_source
+	match _tool_mode:
+		ToolMode.TOOL_REMOVE:
+			var cell: FieldCellState = known_cell if known_cell != null else farming_controller.get_grid_snapshot().get_cell(coordinates)
+			action.kind = SimulationEnums.FieldActionKind.REMOVE_CROP if cell != null and cell.has_crop else SimulationEnums.FieldActionKind.DIG_GRASS
+		ToolMode.TOOL_WATER_BUCKET:
+			action.kind = SimulationEnums.FieldActionKind.MAKE_PADDY
+		ToolMode.TOOL_TRANSFER:
+			action.kind = SimulationEnums.FieldActionKind.MOVE_CROP
+		ToolMode.TOOL_HARVEST:
+			action.kind = SimulationEnums.FieldActionKind.HARVEST
+		ToolMode.TOOL_WATER:
+			action.kind = SimulationEnums.FieldActionKind.WATER_SOIL
+			action.additions = Vector3(soil_tool_controller.water_infusion_amount, 0, 0) if soil_tool_controller != null else Vector3.INF
+		ToolMode.TOOL_FERTILIZE:
+			action.kind = SimulationEnums.FieldActionKind.FERTILIZE
+			action.additions = Vector3(0, soil_tool_controller.nitrogen_boost_amount, soil_tool_controller.potassium_boost_amount) if soil_tool_controller != null else Vector3.INF
+		_:
+			action.kind = SimulationEnums.FieldActionKind.PLANT
+	return action
+
+
+func _queue_at(coordinates: Vector2i, expected_kind: int = -1) -> bool:
+	if world_view.farmer_agent == null:
+		status_label.text = "Assign FarmerAgent before queuing actions."
+		return false
+	var action: FieldAction = _make_action(coordinates)
+	if expected_kind >= 0 and action.kind != expected_kind:
+		return false
+	var success: bool = farming_controller.enqueue_action(action)
+	status_label.text = "Action queued. The farmer is on the way." if success else farming_controller.last_error
+	return success
+
+
+func _on_cells_selected(coordinates: Array[Vector2i], kind: int) -> void:
+	if not _running or _tool_mode == ToolMode.INSPECT:
+		return
+	for coords: Vector2i in coordinates:
+		_queue_at(coords, kind)
+
+
+func _refresh_tool_targets(mode_changed: bool = false) -> void:
+	if world_view == null or not farming_controller.is_initialized():
+		return
+	var eligible: Dictionary[Vector2i, int] = {}
+	var snapshot: FieldGridState = farming_controller.get_grid_snapshot()
+	var reserved: Array[Vector2i] = farming_controller.get_queued_coordinates()
+	if _tool_mode != ToolMode.INSPECT:
+		for y: int in range(snapshot.height):
+			for x: int in range(snapshot.width):
+				var coords: Vector2i = Vector2i(x, y)
+				if _tool_mode == ToolMode.TOOL_TRANSFER and _transfer_source.x < 0:
+					if snapshot.get_cell(coords).has_crop and not reserved.has(coords):
+						eligible[coords] = SimulationEnums.FieldActionKind.MOVE_CROP
+				elif _tool_mode == ToolMode.TOOL_TRANSFER and coords == _transfer_source:
+					eligible[coords] = SimulationEnums.FieldActionKind.MOVE_CROP
+				else:
+					var action: FieldAction = _make_action(coords, snapshot.get_cell(coords))
+					if farming_controller.action_error(action).is_empty():
+						eligible[coords] = action.kind
+	world_view.configure_tool(_tool_mode != ToolMode.INSPECT, _tool_mode != ToolMode.TOOL_TRANSFER, eligible, mode_changed)
+	world_view.show_queued(reserved, _transfer_source)
+
+
+func _on_action_queue_changed() -> void:
+	_refresh_tool_targets()
+	if next_turn_button != null:
+		next_turn_button.disabled = not _running or farming_controller.has_pending_actions()
+	var agent: FarmerAgent = world_view.farmer_agent
+	if agent == null:
+		return
+	var action: FieldAction = farming_controller.get_current_action()
+	if action == null:
+		agent.stop()
+	else:
+		var stop: Vector2i = action.stop_coordinates()
+		agent.walk_to(action.id, stop, world_view.standing_point(stop, agent.global_position))
+
+
+func _on_farmer_arrived(action_id: int, coordinates: Vector2i) -> void:
+	farming_controller.arrive_at_action(action_id, coordinates)
+
+
+func _on_action_finished(_action_id: int, success: bool, reason: String) -> void:
+	status_label.text = "Action complete." if success else reason
+
+
+func _on_queued_harvest_completed(result: HarvestResult) -> void:
+	status_label.text = "Harvested: %.0f%% yield quality." % (100.0 * result.quality_multiplier) if result.success else result.reason

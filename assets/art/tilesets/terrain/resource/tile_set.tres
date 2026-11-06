@@ -1,0 +1,135 @@
+[gd_resource type="TileSet" format=3 uid="uid://bh0d55kljfsfl"]
+
+[ext_resource type="Texture2D" uid="uid://c4fpifar6lrnd" path="res://assets/art/tilesets/terrain/paddy_mud.png.png" id="1_oa2xd"]
+[ext_resource type="Texture2D" uid="uid://dvc5tw8bxyink" path="res://assets/art/tilesets/terrain/Isometric Assets.png" id="1_td5fv"]
+[ext_resource type="Texture2D" uid="uid://ymbkqy087onx" path="res://assets/art/tilesets/foliage/animated_grass_tuft.png" id="2_td5fv"]
+[ext_resource type="Texture2D" uid="uid://bmrn6dubqs6xm" path="res://assets/art/tilesets/foliage/Isometric Assets 5.png" id="4_td5fv"]
+[ext_resource type="Texture2D" uid="uid://dxgn88ud4p3t7" path="res://assets/art/tilesets/foliage/Isometric Assets 6.png" id="5_reoau"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_reoau"]
+resource_name = "dry_soil"
+texture = ExtResource("1_td5fv")
+texture_region_size = Vector2i(256, 256)
+9:9/0 = 0
+9:9/0/texture_origin = Vector2i(4, -1)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_td5fv"]
+resource_name = "grass"
+texture = ExtResource("1_td5fv")
+texture_region_size = Vector2i(256, 256)
+0:6/0 = 0
+3:9/0 = 0
+7:9/0 = 0
+4:9/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+4:6/0 = 0
+6:6/0 = 0
+6:7/0 = 0
+5:6/0 = 0
+8:6/0 = 0
+7:6/0 = 0
+9:6/0 = 0
+1:7/0 = 0
+0:7/0 = 0
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_56fpe"]
+load_path = "res://.godot/imported/dry_soil.png.png-1a6462df813c7b924cf0c9552dd5120a.ctex"
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_v286j"]
+resource_name = "dry_soil"
+texture = SubResource("CompressedTexture2D_56fpe")
+texture_region_size = Vector2i(512, 478)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(4, -14)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_v286j"]
+load_path = "res://.godot/imported/grass.png.png-b7a38354c4577d6470e0b8cbdcc01659.ctex"
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fdjjd"]
+resource_name = "grass1"
+texture = SubResource("CompressedTexture2D_v286j")
+texture_region_size = Vector2i(512, 512)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(4, -14)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_oa2xd"]
+resource_name = "paddy_mud"
+texture = ExtResource("1_td5fv")
+texture_region_size = Vector2i(256, 256)
+8:9/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tcj1j"]
+resource_name = "paddy_mud"
+texture = ExtResource("1_oa2xd")
+texture_region_size = Vector2i(512, 470)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(4, -14)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0n7ni"]
+texture = ExtResource("2_td5fv")
+texture_region_size = Vector2i(875, 875)
+0:0/animation_columns = 4
+0:0/animation_speed = 7.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/0 = 0
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_reoau"]
+polygon = PackedVector2Array(-80, -9, -36, -94, -23, -98, 49, -74, 80, -14, 1, 32, -80, -8)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_rg1bt"]
+polygon = PackedVector2Array(-104, -32, -87, -86, -14, -146, 76, -100, 107, -26, 99, -13, 9, 44, -99, -16)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_eoemk"]
+polygon = PackedVector2Array(-85, -46, -57, -118, 13, -162, 39, -148, 78, -28, 63, -2, 2, 31, -65, -7)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_5rg5e"]
+polygon = PackedVector2Array(-126, -112, -91, -172, -13, -189, 110, -156, 123, -87, 111, -2, 3, 60, -104, 5)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rg1bt"]
+resource_name = "foliage"
+texture = ExtResource("4_td5fv")
+texture_region_size = Vector2i(256, 256)
+7:1/0 = 0
+7:1/0/texture_origin = Vector2i(0, 61)
+7:1/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_rg1bt")
+8:1/0 = 0
+8:1/0/texture_origin = Vector2i(0, 61)
+8:1/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_eoemk")
+9:1/0 = 0
+9:1/0/texture_origin = Vector2i(0, 61)
+9:1/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_5rg5e")
+6:1/0 = 0
+6:1/0/texture_origin = Vector2i(0, 61)
+6:1/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_reoau")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_eoemk"]
+resource_name = "fence"
+texture = ExtResource("5_reoau")
+texture_region_size = Vector2i(256, 256)
+4:4/0 = 0
+4:4/0/texture_origin = Vector2i(3, 62)
+5:4/0 = 0
+5:4/0/texture_origin = Vector2i(21, 59)
+6:4/0 = 0
+6:4/0/texture_origin = Vector2i(-3, 67)
+4:3/0 = 0
+4:3/0/texture_origin = Vector2i(15, 64)
+
+[resource]
+tile_shape = 1
+tile_layout = 4
+tile_size = Vector2i(213, 122)
+occlusion_layer_0/light_mask = 2
+sources/3 = SubResource("TileSetAtlasSource_0n7ni")
+sources/11 = SubResource("TileSetAtlasSource_fdjjd")
+sources/1 = SubResource("TileSetAtlasSource_td5fv")
+sources/10 = SubResource("TileSetAtlasSource_v286j")
+sources/0 = SubResource("TileSetAtlasSource_reoau")
+sources/22 = SubResource("TileSetAtlasSource_tcj1j")
+sources/2 = SubResource("TileSetAtlasSource_oa2xd")
+sources/8 = SubResource("TileSetAtlasSource_rg1bt")
+sources/9 = SubResource("TileSetAtlasSource_eoemk")

@@ -1,4 +1,5 @@
 extends SceneTree
+const QueueDriver = preload("res://tests/logic/queued_action_test_driver.gd")
 
 var _failures: PackedStringArray = PackedStringArray()
 var _changes: Array[Vector2i] = []
@@ -31,6 +32,8 @@ func _run() -> void:
 	_click(scene.corn_button.get_global_rect().get_center())
 	await process_frame
 	_click_cell(world, dry[0])
+	_check(not farming.get_grid_snapshot().get_cell(dry[0]).has_crop, "Native planting waits for arrival")
+	_check(QueueDriver.finish(scene), "Plant queue completes")
 	await process_frame
 	_check(farming.get_grid_snapshot().get_cell(dry[0]).has_crop, "Native planting")
 	_click(scene.next_turn_button.get_global_rect().get_center())
@@ -47,6 +50,8 @@ func _run() -> void:
 	_check(farming.get_grid_snapshot().get_cell(dry[0]).has_crop, "Invalid destination retains source")
 	_changes.clear()
 	_click_cell(world, dry[1])
+	_check(farming.get_grid_snapshot().get_cell(dry[0]).has_crop and not farming.get_grid_snapshot().get_cell(dry[1]).has_crop, "Move waits for both visits")
+	_check(QueueDriver.finish(scene), "Move queue completes")
 	await process_frame
 	var after: FieldGridState = farming.get_grid_snapshot()
 	_check(not after.get_cell(dry[0]).has_crop and after.get_cell(dry[1]).has_crop, "Native move commits both endpoints")
@@ -59,6 +64,8 @@ func _run() -> void:
 	_click(scene.remove_button.get_global_rect().get_center())
 	await process_frame
 	_click_cell(world, dry[1])
+	_check(farming.get_grid_snapshot().get_cell(dry[1]).has_crop, "Shovel waits for arrival")
+	_check(QueueDriver.finish(scene), "Removal queue completes")
 	await process_frame
 	_check(not farming.get_grid_snapshot().get_cell(dry[1]).has_crop, "Native shovel removes crop")
 	_check(world.crop_layer.get_cell_source_id(dry[1]) == -1, "Removed sprite erased")

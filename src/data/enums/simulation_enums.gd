@@ -2,6 +2,8 @@ class_name SimulationEnums
 extends RefCounted
 ## Shared identifiers. Preserve numeric values for future save compatibility.
 
+enum FieldActionKind { REMOVE_CROP, DIG_GRASS, MAKE_PADDY, PLANT, MOVE_CROP, HARVEST, WATER_SOIL, FERTILIZE }
+
 enum SIRState {
 	S = 0,
 	E = 1,

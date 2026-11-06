@@ -1,4 +1,5 @@
 extends SceneTree
+const QueueDriver = preload("res://tests/logic/queued_action_test_driver.gd")
 
 class RejectedTurn:
 	extends SimulationController
@@ -140,9 +141,11 @@ func _run() -> void:
 	var point: Vector2 = scene.world_view.terrain_layer.get_global_transform_with_canvas() * scene.world_view.terrain_layer.map_to_local(target)
 	_click(scene.water_button.get_global_rect().get_center())
 	_click(point)
+	_check(QueueDriver.finish(scene), "Water queue completes")
 	_check(is_equal_approx(scene.farming_controller.get_grid_snapshot().get_cell(target).soil.moisture, 0.6), "Native Water button and tile action")
 	_click(scene.fertilize_button.get_global_rect().get_center())
 	_click(point)
+	_check(QueueDriver.finish(scene), "Fertilize queue completes")
 	_check(is_equal_approx(scene.farming_controller.get_grid_snapshot().get_cell(target).soil.nitrogen, 0.6), "Native Fertilize button and tile action")
 	scene.turn_controller.weather_manager.rainfall_per_turn = 0.1
 	scene.turn_controller.weather_manager.evaporation_per_turn = 0.0

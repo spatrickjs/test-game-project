@@ -4,14 +4,26 @@ extends Node2D
 
 signal cell_clicked(coordinates: Vector2i)
 signal camera_view_changed
+signal cells_selected(coordinates: Array[Vector2i], action_kind: int)
 
 @export var terrain_layer: TileMapLayer
+## Runtime-generated backdrop only. Never assign an authored scenery layer here.
+@export var background_fill_layer: TileMapLayer
+@export var automatic_background_enabled: bool = false
+## Authored scenery is never cleared or painted by FieldWorldView.
+@export var background_terrain_layer: TileMapLayer
+@export var background_decorations: TileMapLayer
 @export var visual_map: TerrainTileVisualMap
 @export var debug_clicks: bool = true
 @export var crop_overlay: CropDebugOverlay
 @export var crop_layer: TileMapLayer
+@export var crop_shadows: CropShadowOverlay
 @export var camera: Camera2D
+@export var farmer_agent: FarmerAgent
+@export var selection_overlay: FieldSelectionOverlay
 @export var camera_margin_pixels: float = 32.0
+## World-space camera adjustment. Positive Y moves the rendered field upward.
+@export var camera_center_offset: Vector2 = Vector2.ZERO
 @export var hud_reserved_height: float = 180.0
 @export_range(1.0, 10.0) var max_zoom_multiplier: float = 2.5
 @export_range(1.01, 2.0) var wheel_zoom_factor: float = 1.15
@@ -38,6 +50,14 @@ var _gesture_blocked: bool = false
 var last_error: String = ""
 var _snapshot: FieldGridState = null
 var _input_enabled: bool = false
+var _tool_active: bool = false
+var _multi_select: bool = false
+var _eligible: Dictionary[Vector2i, int] = {}
+var _selection: Array[Vector2i] = []
+var _selection_kind: int = -1
+var _selecting: bool = false
+var _selection_last: Vector2 = Vector2.ZERO
+var _middle_pan: bool = false
 
 
 func _ready() -> void:
@@ -92,18 +112,19 @@ func render_field(snapshot: FieldGridState, crops: CropDatabase) -> bool:
 ## Terrain-only entry point. Requires only terrain_layer and visual_map.
 ## Returns false with last_error on invalid configuration; never mutates input.
 func render_grid(grid_state: FieldGridState) -> bool:
-	set_interaction_enabled(false)
 	var errors: PackedStringArray = _validate_terrain_configuration()
 	if grid_state == null:
 		errors.append("World: grid_state is required.")
 	if not errors.is_empty():
 		last_error = "\n".join(errors)
 		push_error(last_error)
+		set_interaction_enabled(false)
 		return false
 	errors = grid_state.validate()
 	if not errors.is_empty():
 		last_error = "\n".join(errors)
 		push_error(last_error)
+		set_interaction_enabled(false)
 		return false
 	for y: int in range(grid_state.height):
 		for x: int in range(grid_state.width):
@@ -115,6 +136,7 @@ func render_grid(grid_state: FieldGridState) -> bool:
 	if not errors.is_empty():
 		last_error = "\n".join(errors)
 		push_error(last_error)
+		set_interaction_enabled(false)
 		return false
 	terrain_layer.clear()
 	# Raised tile side faces need back-to-front ordering.
@@ -124,6 +146,7 @@ func render_grid(grid_state: FieldGridState) -> bool:
 			var cell: FieldCellState = grid_state.get_cell(Vector2i(x, y))
 			var visual: TerrainTileVisual = visual_map.get_visual(cell.terrain_type)
 			terrain_layer.set_cell(cell.coordinates, visual.source_id, visual.atlas_coords, visual.alternative_tile)
+	_render_cosmetic_border(grid_state)
 	_render_grass_overlay(grid_state)
 	_snapshot = grid_state.copy()
 	last_error = ""
@@ -147,7 +170,9 @@ func _render_grass_overlay(grid_state: FieldGridState) -> void:
 	for y: int in range(grid_state.height):
 		for x: int in range(grid_state.width):
 			var cell: FieldCellState = grid_state.get_cell(Vector2i(x, y))
-			if cell.terrain_type == SimulationEnums.TerrainType.GRASS and decoration_rng.randf() < tuft_spawn_chance:
+			# Consume one value per coordinate so digging never relocates other tufts.
+			var spawn: bool = decoration_rng.randf() < tuft_spawn_chance
+			if cell.terrain_type == SimulationEnums.TerrainType.GRASS and spawn:
 				grass_overlay_layer.set_cell(cell.coordinates, animated_grass_source_id, grass_tuft_atlas_coords)
 
 
@@ -197,6 +222,9 @@ func validate_crop_visuals(crops: CropDatabase) -> PackedStringArray:
 
 ## Validate before drawing, erase vacant cells, then refresh occupied tiles.
 func render_crops(snapshot: FieldGridState, crops: CropDatabase) -> bool:
+	_align_crop_grid()
+	if crop_shadows != null:
+		crop_shadows.show_snapshot(snapshot)
 	if crop_layer == null:
 		return true
 	var errors: PackedStringArray = validate_crop_visuals(crops)
@@ -227,6 +255,25 @@ func render_crops(snapshot: FieldGridState, crops: CropDatabase) -> bool:
 	return true
 
 
+## Crop artwork keeps its own atlas and root origins, but uses terrain geometry.
+## Duplicate before changing geometry so shared authoring resources stay intact.
+func _align_crop_grid() -> void:
+	if crop_layer == null or crop_layer == terrain_layer or crop_layer.tile_set == null:
+		return
+	if terrain_layer == null or terrain_layer.tile_set == null:
+		return
+	var ground: TileSet = terrain_layer.tile_set
+	var crops: TileSet = crop_layer.tile_set
+	if crops.tile_size != ground.tile_size or crops.tile_shape != ground.tile_shape or crops.tile_layout != ground.tile_layout or crops.tile_offset_axis != ground.tile_offset_axis:
+		crops = crops.duplicate() as TileSet
+		crops.tile_shape = ground.tile_shape
+		crops.tile_layout = ground.tile_layout
+		crops.tile_offset_axis = ground.tile_offset_axis
+		crops.tile_size = ground.tile_size
+		crop_layer.tile_set = crops
+	crop_layer.global_transform = terrain_layer.global_transform
+
+
 func set_interaction_enabled(enabled: bool) -> void:
 	_input_enabled = enabled and _snapshot != null
 	set_process_unhandled_input(_input_enabled)
@@ -248,24 +295,19 @@ func get_cell_at_viewport_position(viewport_position: Vector2) -> Vector2i:
 
 
 func frame_field() -> void:
-	if _snapshot == null or camera == null or terrain_layer == null:
+	if _snapshot == null or camera == null or terrain_layer == null or terrain_layer.tile_set == null:
 		return
 	var bounds: Rect2 = Rect2()
 	var has_bounds: bool = false
+	var half_tile: Vector2 = Vector2(terrain_layer.tile_set.tile_size) * 0.5
 	for y: int in range(_snapshot.height):
 		for x: int in range(_snapshot.width):
 			var cell: FieldCellState = _snapshot.get_cell(Vector2i(x, y))
-			var visual: TerrainTileVisual = visual_map.get_visual(cell.terrain_type)
-			var atlas: TileSetAtlasSource = terrain_layer.tile_set.get_source(visual.source_id) as TileSetAtlasSource
-			var data: TileData = atlas.get_tile_data(visual.atlas_coords, visual.alternative_tile)
-			var region_size: Vector2 = Vector2(atlas.get_tile_texture_region(visual.atlas_coords).size)
-			var top_left: Vector2 = (
-				terrain_layer.map_to_local(cell.coordinates)
-				- region_size * 0.5 - Vector2(data.texture_origin)
-			)
+			var center: Vector2 = terrain_layer.map_to_local(cell.coordinates)
+			# Use the playable diamond, not transparent atlas padding or border cells.
 			var corners: Array[Vector2] = [
-				top_left, top_left + Vector2(region_size.x, 0.0),
-				top_left + region_size, top_left + Vector2(0.0, region_size.y),
+				center + Vector2(-half_tile.x, 0.0), center + Vector2(half_tile.x, 0.0),
+				center + Vector2(0.0, -half_tile.y), center + Vector2(0.0, half_tile.y),
 			]
 			for corner: Vector2 in corners:
 				var point: Vector2 = terrain_layer.to_global(corner)
@@ -276,7 +318,6 @@ func frame_field() -> void:
 					bounds = bounds.expand(point)
 	if not has_bounds:
 		return
-	bounds = bounds.grow(32.0)
 	var viewport_size: Vector2 = get_viewport_rect().size
 	var margin: float = maxf(0.0, camera_margin_pixels)
 	var reserved: float = clampf(hud_reserved_height, 0.0, viewport_size.y * 0.45)
@@ -284,21 +325,61 @@ func frame_field() -> void:
 		maxf(1.0, viewport_size.x - margin * 2.0),
 		maxf(1.0, viewport_size.y - reserved - margin * 2.0)
 	)
-	var zoom_factor: float = maxf(0.01, minf(
+	var zoom_factor: float = maxf(0.001, minf(
 		available.x / maxf(bounds.size.x, 1.0),
 		available.y / maxf(bounds.size.y, 1.0)
 	))
 	camera.zoom = Vector2(zoom_factor, zoom_factor)
-	camera.global_position = bounds.get_center() - Vector2(0.0, reserved * 0.5 / zoom_factor)
+	# The bottom HUD occupies screen space: move the camera DOWN to lift the field.
+	_default_camera_center = bounds.get_center() + Vector2(0.0, reserved * 0.5 / zoom_factor) + camera_center_offset
+	camera.global_position = _default_camera_center
 	min_zoom = zoom_factor
 	max_zoom = min_zoom * maxf(1.0, max_zoom_multiplier)
-	_default_camera_center = camera.global_position
+	_render_cosmetic_border(_snapshot)
 	_reset_touch_gesture()
 	_blocked_touches.clear()
 	camera.reset_smoothing()
 	camera.force_update_scroll()
 	camera_view_changed.emit()
 
+func _render_cosmetic_border(grid_state: FieldGridState) -> void:
+	if background_fill_layer == null:
+		return
+	if background_fill_layer in [terrain_layer, crop_layer, grass_overlay_layer, background_terrain_layer, background_decorations]:
+		return # A misassigned generated layer must never erase gameplay or artwork.
+	background_fill_layer.clear()
+	if not automatic_background_enabled:
+		return
+	background_fill_layer.tile_set = terrain_layer.tile_set
+	background_fill_layer.global_transform = terrain_layer.global_transform
+	background_fill_layer.z_index = terrain_layer.z_index
+	background_fill_layer.y_sort_enabled = true
+	var visual: TerrainTileVisual = visual_map.get_visual(SimulationEnums.TerrainType.GRASS)
+	if visual == null:
+		return
+
+	# Keep the original border, extending it to cover the shifted overview.
+	# Zoomed/panned views are clamped inside this same overview footprint.
+	var padding: int = 10
+	var minimum: Vector2i = Vector2i(-padding, -padding)
+	var maximum: Vector2i = Vector2i(grid_state.width + padding, grid_state.height + padding)
+	if camera != null and min_zoom > 0.0:
+		var half_view: Vector2 = get_viewport_rect().size * 0.5 / min_zoom
+		for direction: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
+			var corner: Vector2i = terrain_layer.local_to_map(terrain_layer.to_local(_default_camera_center + half_view * direction))
+			minimum = minimum.min(corner - Vector2i(2, 2))
+			maximum = maximum.max(corner + Vector2i(3, 3))
+	for y: int in range(minimum.y, maximum.y):
+		for x: int in range(minimum.x, maximum.x):
+			var coords: Vector2i = Vector2i(x, y)
+
+			# Only paint if this coordinate is OUTSIDE our actual playable farm grid
+			if not grid_state.is_in_bounds(coords):
+				if background_terrain_layer != null and background_terrain_layer.is_visible_in_tree():
+					var authored_coords: Vector2i = background_terrain_layer.local_to_map(background_terrain_layer.to_local(terrain_layer.to_global(terrain_layer.map_to_local(coords))))
+					if background_terrain_layer.get_cell_source_id(authored_coords) >= 0:
+						continue
+				background_fill_layer.set_cell(coords, visual.source_id, visual.atlas_coords, visual.alternative_tile)
 
 ## The visible rectangle always remains inside the original overview footprint.
 func clamp_camera_position() -> void:
@@ -343,6 +424,8 @@ func toggle_inspection_zoom() -> void:
 
 
 func _reset_touch_gesture() -> void:
+	_cancel_selection()
+	_middle_pan = false
 	_touches.clear()
 	_tap_index = -1
 	_gesture_blocked = false
@@ -402,6 +485,23 @@ func _is_over_ui(screen_pos: Vector2) -> bool:
 func _unhandled_input(event: InputEvent) -> void:
 	if not _input_enabled or terrain_layer == null:
 		return
+	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_MIDDLE:
+		var middle: InputEventMouseButton = event as InputEventMouseButton
+		_cancel_selection()
+		_mouse_down = false
+		_middle_pan = middle.pressed and not _is_over_ui(middle.position) and _touches.is_empty()
+		_mouse_last = middle.position
+		get_viewport().set_input_as_handled()
+		return
+	if event is InputEventMouseMotion and _middle_pan:
+		var middle_motion: InputEventMouseMotion = event as InputEventMouseMotion
+		if _is_over_ui(middle_motion.position) or not (middle_motion.button_mask & MOUSE_BUTTON_MASK_MIDDLE):
+			_reset_touch_gesture()
+			return
+		pan_camera(middle_motion.position - _mouse_last)
+		_mouse_last = middle_motion.position
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventScreenTouch:
 		var touch: InputEventScreenTouch = event as InputEventScreenTouch
 		if touch.device == -1:
@@ -423,10 +523,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			if _touches.size() == 1 and not _gesture_blocked:
 				_tap_index = touch.index
 				_tap_origin = touch.position
+				if _tool_active:
+					_begin_selection(touch.position)
 			else:
+				_cancel_selection()
 				_gesture_blocked = true
 				_tap_index = -1
 		else:
+			var finish_selection: bool = _selecting and not touch.canceled and not _gesture_blocked and touch.index == _tap_index and _touches.size() == 1
 			var is_tap: bool = (not touch.canceled and not _gesture_blocked
 				and touch.index == _tap_index and _touches.size() == 1
 				and touch.position.distance_to(_tap_origin) <= tap_drag_threshold)
@@ -434,7 +538,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			_tap_index = -1
 			if _touches.is_empty():
 				_gesture_blocked = false
-			if is_tap:
+			if finish_selection:
+				_extend_selection(touch.position)
+				_commit_selection()
+			elif _tool_active:
+				_cancel_selection()
+			elif is_tap:
 				_emit_cell_at(touch.position)
 		get_viewport().set_input_as_handled()
 	elif event is InputEventScreenDrag:
@@ -463,10 +572,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_touches[drag.index] = drag.position
 			if indices.size() == 1:
-				if drag.position.distance_to(_tap_origin) > tap_drag_threshold:
+				if _tool_active and _selecting:
+					_extend_selection(drag.position)
+				elif drag.position.distance_to(_tap_origin) > tap_drag_threshold:
 					_gesture_blocked = true
 					_tap_index = -1
-				if _gesture_blocked:
+				if _gesture_blocked and not _tool_active:
 					pan_camera(drag.position - previous)
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton:
@@ -484,10 +595,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				_mouse_dragged = false
 				_mouse_origin = mouse.position
 				_mouse_last = mouse.position
+				if _tool_active:
+					_begin_selection(mouse.position)
 			else:
 				var is_click: bool = _mouse_down and not _mouse_dragged and mouse.position.distance_to(_mouse_origin) <= tap_drag_threshold
 				_mouse_down = false
-				if is_click:
+				if _tool_active and _selecting:
+					_extend_selection(mouse.position)
+					_commit_selection()
+				elif is_click and not _tool_active:
 					_emit_cell_at(mouse.position)
 		else:
 			return
@@ -501,7 +617,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if motion.position.distance_to(_mouse_origin) > tap_drag_threshold:
 			_mouse_dragged = true
-		if _mouse_dragged:
+		if _tool_active and _selecting:
+			_extend_selection(motion.position)
+		elif _mouse_dragged and not _tool_active:
 			pan_camera(motion.position - _mouse_last)
 		_mouse_last = motion.position
 		get_viewport().set_input_as_handled()
@@ -514,3 +632,93 @@ func _emit_cell_at(viewport_position: Vector2) -> void:
 	if debug_clicks:
 		print("FieldWorldView: cell_clicked (%d, %d)" % [coordinates.x, coordinates.y])
 	cell_clicked.emit(coordinates)
+
+
+## Presenter supplies eligibility from Logic. Changing modes cancels the gesture;
+## refreshing eligibility while the farmer works must not cancel an active drag.
+func configure_tool(active: bool, multi_select: bool, eligible: Dictionary[Vector2i, int], mode_changed: bool = false) -> void:
+	if mode_changed:
+		_reset_touch_gesture()
+	_tool_active = active
+	_multi_select = multi_select
+	_eligible = eligible.duplicate()
+	if selection_overlay != null:
+		selection_overlay.eligible = _eligible.keys()
+
+
+func show_queued(coordinates: Array[Vector2i], pending_source: Vector2i = Vector2i(-1, -1)) -> void:
+	if selection_overlay != null:
+		selection_overlay.queued = coordinates.duplicate()
+		if pending_source.x >= 0 and not selection_overlay.queued.has(pending_source):
+			selection_overlay.queued.append(pending_source)
+
+
+func _begin_selection(screen_position: Vector2) -> void:
+	_cancel_selection()
+	_selecting = true
+	_selection_last = screen_position
+	_select_at(screen_position)
+
+
+func _extend_selection(screen_position: Vector2) -> void:
+	# Sample in terrain-local pixels so fast drags do not skip narrow diamonds.
+	var local_from: Vector2 = terrain_layer.get_global_transform_with_canvas().affine_inverse() * _selection_last
+	var local_to: Vector2 = terrain_layer.get_global_transform_with_canvas().affine_inverse() * screen_position
+	var step_size: float = maxf(1.0, float(terrain_layer.tile_set.tile_size.y) * 0.15)
+	var steps: int = maxi(1, ceili(local_from.distance_to(local_to) / step_size))
+	for step: int in range(1, steps + 1):
+		_select_at(_selection_last.lerp(screen_position, float(step) / float(steps)))
+	_selection_last = screen_position
+
+
+func _select_at(screen_position: Vector2) -> void:
+	var coords: Vector2i = get_cell_at_viewport_position(screen_position)
+	if not _eligible.has(coords) or _selection.has(coords):
+		return
+	if not _multi_select and not _selection.is_empty():
+		return
+	var kind: int = _eligible[coords]
+	if _selection_kind < 0:
+		_selection_kind = kind
+	if kind != _selection_kind:
+		return # Shovel gesture stays removal OR digging until release.
+	_selection.append(coords)
+	if selection_overlay != null:
+		selection_overlay.selected = _selection.duplicate()
+
+
+func _commit_selection() -> void:
+	var selected: Array[Vector2i] = []
+	for coords: Vector2i in _selection:
+		if _eligible.get(coords, -1) == _selection_kind:
+			selected.append(coords)
+	var kind: int = _selection_kind
+	_cancel_selection()
+	if selected.size() == 1:
+		cell_clicked.emit(selected[0])
+	elif not selected.is_empty():
+		cells_selected.emit(selected, kind)
+
+
+func _cancel_selection() -> void:
+	_selecting = false
+	_selection_kind = -1
+	_selection.clear()
+	if selection_overlay != null:
+		selection_overlay.selected.clear()
+
+
+## A point slightly beyond an orthogonal edge midpoint, never target center.
+## Outside-grid offsets are allowed at boundaries; no obstacle/pathfinding model.
+func standing_point(coordinates: Vector2i, from_global: Vector2) -> Vector2:
+	var center: Vector2 = terrain_layer.map_to_local(coordinates)
+	var best: Vector2 = Vector2.ZERO
+	var best_distance: float = INF
+	for direction: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+		var neighbor: Vector2 = terrain_layer.map_to_local(coordinates + direction)
+		var candidate: Vector2 = terrain_layer.to_global(center.lerp(neighbor, 0.6))
+		var distance: float = candidate.distance_squared_to(from_global)
+		if distance < best_distance:
+			best_distance = distance
+			best = candidate
+	return best
