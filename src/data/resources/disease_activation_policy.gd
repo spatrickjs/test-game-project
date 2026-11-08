@@ -5,9 +5,9 @@ extends Resource
 @export var enabled: bool = true
 @export var allowed_disease_ids: Array[SimulationEnums.DiseaseId] = [SimulationEnums.DiseaseId.RICE_BLAST]
 @export_range(1, 1000, 1, "or_greater") var first_eligible_turn: int = 3
-@export_range(0.0, 1.0) var chance_per_eligible_turn: float = 0.25
-@export_range(0, 1000, 1, "or_greater") var cooldown_turns: int = 3
-@export_range(0, 1000, 1, "or_greater") var max_introductions_per_session: int = 2
+@export_range(0.0, 1.0) var chance_per_eligible_turn: float = 0.50
+@export_range(0, 1000, 1, "or_greater") var cooldown_turns: int = 2
+@export_range(0, 1000, 1, "or_greater") var max_introductions_per_session: int = 5
 @export var random_seed: int = 2026
 @export_multiline var design_note: String = "Illustrative game encounters; frequency and timing are designer choices, not measured outbreak probabilities."
 
