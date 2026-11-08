@@ -27,6 +27,7 @@ extends Node
 @export var fertilize_button: Button
 @export var soil_tool_controller: SoilToolController
 @export var water_bucket_button: Button
+@export var game_state_manager: GameStateManager
 enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE, TOOL_WATER_BUCKET }
 var _tool_mode: ToolMode = ToolMode.INSPECT
 var _transfer_source: Vector2i = Vector2i(-1, -1)
@@ -35,6 +36,12 @@ var _selected_crop: SimulationEnums.CropType = SimulationEnums.CropType.SUGARCAN
 var _running: bool = false
 var _planting_enabled: bool = false
 var _inspected_coordinates: Vector2i = Vector2i(-1, -1)
+var _start_overlay: CanvasLayer
+var _end_overlay: CanvasLayer
+var _end_overlay_title: Label
+var _end_overlay_details: Label
+var _end_overlay_button: Button
+var _score_label: Label
 
 
 func _ready() -> void:
@@ -57,6 +64,13 @@ func _ready() -> void:
 	if not errors.is_empty():
 		_show_failure("\n".join(errors))
 		return
+	# Game loop setup.
+	if game_state_manager == null:
+		game_state_manager = GameStateManager.new()
+		add_child(game_state_manager)
+	_create_overlays()
+	_connect_game_signals()
+	next_turn_button.text = "End Turn"
 	# All listeners are connected before Logic emits its initialization signal.
 	if not farming_controller.initialize_field():
 		_show_failure(farming_controller.last_error)
@@ -147,12 +161,17 @@ func _on_field_initialized() -> void:
 	_running = true
 	if world_view.farmer_agent != null:
 		world_view.farmer_agent.global_position = world_view.standing_point(Vector2i.ZERO, world_view.terrain_layer.to_global(world_view.terrain_layer.map_to_local(Vector2i(-1, 0))))
-	_set_controls_enabled(true)
 	_enter_inspect_mode()
 	turn_label.text = "Turn: 0"
 	_sync_algorithm_selector()
+	_update_score_display()
 	# Run again after the scene's first layout pass.
 	world_view.frame_field.call_deferred()
+	# Gate controls by game state: show start screen on first init, enable on restart.
+	if game_state_manager.current_state == GameStateManager.State.MENU:
+		_start_overlay.visible = true
+	elif game_state_manager.is_playing():
+		_set_controls_enabled(true)
 
 
 func _set_controls_enabled(enabled: bool) -> void:
@@ -167,7 +186,7 @@ func _set_controls_enabled(enabled: bool) -> void:
 
 
 func _select_crop(crop_type: SimulationEnums.CropType) -> void:
-	if not _running:
+	if not _running or not game_state_manager.is_playing():
 		return
 	var crop: CropData = farming_controller.crop_database.get_crop(crop_type)
 	if crop == null:
@@ -281,7 +300,7 @@ func _on_corn_pressed() -> void:
 
 
 func _on_cell_clicked(coordinates: Vector2i) -> void:
-	if not _running:
+	if not _running or not game_state_manager.is_playing():
 		return
 	if _tool_mode == ToolMode.TOOL_TRANSFER:
 		_handle_transfer_click(coordinates)
@@ -309,7 +328,7 @@ func _on_planting_rejected(_coordinates: Vector2i, reason: String) -> void:
 
 
 func _on_next_turn_pressed() -> void:
-	if _running and not turn_controller.advance_turn():
+	if _running and game_state_manager.is_playing() and not turn_controller.advance_turn():
 		status_label.text = turn_controller.last_error
 
 
@@ -324,6 +343,7 @@ func _on_turn_completed(turn_index: int) -> void:
 		status_label.text = "Turn advanced. Choose a crop to move."
 	elif _tool_mode == ToolMode.TOOL_REMOVE:
 		status_label.text = "Turn advanced. Choose a crop to remove."
+	game_state_manager.check_turn_limit(turn_index)
 
 
 func _on_water_pressed() -> void:
@@ -351,7 +371,7 @@ func _on_transfer_pressed() -> void:
 
 
 func _select_management_tool(mode: ToolMode) -> void:
-	if not _running:
+	if not _running or not game_state_manager.is_playing():
 		return
 	if _tool_mode == mode:
 		_enter_inspect_mode()
@@ -476,7 +496,7 @@ func _queue_at(coordinates: Vector2i, expected_kind: int = -1) -> bool:
 
 
 func _on_cells_selected(coordinates: Array[Vector2i], kind: int) -> void:
-	if not _running or _tool_mode == ToolMode.INSPECT:
+	if not _running or not game_state_manager.is_playing() or _tool_mode == ToolMode.INSPECT:
 		return
 	for coords: Vector2i in coordinates:
 		_queue_at(coords, kind)
@@ -530,3 +550,131 @@ func _on_action_finished(_action_id: int, success: bool, reason: String) -> void
 
 func _on_queued_harvest_completed(result: HarvestResult) -> void:
 	status_label.text = "Harvested: %.0f%% yield quality." % (100.0 * result.quality_multiplier) if result.success else result.reason
+	game_state_manager.record_harvest(result)
+
+
+func _create_overlays() -> void:
+	# --- Start screen overlay ---
+	_start_overlay = CanvasLayer.new()
+	_start_overlay.layer = 10
+	_start_overlay.visible = false
+	add_child(_start_overlay)
+	var start_bg := ColorRect.new()
+	start_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	start_bg.color = Color(0.0, 0.0, 0.0, 0.7)
+	start_bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	_start_overlay.add_child(start_bg)
+	var start_center := CenterContainer.new()
+	start_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_start_overlay.add_child(start_center)
+	var start_vbox := VBoxContainer.new()
+	start_vbox.custom_minimum_size = Vector2(420, 0)
+	start_vbox.add_theme_constant_override("separation", 16)
+	start_center.add_child(start_vbox)
+	var start_title := Label.new()
+	start_title.text = "Farming Simulator"
+	start_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	start_title.add_theme_font_size_override("font_size", 28)
+	start_vbox.add_child(start_title)
+	var start_blurb := Label.new()
+	start_blurb.text = "Plant crops, manage soil, and harvest before the turn limit.\nGoal: harvest %d crops in %d turns." % [game_state_manager.harvest_goal, game_state_manager.turn_limit]
+	start_blurb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	start_vbox.add_child(start_blurb)
+	var start_button := Button.new()
+	start_button.text = "Start Game"
+	start_button.custom_minimum_size = Vector2(200, 48)
+	start_button.size_flags_horizontal = Control.SIZE_EXPAND
+	_connect_once(start_button.pressed, _on_start_pressed)
+	start_vbox.add_child(start_button)
+	# --- End screen overlay ---
+	_end_overlay = CanvasLayer.new()
+	_end_overlay.layer = 10
+	_end_overlay.visible = false
+	add_child(_end_overlay)
+	var end_bg := ColorRect.new()
+	end_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	end_bg.color = Color(0.0, 0.0, 0.0, 0.7)
+	end_bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	_end_overlay.add_child(end_bg)
+	var end_center := CenterContainer.new()
+	end_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_end_overlay.add_child(end_center)
+	var end_vbox := VBoxContainer.new()
+	end_vbox.custom_minimum_size = Vector2(420, 0)
+	end_vbox.add_theme_constant_override("separation", 16)
+	end_center.add_child(end_vbox)
+	_end_overlay_title = Label.new()
+	_end_overlay_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_end_overlay_title.add_theme_font_size_override("font_size", 28)
+	end_vbox.add_child(_end_overlay_title)
+	_end_overlay_details = Label.new()
+	_end_overlay_details.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	end_vbox.add_child(_end_overlay_details)
+	_end_overlay_button = Button.new()
+	_end_overlay_button.text = "Play Again"
+	_end_overlay_button.custom_minimum_size = Vector2(200, 48)
+	_end_overlay_button.size_flags_horizontal = Control.SIZE_EXPAND
+	_connect_once(_end_overlay_button.pressed, _on_play_again_pressed)
+	end_vbox.add_child(_end_overlay_button)
+	# --- Score label in HUD ---
+	_score_label = Label.new()
+	_score_label.text = "Harvested: 0 / %d" % game_state_manager.harvest_goal
+	var controls: VBoxContainer = hud_panel.get_node("Margin/Controls")
+	controls.add_child(_score_label)
+	controls.move_child(_score_label, 1)
+
+
+func _connect_game_signals() -> void:
+	_connect_once(game_state_manager.state_changed, _on_game_state_changed)
+	_connect_once(game_state_manager.score_changed, _on_score_changed)
+	_connect_once(game_state_manager.game_ended, _on_game_ended)
+
+
+func _on_start_pressed() -> void:
+	game_state_manager.start_game()
+
+
+func _on_game_state_changed(_old_state: GameStateManager.State, new_state: GameStateManager.State) -> void:
+	match new_state:
+		GameStateManager.State.PLAYING:
+			_start_overlay.visible = false
+			_end_overlay.visible = false
+			if _running:
+				_set_controls_enabled(true)
+		GameStateManager.State.GAME_OVER, GameStateManager.State.VICTORY:
+			_set_controls_enabled(false)
+		GameStateManager.State.MENU:
+			_set_controls_enabled(false)
+			_end_overlay.visible = false
+			_start_overlay.visible = true
+
+
+func _on_score_changed(_harvests: int, _goal: int) -> void:
+	_update_score_display()
+
+
+func _update_score_display() -> void:
+	if _score_label != null and game_state_manager != null:
+		_score_label.text = "Harvested: %d / %d" % [game_state_manager.harvest_count, game_state_manager.harvest_goal]
+
+
+func _on_game_ended(victory: bool) -> void:
+	_set_controls_enabled(false)
+	if victory:
+		_end_overlay_title.text = "Victory!"
+		_end_overlay_title.add_theme_color_override("font_color", Color(0.3, 0.8, 0.3))
+		_end_overlay_details.text = "You harvested %d crops in %d turns!" % [game_state_manager.harvest_count, game_state_manager.turns_reached]
+	else:
+		_end_overlay_title.text = "Game Over"
+		_end_overlay_title.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
+		_end_overlay_details.text = "You harvested %d of %d crops in %d turns." % [game_state_manager.harvest_count, game_state_manager.harvest_goal, game_state_manager.turns_reached]
+	_end_overlay_button.text = "Play Again"
+	_end_overlay.visible = true
+
+
+func _on_play_again_pressed() -> void:
+	_end_overlay.visible = false
+	game_state_manager.start_game()
+	turn_controller.reset_clock()
+	if not farming_controller.initialize_field():
+		_show_failure(farming_controller.last_error)
