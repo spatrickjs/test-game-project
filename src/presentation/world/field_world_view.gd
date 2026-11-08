@@ -217,6 +217,19 @@ func validate_crop_visuals(crops: CropDatabase) -> PackedStringArray:
 			var atlas: TileSetAtlasSource = crop_layer.tile_set.get_source(source_id) as TileSetAtlasSource
 			if atlas == null or not atlas.has_tile(crop.growth_stage_atlas_coords[stage]):
 				errors.append("%s stage %d: missing atlas tile." % [crop.display_name, stage])
+		if crop.disease_stage_source_ids.size() != 4 or crop.disease_stage_atlas_coords.size() != 4:
+			errors.append("%s: disease visual arrays must contain four entries." % crop.display_name)
+		else:
+			for stage: int in range(4):
+				var disease_source_id: int = crop.disease_stage_source_ids[stage]
+				if disease_source_id < 0:
+					continue
+				if not crop_layer.tile_set.has_source(disease_source_id):
+					errors.append("%s disease stage %d: missing source %d." % [crop.display_name, stage, disease_source_id])
+					continue
+				var disease_atlas: TileSetAtlasSource = crop_layer.tile_set.get_source(disease_source_id) as TileSetAtlasSource
+				if disease_atlas == null or not disease_atlas.has_tile(crop.disease_stage_atlas_coords[stage]):
+					errors.append("%s disease stage %d: missing atlas tile." % [crop.display_name, stage])
 	return errors
 
 
@@ -250,7 +263,10 @@ func render_crops(snapshot: FieldGridState, crops: CropDatabase) -> bool:
 				continue
 			var crop: CropData = crops.get_crop(cell.crop_type)
 			var stage: int = get_growth_stage(cell.growth_elapsed_ticks, crop.growth_ticks)
-			crop_layer.set_cell(cell.coordinates, crop.growth_stage_source_ids[stage], crop.growth_stage_atlas_coords[stage])
+			if cell.has_active_disease and crop.disease_stage_source_ids[stage] >= 0:
+				crop_layer.set_cell(cell.coordinates, crop.disease_stage_source_ids[stage], crop.disease_stage_atlas_coords[stage])
+			else:
+				crop_layer.set_cell(cell.coordinates, crop.growth_stage_source_ids[stage], crop.growth_stage_atlas_coords[stage])
 	last_error = ""
 	return true
 

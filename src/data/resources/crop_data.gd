@@ -19,6 +19,9 @@ extends Resource
 ## Logic and Simulation must not interpret these TileSet identifiers.
 @export var growth_stage_source_ids: Array[int] = [-1, -1, -1, -1]
 @export var growth_stage_atlas_coords: Array[Vector2i] = [Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO]
+## Diseased variants parallel to growth stages; -1 means not authored (falls back to healthy).
+@export var disease_stage_source_ids: Array[int] = [-1, -1, -1, -1]
+@export var disease_stage_atlas_coords: Array[Vector2i] = [Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO]
 
 @export_group("Optional Rules")
 ## Outside these intervals, crop stress increases. Empty arrays are neutral.
@@ -81,6 +84,8 @@ func copy() -> CropData:
 	result.base_immunity = base_immunity
 	result.growth_stage_source_ids = growth_stage_source_ids.duplicate()
 	result.growth_stage_atlas_coords = growth_stage_atlas_coords.duplicate()
+	result.disease_stage_source_ids = disease_stage_source_ids.duplicate()
+	result.disease_stage_atlas_coords = disease_stage_atlas_coords.duplicate()
 	for rule: AbioticRule in abiotic_tolerance_rules:
 		if rule == null:
 			result.abiotic_tolerance_rules.append(null)

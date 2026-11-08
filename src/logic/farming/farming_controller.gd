@@ -249,6 +249,9 @@ func seed_infection(coordinates: Vector2i, disease_id: SimulationEnums.DiseaseId
 	if not reason.is_empty():
 		return _fail(reason)
 	_grid = candidate
+	var disease: DiseaseData = diseases.get_disease(disease_id)
+	var disease_name: String = disease.display_name if disease != null else str(disease_id)
+	print("Patient zero seeded: %s at %s." % [disease_name, coordinates])
 	last_error = ""
 	_emit_cell_changed(coordinates)
 	return true
