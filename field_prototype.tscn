@@ -35,8 +35,8 @@
 [ext_resource type="Script" uid="uid://dmwfbudlygvky" path="res://src/logic/environment/weather_manager.gd" id="27_mfnx3"]
 [ext_resource type="Script" uid="uid://bh07j7g2ueac1" path="res://src/presentation/world/field_selection_overlay.gd" id="28_3wfy2"]
 [ext_resource type="Script" uid="uid://c0xjvj7idv2fq" path="res://src/logic/farming/soil_tool_controller.gd" id="28_gxe8k"]
-[ext_resource type="Script" path="res://src/presentation/ui/pause_menu_view.gd" id="29_pause"]
 [ext_resource type="Script" uid="uid://q2tph6b4xeio" path="res://src/presentation/world/crop_shadow_overlay.gd" id="29_3wfy2"]
+[ext_resource type="Script" uid="uid://ma86048skmrv" path="res://src/presentation/ui/pause_menu_view.gd" id="29_pause"]
 [ext_resource type="Script" uid="uid://xv0vhi4veopc" path="res://src/logic/environment/disease_activation_controller.gd" id="37_jeedr"]
 [ext_resource type="Resource" uid="uid://dhxtd6ic3uj68" path="res://src/data/resources/disease_activation/default_activation_policy.tres" id="38_7a55d"]
 [ext_resource type="Script" uid="uid://cgcmesq61apy" path="res://src/logic/turns/game_state_manager.gd" id="39_0n7ni"]
@@ -1038,39 +1038,38 @@ script = ExtResource("28_gxe8k")
 farming_controller = NodePath("../FarmingController")
 
 [node name="PauseLayer" type="CanvasLayer" parent="." unique_id=1178418751]
-layer = 1
 
 [node name="PauseButton" type="Button" parent="PauseLayer" unique_id=2119795751]
 custom_minimum_size = Vector2(132, 48)
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 148.0
-offset_bottom = 64.0
+offset_left = 570.1208
+offset_top = 14.240723
+offset_right = 702.1208
+offset_bottom = 62.240723
 mouse_force_pass_scroll_events = false
 text = "Pause"
 
 [node name="PauseMenu" type="Control" parent="PauseLayer" unique_id=703054139 node_paths=PackedStringArray("continue_button", "exit_to_menu_button")]
+process_mode = 3
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-process_mode = 3
 script = ExtResource("29_pause")
 continue_button = NodePath("CenterContainer/Panel/Margin/VBox/ContinueButton")
 exit_to_menu_button = NodePath("CenterContainer/Panel/Margin/VBox/ExitToMenuButton")
 
 [node name="DimBackground" type="ColorRect" parent="PauseLayer/PauseMenu" unique_id=967594051]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 0
 color = Color(0, 0, 0, 0.6)
 
 [node name="CenterContainer" type="CenterContainer" parent="PauseLayer/PauseMenu" unique_id=2137092682]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -1081,7 +1080,6 @@ mouse_filter = 2
 [node name="Panel" type="PanelContainer" parent="PauseLayer/PauseMenu/CenterContainer" unique_id=479082201]
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
-mouse_filter = 0
 
 [node name="Margin" type="MarginContainer" parent="PauseLayer/PauseMenu/CenterContainer/Panel" unique_id=1922421208]
 layout_mode = 2
