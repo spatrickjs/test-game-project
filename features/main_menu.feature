@@ -122,3 +122,24 @@ Feature: Main Menu
         Given I am viewing the exit confirmation dialog
         When I click the Cancel button
         Then I should return to the Main Menu screen
+
+    # Pause Menu
+
+    Scenario: Player pauses the game
+        Given I am playing the game
+        When I press the Escape key
+        Then I should see the pause menu
+        And the game should be paused
+        And I should see a Continue button
+        And I should see an Exit to Main Menu button
+
+    Scenario: Player resumes the game from the pause menu
+        Given I am viewing the pause menu
+        When I click the Continue button
+        Then the game should resume
+        And I should no longer see the pause menu
+
+    Scenario: Player exits to the main menu from the pause menu
+        Given I am viewing the pause menu
+        When I click the Exit to Main Menu button
+        Then I should return to the Main Menu screen

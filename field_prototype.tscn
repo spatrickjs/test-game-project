@@ -30,6 +30,7 @@
 [ext_resource type="Texture2D" uid="uid://ymbkqy087onx" path="res://assets/art/tilesets/foliage/animated_grass_tuft.png" id="26_dqm82"]
 [ext_resource type="Script" uid="uid://dmwfbudlygvky" path="res://src/logic/environment/weather_manager.gd" id="27_mfnx3"]
 [ext_resource type="Script" uid="uid://c0xjvj7idv2fq" path="res://src/logic/farming/soil_tool_controller.gd" id="28_gxe8k"]
+[ext_resource type="Script" path="res://src/presentation/ui/pause_menu_view.gd" id="29_pause"]
 
 [sub_resource type="Resource" id="Resource_34f8n"]
 script = ExtResource("7_p35bb")
@@ -362,7 +363,7 @@ sources/9 = SubResource("TileSetAtlasSource_7a55d")
 sources/10 = SubResource("TileSetAtlasSource_2l5e1")
 sources/11 = SubResource("TileSetAtlasSource_bct15")
 
-[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "soil_tool_controller")]
+[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "pause_button", "pause_menu", "soil_tool_controller")]
 script = ExtResource("1_44tld")
 farming_controller = NodePath("FarmingController")
 turn_controller = NodePath("TurnController")
@@ -383,6 +384,8 @@ camera_zoom_button = NodePath("HUD/CameraZoomButton")
 harvest_button = NodePath("HUD/HarvestButton")
 water_button = NodePath("HUD/WaterButton")
 fertilize_button = NodePath("HUD/FertilizeButton")
+pause_button = NodePath("PauseLayer/PauseButton")
+pause_menu = NodePath("PauseLayer/PauseMenu")
 soil_tool_controller = NodePath("SoilToolController")
 
 [node name="FarmingController" type="Node" parent="." unique_id=889834426]
@@ -858,3 +861,79 @@ fluctuations_enabled = true
 [node name="SoilToolController" type="Node" parent="." unique_id=626484259 node_paths=PackedStringArray("farming_controller")]
 script = ExtResource("28_gxe8k")
 farming_controller = NodePath("../FarmingController")
+
+[node name="PauseLayer" type="CanvasLayer" parent="." unique_id=1178418751]
+layer = 1
+
+[node name="PauseButton" type="Button" parent="PauseLayer" unique_id=2119795751]
+custom_minimum_size = Vector2(132, 48)
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 148.0
+offset_bottom = 64.0
+mouse_force_pass_scroll_events = false
+text = "Pause"
+
+[node name="PauseMenu" type="Control" parent="PauseLayer" unique_id=703054139 node_paths=PackedStringArray("continue_button", "exit_to_menu_button")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+process_mode = 3
+script = ExtResource("29_pause")
+continue_button = NodePath("CenterContainer/Panel/Margin/VBox/ContinueButton")
+exit_to_menu_button = NodePath("CenterContainer/Panel/Margin/VBox/ExitToMenuButton")
+
+[node name="DimBackground" type="ColorRect" parent="PauseLayer/PauseMenu" unique_id=967594051]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0, 0, 0, 0.6)
+
+[node name="CenterContainer" type="CenterContainer" parent="PauseLayer/PauseMenu" unique_id=2137092682]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="PauseLayer/PauseMenu/CenterContainer" unique_id=479082201]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+mouse_filter = 0
+
+[node name="Margin" type="MarginContainer" parent="PauseLayer/PauseMenu/CenterContainer/Panel" unique_id=1922421208]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="PauseLayer/PauseMenu/CenterContainer/Panel/Margin" unique_id=640385892]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="PauseLayer/PauseMenu/CenterContainer/Panel/Margin/VBox" unique_id=828295203]
+layout_mode = 2
+text = "Paused"
+horizontal_alignment = 1
+
+[node name="ContinueButton" type="Button" parent="PauseLayer/PauseMenu/CenterContainer/Panel/Margin/VBox" unique_id=1190487198]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+mouse_force_pass_scroll_events = false
+text = "Continue"
+
+[node name="ExitToMenuButton" type="Button" parent="PauseLayer/PauseMenu/CenterContainer/Panel/Margin/VBox" unique_id=31658864]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+mouse_force_pass_scroll_events = false
+text = "Exit to Main Menu"

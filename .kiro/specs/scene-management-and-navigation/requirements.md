@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This feature provides scene management and navigation for the Game's Main Menu and its associated sub-panels. It enables players to navigate between the Main Menu and the Settings panel (with Sound, Graphics, and Difficulty tabs), the About Us panel, and the Play menu. It also covers settings persistence and unsaved-change handling, game initialization (new game and continue), and game exit with confirmation. All requirements are derived from the Gherkin scenarios defined in `features/main_menu.feature` and align with the project's game acceptance criteria steering file.
+This feature provides scene management and navigation for the Game's Main Menu and its associated sub-panels. It enables players to navigate between the Main Menu and the Settings panel (with Sound, Graphics, and Difficulty tabs), the About Us panel, and the Play menu. It also covers settings persistence and unsaved-change handling, game initialization (new game and continue), game exit with confirmation, and a pause menu that allows players to resume gameplay or return to the Main Menu from the Game_Scene. All requirements are derived from the Gherkin scenarios defined in `features/main_menu.feature` and align with the project's game acceptance criteria steering file.
 
 ## Glossary
 
@@ -18,6 +18,8 @@ This feature provides scene management and navigation for the Game's Main Menu a
 - **Discard_Confirmation_Dialog**: A dialog that prompts the player to confirm or cancel discarding unsaved Settings_Panel changes.
 - **Exit_Confirmation_Dialog**: A dialog that prompts the player to confirm or cancel exiting the Game.
 - **Save_Confirmation**: A visual indicator confirming that Settings_Panel changes have been persisted.
+- **Game_Scene**: The gameplay scene where the player actively plays the Game, entered from the Play_Menu via the New Game or Continue options.
+- **Pause_Menu**: An overlay panel displayed over the Game_Scene when the player pauses the game, providing Continue and Exit to Main Menu options.
 
 ## Requirements
 
@@ -91,3 +93,14 @@ This feature provides scene management and navigation for the Game's Main Menu a
 1. WHEN the player clicks the Exit Game button on the Main_Menu, THE Game SHALL display the Exit_Confirmation_Dialog containing Confirm and Cancel buttons.
 2. WHEN the player clicks the Confirm button on the Exit_Confirmation_Dialog, THE Game SHALL close the Game.
 3. WHEN the player clicks the Cancel button on the Exit_Confirmation_Dialog, THE Game SHALL dismiss the Exit_Confirmation_Dialog and return the player to the Main_Menu screen.
+
+### Requirement 8: Pause Menu During Gameplay
+
+**User Story:** As a player, I want to pause the game and choose to resume or return to the Main Menu, so that I can take a break or leave the game without losing my place.
+
+#### Acceptance Criteria
+
+1. WHILE the player is in the Game_Scene, WHEN the player presses the pause button or the Escape key, THE Game SHALL pause gameplay and display the Pause_Menu overlay.
+2. WHILE the Pause_Menu overlay is displayed, THE Pause_Menu SHALL show a Continue button and an Exit to Main Menu button.
+3. WHEN the player clicks the Continue button on the Pause_Menu, THE Game SHALL resume gameplay and hide the Pause_Menu overlay.
+4. WHEN the player clicks the Exit to Main Menu button on the Pause_Menu, THE Game SHALL transition from the Game_Scene to the Main_Menu screen.

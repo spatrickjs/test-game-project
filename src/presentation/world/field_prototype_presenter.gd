@@ -25,6 +25,12 @@ extends Node
 @export var harvest_button: Button
 @export var water_button: Button
 @export var fertilize_button: Button
+
+@export_group("Pause")
+@export var pause_button: Button
+@export var pause_menu: PauseMenuView
+
+@export_group("Logic")
 @export var soil_tool_controller: SoilToolController
 enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE }
 var _tool_mode: ToolMode = ToolMode.INSPECT
@@ -82,6 +88,13 @@ func _connect_signals() -> void:
 		world_view.register_ui_input_root(camera_zoom_button)
 		_connect_once(camera_zoom_button.pressed, world_view.toggle_inspection_zoom)
 		_connect_once(world_view.camera_view_changed, _refresh_camera_button)
+
+	if pause_button != null:
+		world_view.register_ui_input_root(pause_button)
+		_connect_once(pause_button.pressed, _on_pause_requested)
+	if pause_menu != null:
+		_connect_once(pause_menu.continue_pressed, _on_continue_requested)
+		_connect_once(pause_menu.exit_to_menu_pressed, _on_exit_to_menu_requested)
 
 	if remove_button != null:
 		_connect_once(remove_button.pressed, _on_remove_pressed)
@@ -144,7 +157,7 @@ func _on_field_initialized() -> void:
 
 
 func _set_controls_enabled(enabled: bool) -> void:
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button]:
 		if button != null:
 			button.disabled = not enabled
 	next_turn_button.disabled = not enabled
@@ -390,16 +403,19 @@ func _handle_transfer_click(coordinates: Vector2i) -> void:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if _running and event is InputEventKey:
-		var key: InputEventKey = event as InputEventKey
-		if key.pressed and not key.echo and key.keycode == KEY_ESCAPE:
-			_enter_inspect_mode()
-			get_viewport().set_input_as_handled()
+	# The pause menu (process_mode ALWAYS) handles Escape while paused; this
+	# presenter is pausable and does not receive input once the tree is paused.
+	if not _running or get_tree().paused or not (event is InputEventKey):
+		return
+	var key: InputEventKey = event as InputEventKey
+	if key.pressed and not key.echo and key.keycode == KEY_ESCAPE:
+		_open_pause_menu()
+		get_viewport().set_input_as_handled()
 
 
 func _show_failure(message: String) -> void:
 	_running = false
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button]:
 		if button != null:
 			button.disabled = true
 	if tile_inspector != null:
@@ -422,3 +438,31 @@ func _show_failure(message: String) -> void:
 func _refresh_camera_button() -> void:
 	if camera_zoom_button != null:
 		camera_zoom_button.text = "Reset view" if world_view.camera.zoom.x > world_view.min_zoom + 0.00001 else "Zoom in"
+
+
+# --- Pause menu ---------------------------------------------------------------
+
+func _open_pause_menu() -> void:
+	if pause_menu == null or get_tree().paused:
+		return
+	pause_menu.show_menu()
+	get_tree().paused = true
+
+
+func _on_pause_requested() -> void:
+	if not _running or get_tree().paused:
+		return
+	_open_pause_menu()
+
+
+func _on_continue_requested() -> void:
+	if pause_menu == null:
+		return
+	pause_menu.hide_menu()
+	get_tree().paused = false
+
+
+func _on_exit_to_menu_requested() -> void:
+	# Unpause before leaving so the destination scene starts in a normal state.
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://src/presentation/menu/main_menu.tscn")
