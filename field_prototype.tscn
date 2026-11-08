@@ -638,8 +638,12 @@ texture_scale = 6.62
 [node name="HUD" type="CanvasLayer" parent="." unique_id=222609720]
 
 [node name="Panel" type="PanelContainer" parent="HUD" unique_id=423698777]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -208.0
 offset_right = 454.0
-offset_bottom = 208.0
+grow_vertical = 0
 mouse_force_pass_scroll_events = false
 
 [node name="Margin" type="MarginContainer" parent="HUD/Panel" unique_id=1575669002]
@@ -975,6 +979,7 @@ mouse_force_pass_scroll_events = false
 text = "Seed Infection"
 
 [node name="CameraZoomButton" type="Button" parent="HUD" unique_id=719855363]
+visible = false
 custom_minimum_size = Vector2(132, 48)
 anchors_preset = 3
 anchor_left = 1.0
