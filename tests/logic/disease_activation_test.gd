@@ -89,7 +89,8 @@ func _run() -> void:
 		check(f.activation.get_state_snapshot().introductions_committed == 2, "Session limit enforced")
 		var receipt: HarvestResult = HarvestResult.new()
 		receipt.success = true
-		f.game.harvest_goal = 1
+		receipt.score = 1.0
+		f.game.score_goal = 1
 		f.game.record_harvest(receipt)
 		check(not f.turns.advance_turn(), "Victory blocks direct turns")
 		f.dispose()

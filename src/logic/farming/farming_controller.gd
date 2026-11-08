@@ -480,6 +480,9 @@ func harvest_crop(coordinates: Vector2i) -> HarvestResult:
 				else:
 					result.crop_type = cell.crop_type
 					result.quality_multiplier = 1.0 - cell.yield_quality_loss
+					var scoring: ScoringModel.Result = ScoringModel.evaluate(result, crop)
+					result.base_score = scoring.base_score
+					result.score = scoring.score
 					var candidate: FieldGridState = _grid.copy()
 					var cleared: FieldCellState = candidate.get_cell(coordinates)
 					cleared.has_crop = false

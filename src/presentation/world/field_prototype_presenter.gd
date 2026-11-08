@@ -46,6 +46,8 @@ var _start_overlay: CanvasLayer
 var _end_overlay: CanvasLayer
 var _end_overlay_title: Label
 var _end_overlay_details: Label
+var _end_overlay_score: Label
+var _end_overlay_breakdown: Label
 var _end_overlay_button: Button
 var _score_label: Label
 
@@ -621,7 +623,17 @@ func _create_overlays() -> void:
 	start_title.add_theme_font_size_override("font_size", 28)
 	start_vbox.add_child(start_title)
 	var start_blurb := Label.new()
-	start_blurb.text = "Plant crops, manage soil, and harvest before the turn limit.\nGoal: harvest %d crops in %d turns." % [game_state_manager.harvest_goal, game_state_manager.turn_limit]
+	var start_blurb_text := "Plant crops, manage soil, and harvest before the turn limit.\nGoal: reach %d points in %d turns." % [game_state_manager.score_goal, game_state_manager.turn_limit]
+	if farming_controller != null and farming_controller.crop_database != null:
+		var values := PackedStringArray()
+		var crop_types: Array[SimulationEnums.CropType] = [SimulationEnums.CropType.SUGARCANE, SimulationEnums.CropType.CORN, SimulationEnums.CropType.RICE]
+		for crop_type: SimulationEnums.CropType in crop_types:
+			var c: CropData = farming_controller.crop_database.get_crop(crop_type)
+			if c != null:
+				values.append("%s: %d" % [c.display_name, c.base_score])
+		if not values.is_empty():
+			start_blurb_text += "\nPer harvest: " + " - ".join(values) + " (quality reduces score)."
+	start_blurb.text = start_blurb_text
 	start_blurb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	start_vbox.add_child(start_blurb)
 	var start_button := Button.new()
@@ -651,6 +663,13 @@ func _create_overlays() -> void:
 	_end_overlay_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_end_overlay_title.add_theme_font_size_override("font_size", 28)
 	end_vbox.add_child(_end_overlay_title)
+	_end_overlay_score = Label.new()
+	_end_overlay_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_end_overlay_score.add_theme_font_size_override("font_size", 22)
+	end_vbox.add_child(_end_overlay_score)
+	_end_overlay_breakdown = Label.new()
+	_end_overlay_breakdown.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	end_vbox.add_child(_end_overlay_breakdown)
 	_end_overlay_details = Label.new()
 	_end_overlay_details.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	end_vbox.add_child(_end_overlay_details)
@@ -662,7 +681,7 @@ func _create_overlays() -> void:
 	end_vbox.add_child(_end_overlay_button)
 	# --- Score label in HUD ---
 	_score_label = Label.new()
-	_score_label.text = "Harvested: 0 / %d" % game_state_manager.harvest_goal
+	_score_label.text = "Score: 0 / %d" % game_state_manager.score_goal
 	var controls: VBoxContainer = hud_panel.get_node("Margin/Controls")
 	controls.add_child(_score_label)
 	controls.move_child(_score_label, 1)
@@ -693,27 +712,49 @@ func _on_game_state_changed(_old_state: GameStateManager.State, new_state: GameS
 			_start_overlay.visible = true
 
 
-func _on_score_changed(_harvests: int, _goal: int) -> void:
+func _on_score_changed(_total_score: float, _goal: int) -> void:
 	_update_score_display()
 
 
 func _update_score_display() -> void:
 	if _score_label != null and game_state_manager != null:
-		_score_label.text = "Harvested: %d / %d" % [game_state_manager.harvest_count, game_state_manager.harvest_goal]
+		_score_label.text = "Score: %d / %d" % [roundi(game_state_manager.total_score), game_state_manager.score_goal]
 
 
 func _on_game_ended(victory: bool) -> void:
 	_set_controls_enabled(false)
+	_end_overlay_score.text = "Final Score: %d / %d" % [roundi(game_state_manager.total_score), game_state_manager.score_goal]
+	_end_overlay_breakdown.text = _build_score_breakdown()
 	if victory:
 		_end_overlay_title.text = "Victory!"
 		_end_overlay_title.add_theme_color_override("font_color", Color(0.3, 0.8, 0.3))
-		_end_overlay_details.text = "You harvested %d crops in %d turns!" % [game_state_manager.harvest_count, game_state_manager.turns_reached]
+		_end_overlay_details.text = "Goal reached in %d turns with %d harvests." % [game_state_manager.turns_reached, game_state_manager.harvest_count]
 	else:
 		_end_overlay_title.text = "Game Over"
 		_end_overlay_title.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
-		_end_overlay_details.text = "You harvested %d of %d crops in %d turns." % [game_state_manager.harvest_count, game_state_manager.harvest_goal, game_state_manager.turns_reached]
+		_end_overlay_details.text = "Out of turns (%d). %d harvests scored %d of %d points." % [game_state_manager.turn_limit, game_state_manager.harvest_count, roundi(game_state_manager.total_score), game_state_manager.score_goal]
 	_end_overlay_button.text = "Play Again"
 	_end_overlay.visible = true
+
+
+func _build_score_breakdown() -> String:
+	if game_state_manager == null or game_state_manager.crop_tally.is_empty():
+		return "No harvests yet."
+	var names: Dictionary = {
+		SimulationEnums.CropType.SUGARCANE: "Sugarcane",
+		SimulationEnums.CropType.RICE: "Rice",
+		SimulationEnums.CropType.CORN: "Corn",
+	}
+	var lines: PackedStringArray = PackedStringArray()
+	var keys: Array = game_state_manager.crop_tally.keys()
+	keys.sort()
+	for key: int in keys:
+		var tally: GameStateManager.CropTally = game_state_manager.crop_tally[key] as GameStateManager.CropTally
+		if tally == null:
+			continue
+		var crop_name: String = names.get(key, "Crop %d" % key) as String
+		lines.append("%s: %d harvests - %d pts" % [crop_name, tally.count, roundi(tally.score)])
+	return "\n".join(lines)
 
 
 func _on_play_again_pressed() -> void:
