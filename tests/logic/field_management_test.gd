@@ -1,4 +1,5 @@
 extends SceneTree
+const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
 const QueueDriver = preload("res://tests/logic/queued_action_test_driver.gd")
 
 var _failures: PackedStringArray = PackedStringArray()
@@ -13,7 +14,9 @@ func _initialize() -> void:
 func _run() -> void:
 	root.size = Vector2i(1280, 720)
 	var scene: FieldPrototypePresenter = (load("res://field_prototype.tscn") as PackedScene).instantiate() as FieldPrototypePresenter
+	GameplayFixture.prepare(scene, true)
 	root.add_child(scene)
+	GameplayFixture.start(scene)
 	for frame: int in range(5):
 		await process_frame
 	var farming: FarmingController = scene.farming_controller

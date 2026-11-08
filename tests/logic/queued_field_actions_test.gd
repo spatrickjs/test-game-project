@@ -1,4 +1,5 @@
 extends SceneTree
+const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
 const QueueDriver = preload("res://tests/logic/queued_action_test_driver.gd")
 const Kind = SimulationEnums.FieldActionKind
 var _failures: PackedStringArray = PackedStringArray()
@@ -15,7 +16,9 @@ func _run() -> void:
 	_scene = (load("res://field_prototype.tscn") as PackedScene).instantiate() as FieldPrototypePresenter
 	# Explicit test layout; authored band order is intentionally configurable.
 	_scene.farming_controller.terrain_bands = [SimulationEnums.TerrainType.DRY_SOIL, SimulationEnums.TerrainType.PADDY_MUD, SimulationEnums.TerrainType.GRASS]
+	GameplayFixture.prepare(_scene, true)
 	root.add_child(_scene)
+	GameplayFixture.start(_scene)
 	for frame: int in range(5):
 		await process_frame
 	_farming = _scene.farming_controller

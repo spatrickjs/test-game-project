@@ -1,4 +1,5 @@
 extends SceneTree
+const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
 
 var _failures: PackedStringArray = PackedStringArray()
 var _intents: int = 0
@@ -14,7 +15,9 @@ func _run() -> void:
 	if presenter.world_view.background_fill_layer == null:
 		presenter.world_view.background_fill_layer = TileMapLayer.new()
 		presenter.world_view.add_child(presenter.world_view.background_fill_layer)
+	GameplayFixture.prepare(presenter, false)
 	root.add_child(presenter)
+	GameplayFixture.start(presenter)
 	for frame: int in range(5):
 		await process_frame
 	var view: FieldWorldView = presenter.world_view

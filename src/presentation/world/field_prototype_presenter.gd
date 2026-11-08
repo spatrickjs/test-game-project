@@ -68,6 +68,7 @@ func _ready() -> void:
 	if game_state_manager == null:
 		game_state_manager = GameStateManager.new()
 		add_child(game_state_manager)
+	turn_controller.game_state_manager = game_state_manager
 	_create_overlays()
 	_connect_game_signals()
 	next_turn_button.text = "End Turn"
@@ -262,7 +263,7 @@ func _on_inspector_closed() -> void:
 
 
 func _on_seed_infection_requested() -> void:
-	if not _running or _planting_enabled or _inspected_coordinates.x < 0:
+	if not _running or not game_state_manager.is_playing() or _planting_enabled or _inspected_coordinates.x < 0:
 		return
 	if farming_controller.seed_infection(_inspected_coordinates, playtest_disease_id, turn_controller.disease_database, turn_controller.simulation_controller):
 		status_label.text = "Patient zero seeded. Next Turn advances disease spread."
@@ -343,7 +344,6 @@ func _on_turn_completed(turn_index: int) -> void:
 		status_label.text = "Turn advanced. Choose a crop to move."
 	elif _tool_mode == ToolMode.TOOL_REMOVE:
 		status_label.text = "Turn advanced. Choose a crop to remove."
-	game_state_manager.check_turn_limit(turn_index)
 
 
 func _on_water_pressed() -> void:
@@ -528,7 +528,7 @@ func _refresh_tool_targets(mode_changed: bool = false) -> void:
 func _on_action_queue_changed() -> void:
 	_refresh_tool_targets()
 	if next_turn_button != null:
-		next_turn_button.disabled = not _running or farming_controller.has_pending_actions()
+		next_turn_button.disabled = not _running or game_state_manager == null or not game_state_manager.is_playing() or farming_controller.has_pending_actions()
 	var agent: FarmerAgent = world_view.farmer_agent
 	if agent == null:
 		return
@@ -674,7 +674,7 @@ func _on_game_ended(victory: bool) -> void:
 
 func _on_play_again_pressed() -> void:
 	_end_overlay.visible = false
-	game_state_manager.start_game()
-	turn_controller.reset_clock()
 	if not farming_controller.initialize_field():
 		_show_failure(farming_controller.last_error)
+		return
+	game_state_manager.start_game()

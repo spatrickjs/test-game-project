@@ -1,18 +1,51 @@
 # Project handoff: isometric crop disease education game
 
-Last reviewed: **2026-11-06 (Asia/Shanghai)**. This document combines approved design decisions, files inspected in the workspace, and previously reported test results. Paths below are relative to the project root; `res://` means the directory containing `project.godot`.
+Latest implementation update: **2026-11-08 (Asia/Manila)**. Earlier sections retain the November 6 checkpoint as history. Paths below are relative to the project root; `res://` means the directory containing `project.godot`.
+
+## Current handoff: November 8, 2026
+
+**Latest approved outcome:** automatic turn-based introductions and all nine catalog entries are playable. The eight new definitions remain labeled `(draft)` and share one explicitly fictional game preset. Rice Blast retains its earlier illustrative settings. RSSI means **Red-Striped Soft Scale Insect** and temporarily uses the same abstract compartment rules; pest-specific behavior is not implemented. The earlier decision to leave new entries inactive has been superseded.
+
+| Current setting | Value |
+|---|---|
+| Allowed catalog | All nine existing IDs, registered as standalone `.tres` resources |
+| Session selection | One compatible disease/pest identity per session |
+| First eligible completed turn | 3 |
+| Chance | 0.25 per eligible turn across the field |
+| Cooldown | Skip the next three completed turns after an introduction |
+| Session introduction limit | 2 |
+| Activation seed | 2026; separate from simulation randomness |
+| Session objective | Five successful harvests within twenty turns |
+
+The player must start the game, prepare compatible plots, and plant crops. Automatic introductions happen after existing progression; a newly introduced state progresses starting on the following turn. No compatible crop means no activation random draw. Retained identities and the simulation filter constrain selection. Turns are blocked while farmer tasks are queued or the session is not playing. The terminal turn skips new introductions. Play Again resets field, clock, selection, cooldown, and activation randomness. A fixed seed and identical board reproduce the sequence; restarting alone need not select another disease.
+
+FarmingController stages the complete turn on a detached grid. Any failure restores simulation RNG/cap diagnostics and preserves the authoritative field and activation history. Successful introduction notifications follow clock commit. Manual Seed Infection still uses the presenter's configured ID (Rice Blast by default); no disease-selection menu was added.
+
+**What is not finished:** disease-specific symptom sprites, prevention/treatment actions, disease-driven harvest/growth penalties, pest-specific RSSI behavior, and disease-specific environmental activation. Current crop lifecycle penalties are soil-based. WeatherManager's temperature/humidity still affect evaporation without synchronizing `AbioticState`. Do not imply that activation automatically implements these other features or that the temporary parameters are scientifically validated.
+
+**Read next:** [activation behavior and settings](DISEASE_ACTIVATION.md), [finalization checklist and files to change](DISEASE_FINALIZATION.md), and [catalog status](../src/data/resources/diseases/README.md).
+
+**Verification:** 21 tests are registered. The latest five targeted tests passed without engine warnings/errors: activation, catalog, playable catalog, existing disease playtest, and epidemiology models. The playable-catalog test exercises all nine saved entries under all three algorithms with repeated seeded fixtures. No current full-suite green claim is supported; section 8 records the last full run and four remaining visual/world-layout failures. This documentation refresh did not run tests.
+
+**Workspace:** branch `feat/assets`, HEAD `f3b32dd` (`feat: add game state manager`). The implementation remains modified/untracked in the worktree. No commit or push was performed. Preserve the user's authored scene and assets.
+
+**Setup is already complete:** nodes, policy, and catalogs were saved through Godot Editor APIs. Do not rerun setup merely to play. In particular, `tools/enable_draft_disease_playtest.gd` overwrites the eight new entries with its common preset and enables all IDs; do not run it after individual tuning.
 
 ## 1. Overview and continuation checkpoint
 
 Undergraduate Computer Science thesis: a 2D isometric educational mobile game explaining how crop diseases spread and how field management can prevent or reduce them. The intended audience is the general public. Development follows incremental prompting and **game-first order**.
 
-**Current checkpoint: 9×9 manual-world authoring, queued farming and presentation improvements implemented.** The saved playable field starts entirely as grass. Shovel retains crop removal and adds empty-grass digging; Water Bucket converts empty dry soil to paddy mud; Move reuses the existing control. Player actions wait for the procedural farmer to walk beside plots. Drag selection, eligibility diamonds, blinking queued plots, two-stop transfers, crop shadows and geometric camera framing are implemented. Automatic background grass is disabled and its unused scene node removed. The playable 9×9 editor preview remains enabled. Current authored surroundings are `BackgroundTerrain`, `Foliage` and `Trees`; preserve their painted cells and Inspector settings.
+**Current checkpoint: manual 9-by-9 world, queued farming, session win/loss, automatic introductions, and nine playable catalog entries.** The saved playable field starts entirely as grass. Shovel retains crop removal and adds empty-grass digging; Water Bucket converts empty dry soil to paddy mud; Move reuses the existing control. Player actions wait for the procedural farmer to walk beside plots. Drag selection, eligibility diamonds, blinking queued plots, two-stop transfers, crop shadows and geometric camera framing are implemented. Automatic background grass is disabled and its unused scene node removed. The playable 9×9 editor preview remains enabled. Current authored surroundings are `BackgroundTerrain`, `Foliage` and `Trees`; preserve their painted cells and Inspector settings.
 
-**Verification status: no current full-suite certification.** The last complete strict run was **16/17 passing at the earlier queue checkpoint**, with twelve saved-20-FPS versus expected-8-FPS crop-animation mismatches. The runner now contains **18 tests**. Later targeted background, camera and editor/runtime preview checks passed during implementation, but the current scene has subsequent user edits (painted surroundings, renamed decoration layers, camera offset and artwork changes). No tests were rerun for this documentation-only refresh. All-grass initialization also invalidates older tests that assume initially plantable dry/paddy bands; the later crop-visual run exhibited those fixture failures in addition to speed mismatches. See section 8 before claiming a clean suite.
+**Verification status: no current full-suite certification.** The latest five disease-focused tests pass. The runner has 21 entries. The most recent full run was at the 19-test activation checkpoint (14 passed, five failed); a subsequent crop-growth fixture correction passed on targeted rerun, leaving four recorded visual/world-layout failures. See section 8 for provenance. No tests were rerun during this documentation refresh.
 
-**Resume here:** the user intends to create replacement isometric assets and change tile dimensions. Autotiling and the proposed 128×64 footprint have only been discussed, not implemented or selected as final specifications. Obtain the actual assets/dimensions before migrating; preserve the current 9×9 logical field, manual scenery, animation resources and Inspector edits. Read section 19 for the proposed sheet layout and limitations. Reconcile animation speed and authoring-dependent test fixtures before a fresh full-suite claim. Physical mobile/safe-area checks and obstacle-aware walking remain outstanding. This turn updates documentation only; no scene regeneration, code changes, commit or push is authorized by the handoff refresh itself.
+**Resume here:** use the current playable catalog and [DISEASE_FINALIZATION.md](DISEASE_FINALIZATION.md) to review educational content, model suitability, game pacing, outcomes, and evaluation criteria before replacing temporary settings. Do not recreate activation or catalog files. Follow PCI for additional features. Asset replacement/autotiling remains a separate earlier discussion (section 19); no new tile footprint was approved. Preserve manual scenery and Inspector edits. This handoff refresh authorizes documentation only, not scene regeneration, a commit, or a push.
 
 Detailed continuation guides:
+
+- [DISEASE_ACTIVATION.md](DISEASE_ACTIVATION.md): automatic scheduling, transaction ownership, Inspector settings, and session reset.
+- [DISEASE_FINALIZATION.md](DISEASE_FINALIZATION.md): playable draft limitations, review checklist, and future change locations.
+- [Catalog README](../src/data/resources/diseases/README.md): all nine resource filenames and current status.
 
 - [EDITABLE_BACKGROUNDS.md](EDITABLE_BACKGROUNDS.md): manual background workflow and 9×9 placement guide. Its original `BackgroundDecorations` node is now named `Foliage` in the saved scene, with a separate `Trees` layer added by the user. Section 18 below records the current scene rather than the original setup template.
 - [QUEUED_FIELD_ACTIONS.md](QUEUED_FIELD_ACTIONS.md): context-sensitive tools, deferred queue, FarmerAgent, drag input and verification. This supersedes earlier descriptions of instantaneous player planting/removal/transfer and excluded tilling.
@@ -30,7 +63,7 @@ Detailed continuation guides:
 - Project name: `Test Game Project`.
 - Main scene: `res://field_prototype.tscn`; configured by UID in `project.godot`.
 - Viewport: 1280 × 720; `canvas_items` stretch with expanding aspect.
-- Current project root: `C:\Users\User\Documents\test-game-project\test-game-project`. Run project commands in this directory, which contains `project.godot`.
+- Current project root: `C:\Users\ASUS\Documents\test-game-project`. Run project commands from this directory.
 - Current verified executable: `C:\Program Files\Godot\Godot.exe.exe` (machine-specific, not a project dependency).
 
 ## 2. Architecture and mandatory conventions
@@ -86,9 +119,12 @@ All paths in this table are under `src/data/`.
 | `databases/terrain_database.gd` | TerrainDatabase | `get_terrain()`, `has_terrain()`, `validate()` |
 | `state/field_cell_state.gd` | FieldCellState | Passive per-cell state; `reset_crop_state()`, `is_mature(crop_data)`, `validate()`, `copy()` |
 | `state/field_grid_state.gd` | FieldGridState | Row-major cell container, shared environment; `initialize()`, `is_in_bounds()`, `get_cell()`, `set_cell()`, `validate()`, `copy()` |
+| `resources/disease_activation_policy.gd` | DiseaseActivationPolicy | Validated game scheduling settings; saved policy in `resources/disease_activation/` |
+| `state/disease_activation_state.gd` | DiseaseActivationState | Copied session selection, counters, and activation RNG state |
+| `state/disease_activation_request.gd` | DiseaseActivationRequest | Proposed ID/tile; no authoritative mutation |
 | `state/field_action.gd` | FieldAction | Detached queued intent; action ID/kind, source/target, crop/additions, visit phase, revision stamps, `copy()`, `stop_coordinates()` |
 
-Authored resources present: crop and terrain catalogs; sugarcane, rice, corn, dry-soil, paddy-mud, and grass definitions. The interactive setup additionally saved `src/data/resources/diseases/rice_blast.tres` and `src/data/databases/default_disease_database.tres`. These are demonstration definitions; nine empirically calibrated disease definitions are not complete. A completed schema is not empirical calibration. SaveData and benchmark-result schemas are not implemented.
+Authored resources include crop/terrain catalogs and all nine standalone entries under `src/data/resources/diseases/`, registered in `src/data/databases/default_disease_database.tres`. The saved activation policy permits all nine. The eight additions are playable drafts using the shared fictional preset; Rice Blast retains its earlier demonstration settings. See the catalog README for filenames and categories. Empirical calibration, SaveData, and benchmark-result schemas remain unfinished.
 
 ### Logic, Simulation, and Presentation
 
@@ -102,11 +138,16 @@ Authored resources present: crop and terrain catalogs; sugarcane, rice, corn, dr
 | `src/simulation/models/stochastic_ca_sir_model.gd` | StochasticCASIRModel: seeded categorical transitions with synchronized fractions |
 | `src/simulation/models/transmission_modifiers.gd` | TransmissionModifiers: `evaluate()`, `needs_crop()`, typed Result with multipliers/rates/cap flags |
 | `tools/repair_terrain_atlas.gd` | One-time Godot-API repair, already applied; not a routine pre-test operation |
-| `tools/run_tests.py` | Strict eighteen-test runner; rejects errors, warnings, failures, and missing PASS markers |
+| `tools/run_tests.py` | Strict 21-test runner with optional `--test` selection; rejects errors, warnings, failures, and missing PASS markers |
 | `addons/test_harness/plugin.gd` | Environment-gated editor test harness using normal editor lifecycle |
 | `src/logic/grid/field_grid_queries.gd` | FieldGridQueries: static `can_plant()`, `validate_terrain_assignments()` |
 | `src/logic/farming/farming_controller.gd` | FarmingController: existing farming/turn/snapshot APIs plus `enqueue_action()`, `action_error()`, `get_current_action()`, `get_queued_coordinates()`, `arrive_at_action()`, `cancel_actions()` |
-| `src/logic/turns/turn_controller.gd` | TurnController: `advance_turn()`, `reset_clock()`, `try_set_algorithm_override()` |
+| `src/logic/turns/turn_controller.gd` | TurnController: session-gated advancement, activation reset, clock commit, and notifications |
+| `src/logic/environment/disease_activation_controller.gd` | DiseaseActivationController: detached evaluation, committed history, independent RNG, and diagnostics |
+| `src/logic/turns/game_state_manager.gd` | GameStateManager: MENU/PLAYING/GAME_OVER/VICTORY, harvest goal, and turn limit |
+| `tools/setup_disease_activation.gd` | Editor setup for saved activation node, policy, and shared session-manager wiring |
+| `tools/setup_disease_catalog.gd` | Adds missing external catalog definitions without overwriting existing entries |
+| `tools/enable_draft_disease_playtest.gd` | Already-run authoring tool: overwrites eight drafts with temporary preset and allows all IDs; not a routine startup step |
 | `src/presentation/world/terrain_tile_visual.gd` | TerrainTileVisual: terrain/source/atlas/alternative mapping entry |
 | `src/presentation/world/terrain_tile_visual_map.gd` | TerrainTileVisualMap: `get_visual()`, `validate(tile_set)` |
 | `src/presentation/world/field_world_view.gd` | FieldWorldView: `render_field()`, `render_grid()`, `render_crops()`, `validate_crop_visuals()`, `get_growth_stage()`, `refresh_crops()`, `frame_field()`, coordinate conversion, `_unhandled_input()` |
@@ -135,7 +176,7 @@ Authored resources present: crop and terrain catalogs; sugarcane, rice, corn, dr
 | Rice | `RICE_TUNGRO`, `BACTERIAL_LEAF_BLIGHT`, `RICE_BLAST` |
 | Corn | `COMMON_CORN_RUST`, `PHILIPPINE_DOWNY_MILDEW`, `EAR_ROT` |
 
-Preserve `RSSI` as the approved project identifier for ratoon stunting; do not silently rename existing IDs.
+Preserve the numeric `RSSI` identifier. The user clarified that it means **Red-Striped Soft Scale Insect**, not ratoon stunting. Its representation as a pest requires a separate model review; do not automatically treat it as a calibrated disease definition.
 
 ### Environmental units and rule semantics
 
@@ -168,7 +209,7 @@ The same DiseaseData must support `SPATIAL_SIR = 0`, `SPATIAL_SEIR = 1`, and `ST
 
 Current saved field: **9 × 9**, `terrain_bands = [GRASS]` (`[2]`), coordinates X/Y 0–8. The FarmingController script still has legacy 9×6/three-band defaults, overridden by the scene. Dry soil supports sugarcane/corn; paddy mud supports rice; grass is unplantable and has null soil. Players first dig grass, and use Water Bucket for rice plots. Plantable cells require independent valid SoilState instances. Preserve the saved scene's explicit configuration rather than restoring old band fixtures.
 
-Planting is free on eligible empty cells. Next Turn advances discrete growth, capped at CropData.growth_ticks. Maturity is derived with `is_mature(crop_data)`. Epidemic progression runs after growth. Step 4.4 adds mature-crop harvesting with a yield-quality receipt. Inventory/currency rewards, treatments and win/loss remain unimplemented. `clear_crop()` resets state without harvesting.
+Planting is free on eligible empty cells. Next Turn advances discrete growth, capped at CropData.growth_ticks. Maturity is derived with `is_mature(crop_data)`. Epidemic progression runs after growth. Step 4.4 adds mature-crop harvesting with a yield-quality receipt. Inventory/currency rewards and treatments remain unimplemented. GameStateManager now provides Start, victory/game-over, and Play Again; defaults are five harvests within twenty turns. `clear_crop()` resets state without harvesting.
 
 ```text
 FieldPrototype (Node; FieldPrototypePresenter)
@@ -259,7 +300,7 @@ Each image is a separate atlas source. Never use `(0,1)` or `(0,2)` as terrain s
 
 ## 7. Step 2.3 persistent UI: current workflow
 
-The latest refactor removed runtime layout/style overrides from presenter and inspector. Their `_ready()` methods use exported existing controls; no runtime UI creation is required. The earlier problem also included an inspector saved as hidden and runtime repositioning, not solely missing ownership.
+The field HUD and tile inspector use exported, persistent controls; their earlier runtime layout/style overrides were removed. The later GameStateManager integration adds runtime-created start/end overlays and a score display in the presenter. Preserve this distinction: do not rebuild the authored HUD/inspector to add disease content.
 
 1. Stop playtesting and open `field_prototype.tscn` as the active edited scene.
 2. Open `res://tools/bake_ui_to_scene.gd` in the Script Editor; do not attach it to a node.
@@ -274,18 +315,21 @@ Reference: `docs/BAKE_UI_SETUP.md` is authoritative for the latest UI workflow. 
 
 ## 8. Verification and new-device startup
 
-Verification history: Step 4.2 passed nine tests; Step 4.3B passed eleven; a later crop-animation checkpoint passed fifteen. The queue checkpoint's full run was 16/17, failing only the twelve animation-speed checks. Subsequent targeted camera, queue, grass-overlay, manual-background and editor/runtime-preview runs passed at their implementation checkpoints. The runner now lists eighteen tests, but it has not had a complete verified run against the current user-authored scene. No tests were rerun for this documentation-only refresh; physical Android portrait/landscape/gesture/safe-area checks remain outstanding.
+Verification history: earlier checkpoints passed 9, 11, and 15 tests; the queue checkpoint was 16/17. On November 8, the full 19-test activation run passed 14 and failed five. After correcting the crop-growth fixture, six targeted tests passed (activation, field-scene integration, disease playtest, crop growth, weather/soil, queued actions), leaving four recorded failures. The latest playable-catalog update passed five targeted tests: activation, catalog, playable catalog, disease playtest, and epidemiology models. There are now 21 registered tests; no full 21-test run has been certified. Physical Android/safe-area checks remain outstanding. No tests were rerun for this documentation refresh.
 
 Current test-context caveats:
 
 - Saved crop animations still use 20 FPS versus the test's eight; do not change either without confirming the intended speed.
 - All-grass 9×9 initialization means older saved-scene tests cannot simply find dry/paddy plots. A later crop-visual capture produced missing-eligible-cell/planting failures for this reason. Tests should prepare an explicit isolated terrain fixture or exercise digging/conversion; do not restore the user's scene merely to satisfy old assumptions.
-- The user has since saved `camera_center_offset = (0, -260)`, renamed decorations to `Foliage`, added `Trees`, and painted scenery. Earlier camera assertions about zero offsets and background assertions about blank authored cells require review before interpreting fresh failures. These are inspection observations, not new test results.
+- Camera framing/offset and scenery-coverage assertions fail against the current authored world. The editor-preview test expects automatic surrounding grass, while the saved world is manual; background-layer tests expect independent scenery TileSets, while Foliage and Trees share one. These are unresolved authoring/test-contract mismatches, not repaired by activation.
 - Earlier atlas errors were absent from the later successful targeted runs. Newly edited assets have not been re-certified by this documentation pass.
 
 | Executable test | Coverage |
 |---|---|
 | `tests/logic/field_prototype_smoke.gd` | Core field, terrain, planting and turn behavior |
+| `tests/logic/disease_activation_test.gd` | Activation rules, rollback of both RNGs, cooldowns/limits, Start/end/restart and scene wiring |
+| `tests/logic/disease_catalog_test.gd` | Nine external resource references, playable draft metadata, allowed IDs, and RSSI category |
+| `tests/logic/playable_disease_catalog_test.gd` | All nine resources under all three algorithms, introduction/progression, state validity, and seeded replay |
 | `tests/logic/field_scene_integration.gd` | Native clicks, Inspect/Plant toggles, close_requested exactly once, live snapshots, preserved anchors/offsets |
 | `tests/logic/disease_playtest_test.gd` | Fresh saved-scene load, external catalog wiring, native seed-button clicks, valid/invalid seeding, algorithm rollback, and spread |
 | `tests/logic/simulation_scaffold_test.gd` | Reset/clear/replant, growth → simulation → UI ordering, pre-growth rejection |
@@ -312,7 +356,7 @@ python tools/run_tests.py --godot 'C:\Program Files\Godot\Godot.exe.exe'
 
 Replace the executable path on another device. Logs use absolute paths under `.godot`. Ensure project imports are complete and editor settings/log directories are writable.
 
-**Do not launch the editor builder test with `--editor --script`.** That combination previously reproduced editor shutdown leaks. The runner starts a normal headless editor with `GODOT_EDITOR_TEST=tile_inspector_builder` or `terrain_preview`; ordinary editor sessions do nothing. Setup flags are `GODOT_PLAYTEST_SETUP=1`, `GODOT_CROP_VISUAL_SETUP=1`, `GODOT_FIELD_TOOLS_SETUP=1`, and `GODOT_MANUAL_WORLD_SETUP=1`. Use only one setup/test flag at a time. Setup intentionally saves resources; the strict runner clears all setup flags. Test helpers are released before normal editor teardown. The manual/general setup scripts need review for current renamed scenery nodes before rerunning (section 18).
+**Do not launch the editor builder test with `--editor --script`.** That combination previously reproduced editor shutdown leaks. The runner starts a normal headless editor with `GODOT_EDITOR_TEST=tile_inspector_builder` or `terrain_preview`; ordinary editor sessions do nothing. Setup flags are `GODOT_PLAYTEST_SETUP=1`, `GODOT_CROP_VISUAL_SETUP=1`, `GODOT_FIELD_TOOLS_SETUP=1`, and `GODOT_MANUAL_WORLD_SETUP=1`. Additional setup flags are `GODOT_ACTIVATION_SETUP=1`, `GODOT_CATALOG_SETUP=1`, and `GODOT_DRAFT_DISEASE_PLAYTEST_SETUP=1`; these have already been used for the current feature. The last one overwrites draft tuning. Use only one setup/test flag at a time. Setup intentionally saves resources; the strict runner clears all setup flags. Test helpers are released before normal editor teardown. The manual/general setup scripts need review for current renamed scenery nodes before rerunning (section 18).
 
 Temporary scene instances are freed; undo references are cleared before freeing detached HUD nodes; selection is cleared and deferred updates finish before exit. Grids own cells, cells do not point back to grids, and neighborhood arrays are local. No RefCounted ownership cycle was found. No leak diagnostics are suppressed. See [TESTING.md](TESTING.md).
 
@@ -323,7 +367,7 @@ Transfer checklist:
 - Open/import the project and let script class registration finish before playtesting.
 - Open the prototype, verify catalogs/visual mappings, run the UI baker only if needed, save, and play with F5 (or F6 for the prototype scene).
 - Confirm dry-soil and rice permissions, grass rejection, maturity cap, Inspect/Plant toggling, inspector refresh, close behavior, small seedlings and 100%-only mature art, Shovel removal, and compatible/incompatible Move destinations.
-- Git is initialized. Current inspected HEAD is **`3558a75` (`fix errors`)**. The worktree contains extensive modified/untracked implementation, documentation and user artwork; it is not clean. `origin` is `https://github.com/spatrickjs/test-game-project.git`; remote reachability and push status were not checked. This documentation update is not a commit or push.
+- Git is initialized. Current branch is `feat/assets`; inspected HEAD is `f3b32dd` (`feat: add game state manager`). Current activation/catalog code, resources, tests, and documentation remain modified/untracked. Remote reachability was not checked, and no commit or push was performed.
 
 ## 9. Immediate next steps and remaining scope
 
@@ -338,8 +382,8 @@ Transfer checklist:
 - Evaluation reads a detached snapshot, traverses canonical coordinates/disease IDs, and stages all results. Only validated results commit; failed evaluation restores RNG state. Compartment fractions conserve total mass within floating-point tolerance.
 - Healthy cells exposed to multiple positive disease hazards are rejected until an explicit disease filter resolves the ambiguity. Active disease identity persists through recovery/waning.
 - `FieldCellState.reset_crop_state()` uses `has_crop` to choose healthy S=1 versus empty all-zero fractions; soil/terrain/coordinates are preserved.
-- `FarmingController.advance_simulated_turn()` validates before mutation and rolls back the turn on failure. The current integrated order is **weather/moisture (if configured) → growth → epidemic evaluation/commit → turn increment → turn_completed → UI snapshot**. Pending player tasks block turn advancement.
-- An empty disease catalog is a safe epidemic no-op. The turn controller provides an empty default Resource. No infections arise spontaneously without seeded infection pressure. The saved prototype overrides the empty catalog with the external default Rice Blast catalog and includes the patient-zero action described below.
+- `FarmingController.advance_simulated_turn()` stages weather/moisture, growth, existing simulation, and automatic introduction before final validation and field/history commit. TurnController then increments the clock, checks the game end, reports any committed introduction, and emits `turn_completed` for UI refresh. Failed processing preserves field/history and restores simulation RNG/cap diagnostics. Pending player tasks block advancement.
+- An empty disease catalog remains a safe simulation no-op. The mathematical models require an introduced state to begin spread. The saved scene now supplies all nine catalog entries and a separate automatic game-introduction controller, in addition to manual debug seeding. Automatic scheduling is outside the SIR/SEIR/CA formulas.
 
 See [STEP_3_3_SIMULATION.md](STEP_3_3_SIMULATION.md) for the implementation contract.
 
@@ -388,7 +432,7 @@ Saved configuration:
 
 - `src/data/resources/diseases/rice_blast.tres`: Rice Blast targeting Rice, Spatial SIR default, beta 0.6, sigma 0.5, gamma 0.15, xi 0, mortality 0.10, Moore radius 1, distance decay 0.3.
 - Attached TransmissionModifierProfile: temperature enabled, favorable interval 20–30°C, humidity sensitivity 0.5; N/K effects disabled pending crop threshold authoring.
-- `src/data/databases/default_disease_database.tres` references the external disease resource. TurnController and TileInspectorView share this catalog. All values remain illustrative and uncalibrated.
+- `src/data/databases/default_disease_database.tres` now references all nine external resources and is shared by TurnController and the inspector. Rice Blast remains illustrative; the eight new entries use the temporary shared game preset. This subsection describes the original manual Rice Blast demonstration, not the full automatic catalog.
 - Presenter `playtest_disease_id` defaults to RICE_BLAST. The Seed Infection button emits intent to the presenter; FarmingController validates and commits a copied candidate grid, then emits cell_changed.
 - Continuous SIR/SEIR patient zero is S=0.8, I=0.2, other fractions zero. CA patient zero is one-hot I=1 with matching categorical state.
 - Seeding requires a clean, fully susceptible, compatible occupied cell with valid state. It rejects repeat seeding and invalid hosts, preserves soil/growth, and does not advance the turn.
@@ -399,11 +443,11 @@ Saved configuration:
 
 The environment-gated editor harness also supports automated setup using `GODOT_PLAYTEST_SETUP=1`. Unlike tests, setup intentionally saves resources and the scene. Do not combine setup and test flags. New resources are not covered by editor Undo; the baker's node/ownership operations retain Undo/Redo support.
 
-See [DISEASE_PLAYTEST.md](DISEASE_PLAYTEST.md) for the original operational instructions; prepare paddy plots first in the current all-grass scene. Historical fresh-process verification covered native input, saved wiring, algorithm modes and rollback. The disease-playtest test remains in the eighteen-test runner; section 8 describes why old saved-scene fixture assumptions need review.
+See [DISEASE_PLAYTEST.md](DISEASE_PLAYTEST.md) for the original operational instructions; prepare paddy plots first in the current all-grass scene. Historical fresh-process verification covered native input, saved wiring, algorithm modes and rollback. The disease-playtest test remains in the 21-test runner and uses an explicit gameplay fixture; section 8 records current verification.
 
 ### Next work: propose and approve before implementation
 
-1. Playtest the saved Rice Blast setup, calibrate its parameters using documented sources, and author the remaining diseases/profiles. The catalog is already wired to both TurnController and the inspector.
+1. Review the nine playable entries using `DISEASE_FINALIZATION.md`. Confirm identities, expert-reviewed learning objectives, model suitability (especially RSSI), and whether thesis evaluation targets educational effectiveness or predictive validity. Do not duplicate existing catalog resources.
 2. Propose richer scenario initialization/reset and diagnostic UI for weather, modifiers, and caps. Patient-zero seeding, model selection, four-stage crop visuals, Shovel and Move already exist; do not duplicate them.
 3. Specify benchmark protocols: shared initial state and inputs, time step/horizon, seeded repeated runs, grid scales, timings/memory, and separation of rendering from numerical work. No mobile benchmark results or calibrated accuracy claims exist yet.
 4. Define metrics, research provenance, SaveData and benchmark schemas, and catalog completeness requirements.
@@ -423,14 +467,14 @@ Reserved/planned locations: `src/logic/autoloads/` for a future typed signal bus
 
 Use conventional commits for future changes: `feat(ui): bake persistent inspector controls`, `fix(world): validate atlas source coordinates`, `refactor(simulation): separate neighborhood geometry`, `test(logic): cover terrain planting rules`, `docs: update project handoff`. Use `type(scope): concise imperative description`, document behavior and relevant verification, and avoid claiming unrun tests or calibrated research results.
 
-For the next assistant: read this handoff and current scripts first, follow PCI for new work, and keep the four-layer boundary. Continue from the 9×9 manual world and queued actions, preserving the user's painted surroundings, renamed layers, crop scaling and transfer payload semantics. Sections 1, 8 and 16–19 supersede historical continuation notes. Do not rebuild the inspector, restore runtime layout overrides, regenerate artwork, or bypass the normal editor test lifecycle without task-specific reason.
+For the next assistant: read the current handoff at the top and current scripts first, follow PCI for new work, and preserve the four-layer boundary. Continue from the playable nine-entry catalog, session flow, and manual world. Sections 1 and 8 describe current state and verification; sections 16-19 preserve world-authoring context. Do not rebuild the inspector, regenerate art, rerun setup, or bypass the normal editor test lifecycle without a task-specific reason.
 
 
 ## 11. Current connection and workspace context
 
 - Last connector check: Godot `4.7.2.stable.official.ed1daf0bf` responded and read this project successfully. The connector reported no tracked active Godot process; that does not establish whether a separately launched editor is open.
 - `_is_over_ui(screen_pos: Vector2)` in `src/presentation/world/field_world_view.gd` replaces the parameter `position` and its internal reference, avoiding Node2D property shadowing. No behavior was intentionally changed.
-- Current inspected HEAD is `3558a75` (`fix errors`); earlier `6ff33f3` and `911994d` references are historical. Preserve all unrelated worktree changes. Modified terrain images and untracked `dry_soil1.png.png`, `grass1.png.png`, `paddy_mud1.png.png`, `foliage/grass_tuft.png`, and `tree/treev1.png` (with import files) are present. Do not assume alternates are unused or delete them. No commit or push was performed in this documentation refresh.
+- Current inspected branch/HEAD: `feat/assets` / `f3b32dd` (`feat: add game state manager`). `3558a75`, `6ff33f3`, and `911994d` are historical. The worktree includes this chat's uncommitted activation, catalog, tests, and documentation. Preserve all unrelated work and authored assets. No commit or push was performed.
 - The saved scene now includes painted tile data on `BackgroundTerrain`, `Foliage` and `Trees`. `background_decorations` references `Foliage`; `Trees` shares its saved TileSet. This naming is newer than the original setup scripts and guides. Runtime exports still resolve, but old setup scripts hardcode `BackgroundDecorations`: inspect/update them before rerunning, or they may recreate/rebind an unwanted layer or fail during reordering. This documentation pass did not run those setup scripts.
 
 
@@ -473,7 +517,7 @@ The duplicate was removed. The existing `render_grid(grid_state: FieldGridState)
 
 The immediately preceding full fifteen-test run exited 1. `field_scene_integration.gd` and `camera_zoom_test.gd` reached their PASS markers, but scene loading emitted atlas errors, so strict validation correctly rejected them. The camera and crop-visual logs each contain 516 `ERROR:` records about out-of-texture/overlapping tiles and missing atlas coordinates (for example `(27, 21)`). `crop_growth_visuals_test.gd` also reports twelve `Saved animation speed` failures; the saved scene contains 20-FPS entries while tests expect eight. Do not equate an individual PASS marker with a clean strict result.
 
-Historical pending items at that time were grass-atlas repair, optional overlay wiring and animation-speed reconciliation. Overlay wiring and later rendering fixes have since been implemented; do not repeat that repair blindly. The current runner has eighteen tests. Logs under `.godot/` include `grass_overlay_test.log`, `field_scene_integration.log`, `camera_zoom_test.log` and `crop_growth_visuals_test.log`; they can be overwritten by later runs and are not a substitute for checking run provenance.
+Historical pending items at that time were grass-atlas repair, optional overlay wiring and animation-speed reconciliation. Overlay wiring and later rendering fixes have since been implemented; do not repeat that repair blindly. The current runner has 21 tests; this section records an older checkpoint. Logs under `.godot/` include `grass_overlay_test.log`, `field_scene_integration.log`, `camera_zoom_test.log` and `crop_growth_visuals_test.log`; they can be overwritten by later runs and are not a substitute for checking run provenance.
 
 ## 16. Queued field actions and farmer continuation
 
@@ -542,4 +586,4 @@ Keep ground diamonds aligned consistently within frames; the extra 32 pixels in 
 
 Future migration scope is primarily Presentation/editor resources: synchronize tile size/layout across independent TileSets, update texture origins and crop normalization/roots, review fixed-pixel shadows/agent scale/speed, reposition manually placed props, and verify camera/input/preview on desktop and mobile. Godot coordinates, farming rules and algorithm formulas can remain unchanged. Autotiling would require a deliberate FieldWorldView and editor-preview rendering update, transition artwork, neighbor refresh after conversion and boundary coordination with separately painted layers. Confirm the supplied dimensions and intended connections before implementing.
 
-The core SIR/SEIR/CA and modifier implementations exist, but disease calibration, catalog completion, benchmarks and scientific validation are unfinished. Inventory, economy, quests and art can be added in their appropriate layers without rewriting epidemic models. Mechanics that deliberately change transmission/recovery or introduce barriers/co-infection require a separate approved simulation review. Do not describe the whole research component as 100% finished.
+The core SIR/SEIR/CA and modifier implementations exist, but all nine catalog identities are now present while content review, model finalization, benchmarks and scientific validation remain unfinished. Inventory, economy, quests and art can be added in their appropriate layers without rewriting epidemic models. Mechanics that deliberately change transmission/recovery or introduce barriers/co-infection require a separate approved simulation review. Do not describe the whole research component as 100% finished.

@@ -1,4 +1,5 @@
 extends SceneTree
+const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
 const QueueDriver = preload("res://tests/logic/queued_action_test_driver.gd")
 
 class RejectedTurn:
@@ -132,7 +133,9 @@ func _run() -> void:
 	root.size = Vector2i(1280, 720)
 	var packed: PackedScene = load("res://field_prototype.tscn") as PackedScene
 	var scene: FieldPrototypePresenter = packed.instantiate() as FieldPrototypePresenter
+	GameplayFixture.prepare(scene)
 	root.add_child(scene)
+	GameplayFixture.start(scene)
 	for frame: int in range(5):
 		await process_frame
 	_check(scene.harvest_button != null and scene.harvest_button.owner == scene, "Harvest control saved and wired")

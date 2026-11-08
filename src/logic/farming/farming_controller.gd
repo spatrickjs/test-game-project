@@ -22,6 +22,7 @@ signal queued_harvest_completed(result: HarvestResult)
 
 var last_error: String = ""
 var _grid: FieldGridState = null
+var last_turn_introduction: DiseaseActivationRequest
 var _actions: Array[FieldAction] = []
 var _next_action_id: int = 1
 var _revisions: Dictionary[Vector2i, int] = {}
@@ -67,6 +68,7 @@ func initialize_field() -> bool:
 		return _fail("\n".join(errors))
 	_grid = candidate
 	_actions.clear()
+	last_turn_introduction = null
 	_revisions.clear()
 	action_queue_changed.emit()
 	field_initialized.emit()
@@ -95,12 +97,19 @@ func advance_growth() -> bool:
 		return _fail("Wait for the farmer to finish queued actions before advancing time.")
 	if _grid == null:
 		return _fail("Initialize the field before advancing turns.")
-	var errors: PackedStringArray = FieldGridQueries.validate_terrain_assignments(
-		_grid, crop_database, terrain_database
-	)
-	if not errors.is_empty():
-		return _fail("\n".join(errors))
 	var candidate: FieldGridState = _grid.copy()
+	var reason: String = _stage_growth(candidate)
+	if not reason.is_empty():
+		return _fail(reason)
+	_grid = candidate
+	last_error = ""
+	return true
+
+
+func _stage_growth(candidate: FieldGridState) -> String:
+	var errors: PackedStringArray = FieldGridQueries.validate_terrain_assignments(candidate, crop_database, terrain_database)
+	if not errors.is_empty():
+		return "\n".join(errors)
 	for y: int in range(candidate.height):
 		for x: int in range(candidate.width):
 			var cell: FieldCellState = candidate.get_cell(Vector2i(x, y))
@@ -109,17 +118,12 @@ func advance_growth() -> bool:
 			var crop: CropData = crop_database.get_crop(cell.crop_type)
 			var result: CropGrowthModel.Result = CropGrowthModel.evaluate(cell, crop)
 			if not result.errors.is_empty():
-				return _fail("\n".join(result.errors))
+				return "\n".join(result.errors)
 			cell.growth_elapsed_ticks = result.growth_elapsed_ticks
 			cell.growth_remainder = result.growth_remainder
 			cell.vitality = result.vitality
 			cell.yield_quality_loss = result.yield_quality_loss
-	errors = candidate.validate()
-	if not errors.is_empty():
-		return _fail("\n".join(errors))
-	_grid = candidate
-	last_error = ""
-	return true
+	return "\n".join(candidate.validate())
 
 
 ## State clearing only, without harvesting/reward mechanics.
@@ -188,25 +192,49 @@ func process_simulation(simulation: SimulationController, diseases: DiseaseDatab
 
 
 ## Transaction boundary: no growth or epidemic state survives a failed turn.
-func advance_simulated_turn(simulation: SimulationController, diseases: DiseaseDatabase, weather: WeatherManager = null, turn_index: int = 0) -> bool:
+func advance_simulated_turn(simulation: SimulationController, diseases: DiseaseDatabase, weather: WeatherManager = null, turn_index: int = 0, activation: DiseaseActivationController = null, allow_introduction: bool = true) -> bool:
+	last_turn_introduction = null
 	if has_pending_actions():
 		return _fail("Wait for the farmer to finish queued actions before advancing time.")
+	if simulation == null:
+		return _fail("Assign a simulation controller.")
 	simulation.crop_database = crop_database
 	var errors: PackedStringArray = simulation.validate_turn(_grid, diseases)
 	if not errors.is_empty():
 		return _fail("\n".join(errors))
-	var before: FieldGridState = _grid.copy()
-	if weather != null:
-		var candidate: FieldGridState = _grid.copy()
-		if not weather.apply_to_grid(candidate, turn_index):
-			return _fail(weather.last_error)
-		_grid = candidate
-	if not advance_growth():
-		_grid = before
-		return false
-	if not process_simulation(simulation, diseases):
-		_grid = before
-		return _fail(simulation.last_error)
+	var before: FieldGridState = _grid
+	var candidate: FieldGridState = _grid.copy()
+	var rng_before: int = simulation.rng.state
+	var caps_before: Vector3i = Vector3i(simulation.weather_cap_count, simulation.beta_cap_count, simulation.hazard_cap_count)
+	var reason: String = ""
+	if weather != null and not weather.apply_to_grid(candidate, turn_index):
+		reason = weather.last_error
+	if reason.is_empty():
+		reason = _stage_growth(candidate)
+	if reason.is_empty() and not simulation.process_turn(candidate, diseases):
+		reason = simulation.last_error
+	var proposal: DiseaseActivationController.Result
+	if reason.is_empty() and activation != null:
+		proposal = activation.evaluate(candidate.copy(), diseases, turn_index + 1, simulation.active_disease_filter, allow_introduction)
+		reason = "\n".join(proposal.errors)
+		if reason.is_empty() and proposal.request != null:
+			reason = _stage_infection(candidate, proposal.request.coordinates, proposal.request.disease_id, diseases, simulation)
+	if reason.is_empty():
+		reason = "\n".join(simulation.validate_turn(candidate, diseases))
+	if not reason.is_empty():
+		simulation.rng.state = rng_before
+		simulation.weather_cap_count = caps_before.x
+		simulation.beta_cap_count = caps_before.y
+		simulation.hazard_cap_count = caps_before.z
+		return _fail(reason)
+	_grid = candidate
+	if proposal != null:
+		activation.commit_state(proposal.next_state)
+		last_turn_introduction = proposal.request
+		if proposal.request != null:
+			var coordinates: Vector2i = proposal.request.coordinates
+			_revisions[coordinates] = _revisions.get(coordinates, 0) + 1
+	last_error = ""
 	if weather != null:
 		weather.report_committed_moisture(before, _grid, turn_index + 1)
 	return true
@@ -216,18 +244,22 @@ func advance_simulated_turn(simulation: SimulationController, diseases: DiseaseD
 func seed_infection(coordinates: Vector2i, disease_id: SimulationEnums.DiseaseId, diseases: DiseaseDatabase, simulation: SimulationController) -> bool:
 	if _grid == null or diseases == null or simulation == null:
 		return _fail("Initialize the field and assign simulation/catalog first.")
-	var disease: DiseaseData = diseases.get_disease(disease_id)
-	var cell: FieldCellState = _grid.get_cell(coordinates)
-	if disease == null or cell == null or not cell.has_crop or cell.soil == null:
-		return _fail("Select an occupied tile with a registered disease.")
-	if disease.target_crop != cell.crop_type:
-		return _fail("This disease cannot infect the selected crop.")
-	if not cell.validate().is_empty():
-		return _fail("The selected tile has invalid crop state.")
-	if cell.has_active_disease or cell.susceptible_fraction != 1.0 or cell.exposed_fraction != 0.0 or cell.infected_fraction != 0.0 or cell.recovered_immune_fraction != 0.0 or cell.dead_fraction != 0.0:
-		return _fail("Patient zero must be a clean, fully susceptible crop.")
 	var candidate: FieldGridState = _grid.copy()
+	var reason: String = _stage_infection(candidate, coordinates, disease_id, diseases, simulation)
+	if not reason.is_empty():
+		return _fail(reason)
+	_grid = candidate
+	last_error = ""
+	_emit_cell_changed(coordinates)
+	return true
+
+
+## Shared by manual debug seeding and automatic staged game introductions.
+func _stage_infection(candidate: FieldGridState, coordinates: Vector2i, disease_id: SimulationEnums.DiseaseId, diseases: DiseaseDatabase, simulation: SimulationController) -> String:
+	var disease: DiseaseData = diseases.get_disease(disease_id)
 	var seeded: FieldCellState = candidate.get_cell(coordinates)
+	if not DiseaseActivationController.is_eligible(seeded, disease):
+		return "Choose a clean, fully susceptible compatible crop with a registered disease."
 	seeded.has_active_disease = true
 	seeded.active_disease_id = disease_id
 	seeded.sir_state = SimulationEnums.SIRState.I
@@ -236,13 +268,7 @@ func seed_infection(coordinates: Vector2i, disease_id: SimulationEnums.DiseaseId
 	seeded.infected_fraction = 1.0 if algorithm == SimulationEnums.SimulationAlgorithm.STOCHASTIC_CA_SIR else 0.2
 	seeded.susceptible_fraction = 1.0 - seeded.infected_fraction
 	simulation.crop_database = crop_database
-	var errors: PackedStringArray = simulation.validate_turn(candidate, diseases)
-	if not errors.is_empty():
-		return _fail("\n".join(errors))
-	_grid = candidate
-	last_error = ""
-	_emit_cell_changed(coordinates)
-	return true
+	return "\n".join(simulation.validate_turn(candidate, diseases))
 
 
 func get_grid_snapshot() -> FieldGridState:

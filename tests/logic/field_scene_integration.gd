@@ -1,4 +1,5 @@
 extends SceneTree
+const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
 const InspectorFixture = preload("res://tests/presentation/inspector_test_fixture.gd")
 const QueueDriver = preload("res://tests/logic/queued_action_test_driver.gd")
 ## Exercises the user's Editor-authored scene through real viewport input.
@@ -33,7 +34,9 @@ func _run() -> void:
 	presenter.tile_inspector.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	presenter.tile_inspector.position = Vector2(800.0, 12.0)
 	presenter.tile_inspector.size = Vector2(340.0, 560.0)
+	GameplayFixture.prepare(presenter, true)
 	root.add_child(presenter)
+	GameplayFixture.start(presenter)
 	for frame: int in range(5):
 		await process_frame
 	var farming: FarmingController = presenter.farming_controller

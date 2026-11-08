@@ -1,4 +1,5 @@
 extends SceneTree
+const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
 ## Saved-scene integration, exact boundaries, independent copies and clearing.
 
 var _failures: PackedStringArray = PackedStringArray()
@@ -50,7 +51,9 @@ func _run() -> void:
 	_check(FieldWorldView.get_growth_stage(1, 0) == 0, "Invalid duration safe fallback")
 	var packed: PackedScene = load("res://field_prototype.tscn") as PackedScene
 	var presenter: FieldPrototypePresenter = packed.instantiate() as FieldPrototypePresenter
+	GameplayFixture.prepare(presenter, true)
 	root.add_child(presenter)
+	GameplayFixture.start(presenter)
 	await process_frame
 	var farming: FarmingController = presenter.farming_controller
 	var world: FieldWorldView = presenter.world_view

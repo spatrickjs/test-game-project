@@ -7,11 +7,15 @@ import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--godot", required=True)
+parser.add_argument("--test", action="append", help="Run only this registered test (repeatable)")
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 logs = root / ".godot"
 tests = [
     "tests/logic/field_prototype_smoke.gd",
+    "tests/logic/disease_activation_test.gd",
+    "tests/logic/disease_catalog_test.gd",
+    "tests/logic/playable_disease_catalog_test.gd",
     "tests/logic/field_scene_integration.gd",
     "tests/logic/simulation_scaffold_test.gd",
     "tests/logic/disease_playtest_test.gd",
@@ -30,6 +34,11 @@ tests = [
     "tests/logic/queued_field_actions_test.gd",
     "tests/presentation/background_layers_test.gd",
 ]
+if args.test:
+    unknown = set(args.test) - set(tests)
+    if unknown:
+        parser.error("Unregistered tests: " + ", ".join(sorted(unknown)))
+    tests = [test for test in tests if test in args.test]
 failed = False
 for test in tests:
     command = [args.godot, "--headless", "--path", str(root),
@@ -40,11 +49,21 @@ for test in tests:
     environment.pop("GODOT_CROP_VISUAL_SETUP", None)
     environment.pop("GODOT_FIELD_TOOLS_SETUP", None)
     environment.pop("GODOT_MANUAL_WORLD_SETUP", None)
+    environment.pop("GODOT_ACTIVATION_SETUP", None)
+    environment.pop("GODOT_CATALOG_SETUP", None)
+    environment.pop("GODOT_DRAFT_DISEASE_PLAYTEST_SETUP", None)
+    environment.pop("GODOT_SHADOW_SETUP", None)
+    environment.pop("GODOT_LIGHTING_SETUP", None)
     if test.endswith("editor_test.gd"):
         command = [args.godot, "--headless", "--path", str(root), "--editor",
                    "--log-file", str(logs / (Path(test).stem + ".log"))]
         environment["GODOT_EDITOR_TEST"] = "terrain_preview" if "terrain_preview" in test else "tile_inspector_builder"
-    result = subprocess.run(command, cwd=root, env=environment, capture_output=True, text=True, timeout=60)
+    try:
+        result = subprocess.run(command, cwd=root, env=environment, capture_output=True, text=True, timeout=60)
+    except subprocess.TimeoutExpired:
+        print("FAIL " + test + " (timed out; inspect .godot log)")
+        failed = True
+        continue
     output = result.stdout + result.stderr
     diagnostics = [line for line in output.splitlines()
                    if any(token in line for token in ("ERROR:", "WARNING:", "FAIL:"))]
