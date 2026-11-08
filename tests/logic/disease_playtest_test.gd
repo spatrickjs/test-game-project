@@ -1,4 +1,5 @@
 extends SceneTree
+const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
 
 var failures: int = 0
 
@@ -16,7 +17,9 @@ func _run() -> void:
 		panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 		panel.position = Vector2(750.0, 12.0)
 		panel.size = Vector2(340.0, 560.0)
+		GameplayFixture.prepare(presenter, true)
 		root.add_child(presenter)
+		GameplayFixture.start(presenter)
 		for frame: int in range(4):
 			await process_frame
 		var farming: FarmingController = presenter.farming_controller

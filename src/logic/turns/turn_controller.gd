@@ -6,6 +6,9 @@ signal turn_completed(turn_index: int)
 
 @export var farming_controller: FarmingController
 @export var weather_manager: WeatherManager
+@export var disease_activation_controller: DiseaseActivationController
+## Optional for isolated Logic callers; assigned in the playable scene.
+@export var game_state_manager: GameStateManager
 ## Empty catalog supports authoring; explicitly null is a configuration error.
 @export var disease_database: DiseaseDatabase = DiseaseDatabase.new()
 ## RefCounted dependency: may be injected from code, not a scene node.
@@ -20,6 +23,8 @@ func reset_clock() -> void:
 	if not _advancing:
 		turn_index = 0
 		last_error = ""
+		if disease_activation_controller != null:
+			disease_activation_controller.reset_session()
 
 
 func try_set_algorithm_override(value: int) -> bool:
@@ -39,6 +44,9 @@ func try_set_algorithm_override(value: int) -> bool:
 
 
 func advance_turn() -> bool:
+	if game_state_manager != null and not game_state_manager.is_playing():
+		last_error = "Start a game before advancing turns."
+		return false
 	if _advancing:
 		return false
 	if farming_controller == null or not farming_controller.is_initialized():
@@ -52,12 +60,17 @@ func advance_turn() -> bool:
 		last_error = "\n".join(errors)
 		return false
 	_advancing = true
-	if not farming_controller.advance_simulated_turn(simulation_controller, disease_database, weather_manager, turn_index):
+	var allow_introduction: bool = game_state_manager == null or turn_index + 1 < game_state_manager.turn_limit
+	if not farming_controller.advance_simulated_turn(simulation_controller, disease_database, weather_manager, turn_index, disease_activation_controller, allow_introduction):
 		last_error = farming_controller.last_error
 		_advancing = false
 		return false
 	turn_index += 1
 	last_error = ""
+	if game_state_manager != null:
+		game_state_manager.check_turn_limit(turn_index)
+	if disease_activation_controller != null:
+		disease_activation_controller.report_committed(farming_controller.last_turn_introduction, turn_index)
 	turn_completed.emit(turn_index)
 	_advancing = false
 	return true

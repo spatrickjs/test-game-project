@@ -1,4 +1,6 @@
 extends SceneTree
+const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
+const QueueDriver = preload("res://tests/logic/queued_action_test_driver.gd")
 
 class RejectedTurn:
 	extends SimulationController
@@ -127,7 +129,12 @@ func _run() -> void:
 	# Fresh saved scene: service references and real HUD input.
 	root.size = Vector2i(1280, 720)
 	var scene: FieldPrototypePresenter = (load("res://field_prototype.tscn") as PackedScene).instantiate() as FieldPrototypePresenter
+	GameplayFixture.prepare(scene, true)
+	scene.turn_controller.weather_manager.fluctuations_enabled = false
+	scene.turn_controller.weather_manager.rainfall_per_turn = 0.02
+	scene.turn_controller.weather_manager.evaporation_per_turn = 0.02
 	root.add_child(scene)
+	GameplayFixture.start(scene)
 	for frame: int in range(5):
 		await process_frame
 	_check(scene.soil_tool_controller != null and scene.turn_controller.weather_manager != null, "Saved services wired")
@@ -140,9 +147,11 @@ func _run() -> void:
 	var point: Vector2 = scene.world_view.terrain_layer.get_global_transform_with_canvas() * scene.world_view.terrain_layer.map_to_local(target)
 	_click(scene.water_button.get_global_rect().get_center())
 	_click(point)
+	_check(QueueDriver.finish(scene), "Water queue completes")
 	_check(is_equal_approx(scene.farming_controller.get_grid_snapshot().get_cell(target).soil.moisture, 0.6), "Native Water button and tile action")
 	_click(scene.fertilize_button.get_global_rect().get_center())
 	_click(point)
+	_check(QueueDriver.finish(scene), "Fertilize queue completes")
 	_check(is_equal_approx(scene.farming_controller.get_grid_snapshot().get_cell(target).soil.nitrogen, 0.6), "Native Fertilize button and tile action")
 	scene.turn_controller.weather_manager.rainfall_per_turn = 0.1
 	scene.turn_controller.weather_manager.evaporation_per_turn = 0.0

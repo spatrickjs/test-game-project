@@ -1,5 +1,7 @@
 extends SceneTree
+const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
 const InspectorFixture = preload("res://tests/presentation/inspector_test_fixture.gd")
+const QueueDriver = preload("res://tests/logic/queued_action_test_driver.gd")
 ## Exercises the user's Editor-authored scene through real viewport input.
 ## Does not modify or save the scene or any resources.
 
@@ -32,7 +34,9 @@ func _run() -> void:
 	presenter.tile_inspector.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	presenter.tile_inspector.position = Vector2(800.0, 12.0)
 	presenter.tile_inspector.size = Vector2(340.0, 560.0)
+	GameplayFixture.prepare(presenter, true)
 	root.add_child(presenter)
+	GameplayFixture.start(presenter)
 	for frame: int in range(5):
 		await process_frame
 	var farming: FarmingController = presenter.farming_controller
@@ -64,6 +68,8 @@ func _run() -> void:
 	)
 	_check(view.get_cell_at_viewport_position(viewport_position) == rice_position, "Isometric/camera coordinate conversion")
 	_click(viewport_position)
+	_check(not farming.get_grid_snapshot().get_cell(rice_position).has_crop, "Planting is deferred until arrival")
+	_check(QueueDriver.finish(presenter), "Farmer completes native planting")
 	await process_frame
 	var planted: FieldCellState = farming.get_grid_snapshot().get_cell(rice_position)
 	_check(_intent_count == 1, "One native click emits one intent")
@@ -80,6 +86,7 @@ func _run() -> void:
 	rice_position = _find_empty(farming.get_grid_snapshot(), SimulationEnums.TerrainType.PADDY_MUD)
 	viewport_position = view.terrain_layer.get_global_transform_with_canvas() * view.terrain_layer.map_to_local(rice_position)
 	_click(viewport_position, -1)
+	_check(QueueDriver.finish(presenter), "Farmer completes emulated planting")
 	await process_frame
 	_check(_intent_count == 2, "Emulated mouse click accepted once")
 	_check(farming.get_grid_snapshot().get_cell(rice_position).has_crop, "Emulated click plants selected crop")

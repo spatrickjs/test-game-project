@@ -30,6 +30,12 @@ func _initialize() -> void:
 	var first_cells: Array[Vector2i] = overlay.get_used_cells()
 	view._render_grass_overlay(grid)
 	_check(first_cells == overlay.get_used_cells(), "Repeated rendering preserves decorations")
+	var converted: Vector2i = Vector2i(1, 0)
+	grid.get_cell(converted).terrain_type = SimulationEnums.TerrainType.DRY_SOIL
+	grid.get_cell(converted).soil = SoilState.new()
+	view._render_grass_overlay(grid)
+	first_cells.erase(converted)
+	_check(first_cells == overlay.get_used_cells(), "Conversion removes only its tuft without relocating others")
 	view.tuft_spawn_chance = 0.0
 	view._render_grass_overlay(grid)
 	_check(overlay.get_used_cells().is_empty(), "Zero chance clears old decorations")

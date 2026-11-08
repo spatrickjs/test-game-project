@@ -1,4 +1,6 @@
 extends SceneTree
+const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
+const QueueDriver = preload("res://tests/logic/queued_action_test_driver.gd")
 
 class RejectedTurn:
 	extends SimulationController
@@ -131,7 +133,9 @@ func _run() -> void:
 	root.size = Vector2i(1280, 720)
 	var packed: PackedScene = load("res://field_prototype.tscn") as PackedScene
 	var scene: FieldPrototypePresenter = packed.instantiate() as FieldPrototypePresenter
+	GameplayFixture.prepare(scene)
 	root.add_child(scene)
+	GameplayFixture.start(scene)
 	for frame: int in range(5):
 		await process_frame
 	_check(scene.harvest_button != null and scene.harvest_button.owner == scene, "Harvest control saved and wired")
@@ -148,6 +152,8 @@ func _run() -> void:
 	_click(scene.harvest_button.get_global_rect().get_center())
 	var point: Vector2 = scene.world_view.terrain_layer.get_global_transform_with_canvas() * scene.world_view.terrain_layer.map_to_local(cell_pos)
 	_click(point)
+	_check(scene.farming_controller.get_grid_snapshot().get_cell(cell_pos).has_crop, "Harvest waits for the farmer")
+	_check(QueueDriver.finish(scene), "Harvest queue completes")
 	_check(not scene.farming_controller.get_grid_snapshot().get_cell(cell_pos).has_crop, "Native harvest click clears mature crop")
 	_check(scene.status_label.text.contains("100%") and scene.turn_controller.turn_index == 4, "Harvest reports quality without advancing time")
 	scene.queue_free()

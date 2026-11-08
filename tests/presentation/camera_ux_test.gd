@@ -1,4 +1,5 @@
 extends SceneTree
+const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
 
 var _failures: PackedStringArray = PackedStringArray()
 var _intents: int = 0
@@ -10,12 +11,39 @@ func _run() -> void:
 	root.size = Vector2i(1280, 720)
 	var packed: PackedScene = load("res://field_prototype.tscn") as PackedScene
 	var presenter: FieldPrototypePresenter = packed.instantiate() as FieldPrototypePresenter
+	presenter.world_view.automatic_background_enabled = true # Optional fill coverage fixture.
+	if presenter.world_view.background_fill_layer == null:
+		presenter.world_view.background_fill_layer = TileMapLayer.new()
+		presenter.world_view.add_child(presenter.world_view.background_fill_layer)
+	GameplayFixture.prepare(presenter, false)
 	root.add_child(presenter)
+	GameplayFixture.start(presenter)
 	for frame: int in range(5):
 		await process_frame
 	var view: FieldWorldView = presenter.world_view
 	view.debug_clicks = false
 	view.cell_clicked.connect(func(_cell: Vector2i) -> void: _intents += 1)
+	var grid: FieldGridState = presenter.farming_controller.get_grid_snapshot()
+	var terrain: TileMapLayer = view.terrain_layer
+	var first: Vector2 = terrain.map_to_local(Vector2i.ZERO)
+	var last: Vector2 = terrain.map_to_local(Vector2i(grid.width - 1, grid.height - 1))
+	var geometric_center: Vector2 = terrain.to_global((first + last) * 0.5)
+	var reserved: float = clampf(view.hud_reserved_height, 0.0, float(root.size.y) * 0.45)
+	var projected_center: Vector2 = view.camera.get_canvas_transform() * geometric_center
+	_check(projected_center.is_equal_approx(Vector2(float(root.size.x) * 0.5, (float(root.size.y) - reserved) * 0.5)), "Playable diamond center excludes atlas padding and sits above bottom HUD")
+	var bottom_point: Vector2 = terrain.to_global(last + Vector2(0, float(terrain.tile_set.tile_size.y) * 0.5))
+	_check((view.camera.get_canvas_transform() * bottom_point).y <= float(root.size.y) - reserved - view.camera_margin_pixels + 0.01, "Bottom diamond corner fits above reserved HUD space")
+	var original_center: Vector2 = view.camera.global_position
+	view.camera_center_offset = Vector2(300, 200)
+	view.frame_field()
+	_check(view.camera.global_position.is_equal_approx(original_center + view.camera_center_offset), "Inspector offset adjusts world-space camera center")
+	view.pan_camera(Vector2(10000, 10000))
+	_check(view.camera.global_position.is_equal_approx(original_center + view.camera_center_offset), "Clamping uses the adjusted overview center")
+	for corner: Vector2 in [Vector2.ZERO, Vector2(root.size.x, 0), Vector2(root.size), Vector2(0, root.size.y)]:
+		var coords: Vector2i = view.get_cell_at_viewport_position(corner)
+		_check(terrain.get_cell_source_id(coords) >= 0 or view.background_fill_layer.get_cell_source_id(coords) >= 0, "Cosmetic terrain covers shifted viewport corners")
+	view.camera_center_offset = Vector2.ZERO
+	view.frame_field()
 	var center: Vector2 = view.camera.global_position
 	var minimum: float = view.min_zoom
 	var viewport_center: Vector2 = Vector2(root.size) * 0.5

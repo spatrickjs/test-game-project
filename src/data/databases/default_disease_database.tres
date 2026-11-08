@@ -2,8 +2,16 @@
 
 [ext_resource type="Script" uid="uid://c1gf75cap2tvc" path="res://src/data/resources/disease_data.gd" id="1_m8dav"]
 [ext_resource type="Resource" uid="uid://ddom17amr62dv" path="res://src/data/resources/diseases/rice_blast.tres" id="2_38dqp"]
+[ext_resource type="Resource" uid="uid://cnmmlni0hngkt" path="res://src/data/resources/diseases/red_striped_soft_scale_insect.tres" id="3_gv3kj"]
+[ext_resource type="Resource" uid="uid://l3mqofqe28uy" path="res://src/data/resources/diseases/sugarcane_smut.tres" id="4_45wcf"]
 [ext_resource type="Script" uid="uid://c7p2k0ftei1dk" path="res://src/data/databases/disease_database.gd" id="5_ki5jm"]
+[ext_resource type="Resource" uid="uid://b0yhqxdqbjnyp" path="res://src/data/resources/diseases/leaf_scald.tres" id="5_m4s5u"]
+[ext_resource type="Resource" uid="uid://ck4g5al3ljcq6" path="res://src/data/resources/diseases/rice_tungro.tres" id="6_qxp32"]
+[ext_resource type="Resource" uid="uid://dxmfbocx4kfhm" path="res://src/data/resources/diseases/bacterial_leaf_blight.tres" id="7_oba10"]
+[ext_resource type="Resource" uid="uid://ihclkr18tib2" path="res://src/data/resources/diseases/common_corn_rust.tres" id="8_m8tyx"]
+[ext_resource type="Resource" uid="uid://debld7iggllvd" path="res://src/data/resources/diseases/philippine_downy_mildew.tres" id="9_l14d3"]
+[ext_resource type="Resource" uid="uid://oi76mopuxids" path="res://src/data/resources/diseases/ear_rot.tres" id="10_vsttj"]
 
 [resource]
 script = ExtResource("5_ki5jm")
-diseases = Array[ExtResource("1_m8dav")]([ExtResource("2_38dqp")])
+diseases = Array[ExtResource("1_m8dav")]([ExtResource("2_38dqp"), ExtResource("3_gv3kj"), ExtResource("4_45wcf"), ExtResource("5_m4s5u"), ExtResource("6_qxp32"), ExtResource("7_oba10"), ExtResource("8_m8tyx"), ExtResource("9_l14d3"), ExtResource("10_vsttj")])

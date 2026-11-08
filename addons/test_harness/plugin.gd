@@ -3,6 +3,24 @@ extends EditorPlugin
 
 
 func _enter_tree() -> void:
+	if OS.get_environment("GODOT_DRAFT_DISEASE_PLAYTEST_SETUP") == "1":
+		_run_draft_disease_playtest_setup.call_deferred()
+		return
+	if OS.get_environment("GODOT_CATALOG_SETUP") == "1":
+		_run_catalog_setup.call_deferred()
+		return
+	if OS.get_environment("GODOT_ACTIVATION_SETUP") == "1":
+		_run_activation_setup.call_deferred()
+		return
+	if OS.get_environment("GODOT_SHADOW_SETUP") == "1":
+		_run_shadow_setup.call_deferred()
+		return
+	if OS.get_environment("GODOT_LIGHTING_SETUP") == "1":
+		_run_lighting_setup.call_deferred()
+		return
+	if OS.get_environment("GODOT_MANUAL_WORLD_SETUP") == "1":
+		_run_manual_world_setup.call_deferred()
+		return
 	if OS.get_environment("GODOT_FIELD_TOOLS_SETUP") == "1":
 		_run_field_tools_setup.call_deferred()
 		return
@@ -23,6 +41,49 @@ func _run_test() -> void:
 	var result: int = await test.run(get_tree())
 	test = null
 	# Quit the real editor SceneTree, allowing its normal teardown to run.
+	get_tree().quit(result)
+
+
+func _run_activation_setup() -> void:
+	var setup: EditorScript = (load("res://tools/setup_disease_activation.gd") as Script).new() as EditorScript
+	var result: int = await setup.run_setup()
+	setup = null
+	get_tree().quit(result)
+
+
+func _run_catalog_setup() -> void:
+	var setup: EditorScript = (load("res://tools/setup_disease_catalog.gd") as Script).new() as EditorScript
+	var result: int = await setup.run_setup()
+	setup = null
+	get_tree().quit(result)
+
+
+func _run_draft_disease_playtest_setup() -> void:
+	var setup: EditorScript = (load("res://tools/enable_draft_disease_playtest.gd") as Script).new() as EditorScript
+	var result: int = await setup.run_setup()
+	setup = null
+	get_tree().quit(result)
+
+
+func _run_lighting_setup() -> void:
+	var setup: EditorScript = (load("res://tools/setup_world_lighting.gd") as Script).new() as EditorScript
+	var result: int = await setup.run_setup()
+	setup = null
+	get_tree().quit(result)
+
+
+func _run_shadow_setup() -> void:
+	var setup: EditorScript = (load("res://tools/setup_scenery_shadows.gd") as Script).new() as EditorScript
+	var result: int = await setup.run_setup()
+	setup = null
+	get_tree().quit(result)
+
+
+func _run_manual_world_setup() -> void:
+	var setup_script: Script = load("res://tools/setup_manual_world.gd") as Script
+	var setup: EditorScript = setup_script.new() as EditorScript
+	var result: int = await setup.run_setup()
+	setup = null
 	get_tree().quit(result)
 
 

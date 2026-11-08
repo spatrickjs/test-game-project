@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="TerrainTileVisualMap" format=3 uid="uid://daii8ilkm3qn4"]
+[gd_resource type="Resource" script_class="TerrainTileVisualMap" format=3 uid="uid://bhe8vy8qyxyvy"]
 
 [ext_resource type="Script" uid="uid://uqyd1q3fy7yc" path="res://src/presentation/world/terrain_tile_visual.gd" id="1_1aewo"]
 [ext_resource type="Script" uid="uid://btex26shrhanw" path="res://src/presentation/world/terrain_tile_visual_map.gd" id="2_lnyl6"]
@@ -6,18 +6,21 @@
 [sub_resource type="Resource" id="Resource_xrivr"]
 script = ExtResource("1_1aewo")
 source_id = 0
+atlas_coords = Vector2i(9, 9)
 metadata/_custom_type_script = "uid://uqyd1q3fy7yc"
 
 [sub_resource type="Resource" id="Resource_13qdw"]
 script = ExtResource("1_1aewo")
 terrain_type = 2
 source_id = 1
+atlas_coords = Vector2i(0, 6)
 metadata/_custom_type_script = "uid://uqyd1q3fy7yc"
 
 [sub_resource type="Resource" id="Resource_b1lj4"]
 script = ExtResource("1_1aewo")
 terrain_type = 1
 source_id = 2
+atlas_coords = Vector2i(8, 9)
 metadata/_custom_type_script = "uid://uqyd1q3fy7yc"
 
 [resource]

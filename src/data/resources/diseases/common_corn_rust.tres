@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DiseaseData" format=3 uid="uid://ihclkr18tib2"]
+
+[ext_resource type="Script" uid="uid://bbr8k8k27fpoh" path="res://src/data/resources/abiotic_rule.gd" id="1_41jr3"]
+[ext_resource type="Script" uid="uid://bd8k7muh8e7gn" path="res://src/data/resources/nutrient_rule.gd" id="2_xdnmp"]
+[ext_resource type="Script" uid="uid://c1gf75cap2tvc" path="res://src/data/resources/disease_data.gd" id="3_3sv6l"]
+[ext_resource type="Script" uid="uid://2p7ti4nb1o5a" path="res://src/data/resources/transmission_modifier_profile.gd" id="4_xdnmp"]
+
+[sub_resource type="Resource" id="Resource_ge8wa"]
+script = ExtResource("4_xdnmp")
+metadata/_custom_type_script = "uid://2p7ti4nb1o5a"
+
+[resource]
+script = ExtResource("3_3sv6l")
+disease_id = 6
+display_name = "Common Corn Rust (draft)"
+target_crop = 2
+transmission_modifier_profile = SubResource("Resource_ge8wa")
+beta = 0.35
+sigma = 0.3
+gamma = 0.1
+metadata/authoring_status = "Playable draft; temporary fictional game settings; expert/model review pending."
+metadata/calibration = "Shared toy-game preset v1, identical for all eight new drafts. Not estimated from interviews or calibrated to real-world disease behavior."
+metadata/category = "disease"
+metadata/gameplay_preset = "temporary_shared_v1"
+metadata/finalization_notes = "See res://docs/DISEASE_FINALIZATION.md. Review content, model suitability, gameplay outcomes, parameters and evaluation before removing draft status."

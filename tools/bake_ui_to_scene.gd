@@ -28,6 +28,7 @@ const NODE_TYPES: Dictionary[String, StringName] = {
 	"HUD/Panel/Margin/Controls/CropButtons/TransferButton": &"Button",
 	"HUD/HarvestButton": &"Button",
 	"HUD/WaterButton": &"Button",
+	"HUD/WaterBucketButton": &"Button",
 	"HUD/FertilizeButton": &"Button",
 	"HUD/TileInspectorPanel": &"PanelContainer",
 	"HUD/TileInspectorPanel/Margin": &"MarginContainer",
@@ -94,6 +95,7 @@ const BINDINGS: Dictionary[StringName, NodePath] = {
 const HUD_BINDINGS: Dictionary[StringName, NodePath] = {
 	&"harvest_button": ^"HUD/HarvestButton",
 	&"water_button": ^"HUD/WaterButton",
+	&"water_bucket_button": ^"HUD/WaterBucketButton",
 	&"fertilize_button": ^"HUD/FertilizeButton",
 	&"camera_zoom_button": ^"HUD/CameraZoomButton",
 	&"algorithm_selector": ^"HUD/Panel/Margin/Controls/AlgorithmSelector",
@@ -164,7 +166,7 @@ func _run() -> void:
 			_record_property(undo, node, &"mouse_filter", Control.MOUSE_FILTER_STOP if blocks else Control.MOUSE_FILTER_IGNORE, control.mouse_filter)
 		if node is Control and (node is PanelContainer or node is Button or node is ScrollContainer):
 			_record_property(undo, node, &"mouse_force_pass_scroll_events", false, (node as Control).mouse_force_pass_scroll_events)
-		if node.name in [&"CameraZoomButton", &"HarvestButton", &"WaterButton", &"FertilizeButton"]:
+		if node.name in [&"CameraZoomButton", &"HarvestButton", &"WaterButton", &"FertilizeButton", &"WaterBucketButton"]:
 			_record_property(undo, node, &"script", CAMERA_BUTTON_SCRIPT, node.get_script())
 		if node is Label and (node as Label).text.is_empty():
 			_record_property(undo, node, &"text", _preview_text(String(node.name)), (node as Label).text)
@@ -172,7 +174,7 @@ func _run() -> void:
 			var button: Button = node as Button
 			if button.text.is_empty():
 				_record_property(undo, node, &"text", _preview_text(String(node.name)), button.text)
-			if String(node.name) in ["SugarcaneButton", "RiceButton", "CornButton", "RemoveButton", "TransferButton", "HarvestButton", "WaterButton", "FertilizeButton"]:
+			if String(node.name) in ["SugarcaneButton", "RiceButton", "CornButton", "RemoveButton", "TransferButton", "HarvestButton", "WaterButton", "FertilizeButton", "WaterBucketButton"]:
 				_record_property(undo, node, &"toggle_mode", true, button.toggle_mode)
 	# An empty action is harmless; it does not replace nodes or reset styles.
 	undo.commit_action()
@@ -276,7 +278,7 @@ func _configure_new_node(node: Node) -> void:
 		button.custom_minimum_size = Vector2(64.0, 44.0)
 		button.size_flags_horizontal = Control.SIZE_SHRINK_END
 		button.mouse_filter = Control.MOUSE_FILTER_STOP
-		if node.name in [&"CameraZoomButton", &"HarvestButton", &"WaterButton", &"FertilizeButton"]:
+		if node.name in [&"CameraZoomButton", &"HarvestButton", &"WaterButton", &"FertilizeButton", &"WaterBucketButton"]:
 			button.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 			button.offset_left = -148.0
 			button.offset_top = -64.0
@@ -292,6 +294,9 @@ func _configure_new_node(node: Node) -> void:
 			elif node.name == &"FertilizeButton":
 				button.offset_top = -232.0
 				button.offset_bottom = -184.0
+			elif node.name == &"WaterBucketButton":
+				button.offset_top = -288.0
+				button.offset_bottom = -240.0
 	elif node is ProgressBar:
 		var bar: ProgressBar = node as ProgressBar
 		bar.min_value = 0.0
@@ -336,6 +341,7 @@ func _preview_text(node_name: String) -> String:
 		"TransferButton": return "Move"
 		"HarvestButton": return "Harvest"
 		"WaterButton": return "Water"
+		"WaterBucketButton": return "Water Bucket"
 		"FertilizeButton": return "Fertilize"
 		"NextTurnButton": return "Next Turn"
 		"CameraZoomButton": return "Zoom in"

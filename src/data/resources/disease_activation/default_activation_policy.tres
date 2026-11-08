@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="DiseaseActivationPolicy" format=3 uid="uid://dhxtd6ic3uj68"]
+
+[ext_resource type="Script" uid="uid://dorchhpody7s8" path="res://src/data/resources/disease_activation_policy.gd" id="1_eqne7"]
+
+[resource]
+script = ExtResource("1_eqne7")
+allowed_disease_ids = Array[int]([0, 1, 2, 3, 4, 5, 6, 7, 8])

@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://beit4bfuaevfp"]
+[gd_scene format=4 uid="uid://beit4bfuaevfp"]
 
 [ext_resource type="Script" uid="uid://cv57j7qhuge76" path="res://src/presentation/world/field_prototype_presenter.gd" id="1_44tld"]
 [ext_resource type="Script" uid="uid://b5c7chugjxt0o" path="res://src/logic/farming/farming_controller.gd" id="2_jfjlv"]
@@ -6,15 +6,18 @@
 [ext_resource type="Script" uid="uid://bghaw4686gwwc" path="res://src/logic/turns/turn_controller.gd" id="3_r0odj"]
 [ext_resource type="Script" uid="uid://bs822juxs21vk" path="res://src/presentation/world/field_world_view.gd" id="4_34f8n"]
 [ext_resource type="Resource" uid="uid://c7dk6a0ty5b4l" path="res://src/data/databases/terrain_database.tres" id="5_56fpe"]
-[ext_resource type="Resource" uid="uid://daii8ilkm3qn4" path="res://src/presentation/world/TerrainTileVisualMap.tres" id="5_jfjlv"]
+[ext_resource type="Resource" uid="uid://bhe8vy8qyxyvy" path="res://src/presentation/world/TerrainTileVisualMap.tres" id="5_jfjlv"]
 [ext_resource type="Texture2D" uid="uid://c4fpifar6lrnd" path="res://assets/art/tilesets/terrain/paddy_mud.png.png" id="5_ql0s4"]
 [ext_resource type="Script" uid="uid://clvmxcrluptf4" path="res://src/presentation/world/crop_debug_overlay.gd" id="6_g68ao"]
 [ext_resource type="Script" uid="uid://jt23o8e58cda" path="res://src/data/resources/soil_state.gd" id="7_p35bb"]
 [ext_resource type="Resource" uid="uid://dfb1u1g6nryvu" path="res://src/data/databases/default_disease_database.tres" id="8_qayry"]
 [ext_resource type="Script" uid="uid://ddq1k2v5ci1j1" path="res://src/data/resources/abiotic_state.gd" id="8_yhesb"]
+[ext_resource type="Shader" uid="uid://dmm6k3vqff1h7" path="res://watercolor_floor.gdshader" id="11_ia13u"]
 [ext_resource type="Script" uid="uid://dphgo78jfmxeh" path="res://src/presentation/ui/inspectors/tile_inspector_view.gd" id="12_56fpe"]
 [ext_resource type="Texture2D" uid="uid://jba8xq3unjak" path="res://assets/art/tilesets/crops/normalized/rice_stage_0.res" id="13_5j4ag"]
+[ext_resource type="TileSet" uid="uid://bh0d55kljfsfl" path="res://assets/art/tilesets/terrain/resource/tile_set.tres" id="13_aotfg"]
 [ext_resource type="Texture2D" uid="uid://bxq27t3duh3v7" path="res://assets/art/tilesets/crops/normalized/rice_stage_1.res" id="14_6a3lw"]
+[ext_resource type="Texture2D" uid="uid://dnfltekubkekq" path="res://assets/art/tilesets/tree/Isometric Assets 5.png" id="14_aotfg"]
 [ext_resource type="Texture2D" uid="uid://b108hwxfd4hl6" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_2.res" id="15_fbqid"]
 [ext_resource type="Texture2D" uid="uid://b4efhtf46mjr5" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_3.res" id="16_mfnx3"]
 [ext_resource type="Texture2D" uid="uid://dya1c6h6dk1q3" path="res://assets/art/tilesets/crops/normalized/rice_stage_2.res" id="17_gxe8k"]
@@ -28,9 +31,15 @@
 [ext_resource type="Script" uid="uid://cp76etb7tv8y4" path="res://src/presentation/world/field_terrain_preview.gd" id="25_gxe8k"]
 [ext_resource type="Script" uid="uid://c7x4cbtfkuilb" path="res://src/presentation/ui/camera_zoom_button.gd" id="26_6a3lw"]
 [ext_resource type="Texture2D" uid="uid://ymbkqy087onx" path="res://assets/art/tilesets/foliage/animated_grass_tuft.png" id="26_dqm82"]
+[ext_resource type="Script" uid="uid://bvqqs0qec7sgl" path="res://src/presentation/world/farmer_agent.gd" id="27_bct15"]
 [ext_resource type="Script" uid="uid://dmwfbudlygvky" path="res://src/logic/environment/weather_manager.gd" id="27_mfnx3"]
+[ext_resource type="Script" uid="uid://bh07j7g2ueac1" path="res://src/presentation/world/field_selection_overlay.gd" id="28_3wfy2"]
 [ext_resource type="Script" uid="uid://c0xjvj7idv2fq" path="res://src/logic/farming/soil_tool_controller.gd" id="28_gxe8k"]
 [ext_resource type="Script" path="res://src/presentation/ui/pause_menu_view.gd" id="29_pause"]
+[ext_resource type="Script" uid="uid://q2tph6b4xeio" path="res://src/presentation/world/crop_shadow_overlay.gd" id="29_3wfy2"]
+[ext_resource type="Script" uid="uid://xv0vhi4veopc" path="res://src/logic/environment/disease_activation_controller.gd" id="37_jeedr"]
+[ext_resource type="Resource" uid="uid://dhxtd6ic3uj68" path="res://src/data/resources/disease_activation/default_activation_policy.tres" id="38_7a55d"]
+[ext_resource type="Script" uid="uid://cgcmesq61apy" path="res://src/logic/turns/game_state_manager.gd" id="39_0n7ni"]
 
 [sub_resource type="Resource" id="Resource_34f8n"]
 script = ExtResource("7_p35bb")
@@ -40,34 +49,65 @@ metadata/_custom_type_script = "uid://jt23o8e58cda"
 script = ExtResource("8_yhesb")
 metadata/_custom_type_script = "uid://ddq1k2v5ci1j1"
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_56fpe"]
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_0n7ni"]
+noise_type = 2
+frequency = 0.08
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_7a55d"]
+noise = SubResource("FastNoiseLite_0n7ni")
+seamless = true
+
+[sub_resource type="Gradient" id="Gradient_1vwg7"]
+offsets = PackedFloat32Array(0, 0.51796407, 1)
+colors = PackedColorArray(0.49803922, 0.6509804, 0.3137255, 1, 0.72156864, 0.84705883, 0.43137255, 1, 0.9254902, 0.95686275, 0.5803922, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_jeedr"]
+frequency = 0.008
+fractal_octaves = 3
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_m6w0r"]
+noise = SubResource("FastNoiseLite_jeedr")
+color_ramp = SubResource("Gradient_1vwg7")
+seamless = true
+seamless_blend_skirt = 0.25
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_reoau"]
+shader = ExtResource("11_ia13u")
+shader_parameter/watercolor_wash = SubResource("NoiseTexture2D_m6w0r")
+shader_parameter/paper_grain = SubResource("NoiseTexture2D_7a55d")
+shader_parameter/wash_scale = 0.0008
+shader_parameter/grain_scale = 0.006
+shader_parameter/wash_strength = 0.65
+shader_parameter/grain_strength = 0.08
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_og163"]
 load_path = "res://.godot/imported/dry_soil.png.png-1a6462df813c7b924cf0c9552dd5120a.ctex"
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_v286j"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k753q"]
 resource_name = "dry_soil"
-texture = SubResource("CompressedTexture2D_56fpe")
-texture_region_size = Vector2i(512, 512)
+texture = SubResource("CompressedTexture2D_og163")
+texture_region_size = Vector2i(512, 478)
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(4, -14)
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_v286j"]
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_q6xei"]
 load_path = "res://.godot/imported/grass.png.png-b7a38354c4577d6470e0b8cbdcc01659.ctex"
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fdjjd"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_34q4o"]
 resource_name = "grass"
-texture = SubResource("CompressedTexture2D_v286j")
+texture = SubResource("CompressedTexture2D_q6xei")
 texture_region_size = Vector2i(512, 512)
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(4, -14)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tcj1j"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_es10w"]
 resource_name = "paddy_mud"
 texture = ExtResource("5_ql0s4")
-texture_region_size = Vector2i(512, 512)
+texture_region_size = Vector2i(512, 470)
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(4, -14)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0n7ni"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fe2in"]
 texture = ExtResource("26_dqm82")
 texture_region_size = Vector2i(875, 875)
 0:0/animation_columns = 4
@@ -78,14 +118,27 @@ texture_region_size = Vector2i(875, 875)
 0:0/animation_frame_3/duration = 1.0
 0:0/0 = 0
 
-[sub_resource type="TileSet" id="TileSet_qtxmo"]
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_aotfg"]
+polygon = PackedVector2Array(-105, -544.5, -38, -699.5, -2, -713.5, 216, -683.5, 268, -522.5, 35, 19.5, 2, 33.5, -29, 24.5)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0n7ni"]
+resource_name = "tree"
+texture = ExtResource("14_aotfg")
+texture_region_size = Vector2i(572, 853)
+2:2/0 = 0
+2:2/0/texture_origin = Vector2i(-50, 352)
+2:2/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_aotfg")
+
+[sub_resource type="TileSet" id="TileSet_cmj2x"]
 tile_shape = 1
 tile_layout = 4
 tile_size = Vector2i(276, 140)
-sources/2 = SubResource("TileSetAtlasSource_tcj1j")
-sources/1 = SubResource("TileSetAtlasSource_fdjjd")
-sources/0 = SubResource("TileSetAtlasSource_v286j")
-sources/3 = SubResource("TileSetAtlasSource_0n7ni")
+occlusion_layer_0/light_mask = 2
+sources/2 = SubResource("TileSetAtlasSource_es10w")
+sources/1 = SubResource("TileSetAtlasSource_34q4o")
+sources/0 = SubResource("TileSetAtlasSource_k753q")
+sources/3 = SubResource("TileSetAtlasSource_fe2in")
+sources/7 = SubResource("TileSetAtlasSource_0n7ni")
 
 [sub_resource type="FontFile" id="FontFile_g68ao"]
 subpixel_positioning = 0
@@ -363,7 +416,20 @@ sources/9 = SubResource("TileSetAtlasSource_7a55d")
 sources/10 = SubResource("TileSetAtlasSource_2l5e1")
 sources/11 = SubResource("TileSetAtlasSource_bct15")
 
-[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "pause_button", "pause_menu", "soil_tool_controller")]
+[sub_resource type="Gradient" id="Gradient_aotfg"]
+interpolation_mode = 2
+offsets = PackedFloat32Array(0, 0.35, 0.7, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.8, 0.8, 0.8, 1, 0.28, 0.28, 0.28, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_ia13u"]
+gradient = SubResource("Gradient_aotfg")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "pause_button", "pause_menu", "soil_tool_controller", "water_bucket_button", "game_state_manager")]
 script = ExtResource("1_44tld")
 farming_controller = NodePath("FarmingController")
 turn_controller = NodePath("TurnController")
@@ -387,6 +453,8 @@ fertilize_button = NodePath("HUD/FertilizeButton")
 pause_button = NodePath("PauseLayer/PauseButton")
 pause_menu = NodePath("PauseLayer/PauseMenu")
 soil_tool_controller = NodePath("SoilToolController")
+water_bucket_button = NodePath("HUD/WaterBucketButton")
+game_state_manager = NodePath("GameStateManager")
 
 [node name="FarmingController" type="Node" parent="." unique_id=889834426]
 script = ExtResource("2_jfjlv")
@@ -394,59 +462,145 @@ crop_database = ExtResource("3_g68ao")
 terrain_database = ExtResource("5_56fpe")
 initial_soil = SubResource("Resource_34f8n")
 initial_abiotic = SubResource("Resource_ql0s4")
-terrain_bands = Array[int]([0, 2, 1])
+field_size = Vector2i(9, 9)
+terrain_bands = Array[int]([2])
 
-[node name="TurnController" type="Node" parent="." unique_id=980371109 node_paths=PackedStringArray("farming_controller", "weather_manager")]
+[node name="TurnController" type="Node" parent="." unique_id=980371109 node_paths=PackedStringArray("farming_controller", "weather_manager", "disease_activation_controller", "game_state_manager")]
 script = ExtResource("3_r0odj")
 farming_controller = NodePath("../FarmingController")
 weather_manager = NodePath("../WeatherManager")
+disease_activation_controller = NodePath("../DiseaseActivationController")
+game_state_manager = NodePath("../GameStateManager")
 disease_database = ExtResource("8_qayry")
 
-[node name="World" type="Node2D" parent="." unique_id=369827757 node_paths=PackedStringArray("terrain_layer", "crop_overlay", "crop_layer", "camera", "grass_overlay_layer")]
+[node name="World" type="Node2D" parent="." unique_id=369827757 node_paths=PackedStringArray("terrain_layer", "background_terrain_layer", "background_decorations", "crop_overlay", "crop_layer", "crop_shadows", "camera", "farmer_agent", "selection_overlay", "grass_overlay_layer")]
+y_sort_enabled = true
 script = ExtResource("4_34f8n")
 terrain_layer = NodePath("Terrain")
+background_terrain_layer = NodePath("BackgroundTerrain")
+background_decorations = NodePath("Foliage")
 visual_map = ExtResource("5_jfjlv")
 crop_overlay = NodePath("CropOverlay")
 crop_layer = NodePath("Crops")
+crop_shadows = NodePath("CropShadows")
 camera = NodePath("Camera2D")
+farmer_agent = NodePath("FarmerAgent")
+selection_overlay = NodePath("SelectionOverlay")
+camera_center_offset = Vector2(0, -260)
 grass_overlay_layer = NodePath("GrassOverlayLayer")
 animated_grass_source_id = 3
 
+[node name="BackgroundTerrain" type="TileMapLayer" parent="World" unique_id=30330249]
+editor_description = "PAINT HERE: manual ground outside the 9x9 playable area (coordinates 0..8 on both axes)."
+y_sort_enabled = true
+material = SubResource("ShaderMaterial_reoau")
+tile_map_data = PackedByteArray("AAD9/wAAAQACAAYAAAD8/wAAAQAGAAcAAAD8/wEAAQACAAYAAAD8/wIAAQACAAYAAAD8/wQAAQACAAYAAAD6////AQADAAkAAAD8//3/AQAGAAYAAAD9//3/AQAIAAYAAAD+////AQAHAAkAAAD+/wAAAQAAAAYAAAD7////AQAAAAYAAAD4/wYAAQAHAAkAAAD5/wYAAQAEAAkAAAD5/wcAAQAAAAYAAAD8//z/AQAAAAYAAAD5//z/AQAAAAYAAAD7//r/AQAAAAYAAAD8//r/AQADAAkAAAD9//r/AQAAAAYAAAD+//r/AQAAAAYAAAD///r/AQAAAAYAAAAAAPr/AQAAAAYAAAABAPr/AQAAAAYAAAACAPr/AQAAAAYAAAADAPr/AQAAAAYAAAADAPv/AQAAAAYAAAACAPv/AQAAAAYAAAABAPv/AQAAAAYAAAD///v/AQAAAAYAAAD+//v/AQAAAAYAAAD9//v/AQAAAAYAAAD8//v/AQADAAkAAAD7//v/AQAAAAYAAAACAPz/AQAAAAYAAAADAPz/AQAAAAYAAAD+//z/AQAAAAYAAAD9//z/AQAAAAYAAAACAP3/AQAAAAYAAAADAP3/AQADAAkAAAAEAP3/AQAAAAYAAAAFAP3/AQAAAAYAAAADAP7/AQAAAAYAAAACAP7/AQAAAAYAAAAEAPz/AQAAAAYAAAAFAPz/AQAAAAYAAAAFAPv/AQAAAAYAAAAEAPr/AQAAAAYAAAAEAPn/AQAAAAYAAAAFAPr/AQAAAAYAAAAEAPv/AQAAAAYAAAD+//3/AQAJAAYAAAD4//b/AQAAAAYAAAD4//f/AQAAAAYAAAD4//j/AQAAAAYAAAD4//n/AQAAAAYAAAD4/wcAAQAAAAYAAAD4/wgAAQAAAAYAAAD4/wkAAQAAAAYAAAD4/woAAQAAAAYAAAD4/wsAAQAAAAYAAAD4/wwAAQAAAAYAAAD4/w0AAQAEAAkAAAD4/w4AAQAEAAkAAAD5//b/AQAAAAYAAAD5//f/AQAAAAYAAAD5//j/AQAAAAYAAAD5/wgAAQAAAAYAAAD5/wkAAQAAAAYAAAD5/woAAQAAAAYAAAD5/wsAAQAAAAYAAAD5/wwAAQAAAAYAAAD5/w0AAQAHAAkAAAD5/w4AAQAHAAkAAAD6//b/AQAAAAYAAAD6//f/AQAAAAYAAAD6//j/AQAAAAYAAAD6/wYAAQADAAkAAAD6/wcAAQAAAAYAAAD6/wgAAQAAAAYAAAD6/wkAAQAAAAYAAAD6/woAAQAAAAYAAAD6/wsAAQAAAAYAAAD6/wwAAQAAAAYAAAD6/w0AAQAAAAYAAAD6/w4AAQADAAkAAAD7//b/AQAAAAYAAAD7//f/AQAAAAYAAAD7//j/AQAAAAYAAAD7//n/AQAAAAYAAAD7/wYAAQAHAAkAAAD7/wcAAQAAAAYAAAD7/wgAAQAAAAYAAAD7/wkAAQAAAAYAAAD7/woAAQAAAAYAAAD7/wsAAQAAAAYAAAD7/wwAAQAAAAYAAAD7/w0AAQAAAAYAAAD7/w4AAQAHAAkAAAD8//b/AQAAAAYAAAD8//f/AQAAAAYAAAD8//j/AQAAAAYAAAD8//n/AQAAAAYAAAD8/wMAAQACAAYAAAD8/wUAAQACAAYAAAD8/wYAAQACAAYAAAD8/wcAAQACAAYAAAD8/wgAAQACAAYAAAD8/wkAAQACAAYAAAD8/woAAQACAAYAAAD8/wsAAQAAAAYAAAD8/wwAAQAAAAYAAAD8/w0AAQAEAAkAAAD8/w4AAQAEAAkAAAD9//b/AQAAAAYAAAD9//f/AQAAAAYAAAD9//j/AQAAAAYAAAD9//n/AQAAAAYAAAD9/wEAAQACAAYAAAD9/wIAAQAGAAcAAAD9/wMAAQACAAYAAAD9/wQAAQACAAYAAAD9/wUAAQACAAYAAAD9/wYAAQACAAYAAAD9/wcAAQACAAYAAAD9/wgAAQACAAYAAAD9/wkAAQACAAYAAAD9/woAAQAEAAYAAAD9/wsAAQAAAAYAAAD9/wwAAQAAAAYAAAD9/w0AAQADAAkAAAD9/w4AAQADAAkAAAD+//b/AQAAAAYAAAD+//f/AQAAAAYAAAD+//j/AQAAAAYAAAD+//n/AQAAAAYAAAD+/wEAAQAAAAYAAAD+/wIAAQAAAAYAAAD+/wMAAQAEAAkAAAD+/wQAAQAAAAYAAAD+/wUAAQAAAAYAAAD+/wYAAQADAAkAAAD+/wcAAQAAAAYAAAD+/wgAAQAAAAYAAAD+/wkAAQAAAAYAAAD+/woAAQAAAAYAAAD+/wsAAQAJAAYAAAD+/wwAAQAJAAYAAAD+/w0AAQADAAkAAAD+/w4AAQADAAkAAAD///b/AQAAAAYAAAD///f/AQAAAAYAAAD///j/AQAAAAYAAAD///n/AQAAAAYAAAD//woAAQAAAAYAAAD//wsAAQAJAAYAAAD//wwAAQAJAAYAAAD//w0AAQADAAkAAAD//w4AAQAHAAkAAAAAAPb/AQAAAAYAAAAAAPf/AQAAAAYAAAAAAPj/AQAAAAYAAAAAAPn/AQAAAAYAAAAAAAoAAQAAAAYAAAAAAAsAAQAJAAYAAAAAAAwAAQAJAAYAAAAAAA0AAQAEAAkAAAAAAA4AAQADAAkAAAABAPb/AQAAAAYAAAABAPf/AQAAAAYAAAABAPj/AQAAAAYAAAABAPn/AQAAAAYAAAABAAoAAQAAAAYAAAABAAsAAQAJAAYAAAABAAwAAQAJAAYAAAABAA0AAQADAAkAAAABAA4AAQAEAAkAAAACAPb/AQAAAAYAAAACAPf/AQAAAAYAAAACAPj/AQAAAAYAAAACAPn/AQAAAAYAAAACAAoAAQAAAAYAAAACAAsAAQAJAAYAAAACAAwAAQAJAAYAAAACAA0AAQAHAAkAAAACAA4AAQAEAAkAAAADAPb/AQAAAAYAAAADAPf/AQAAAAYAAAADAPj/AQAAAAYAAAADAPn/AQAAAAYAAAADAAoAAQAAAAYAAAADAAsAAQAAAAYAAAADAAwAAQAJAAYAAAADAA0AAQADAAkAAAADAA4AAQAHAAkAAAAEAPb/AQAAAAYAAAAEAPf/AQAAAAYAAAAEAPj/AQAAAAYAAAAEAP7/AQAAAAYAAAAEAAoAAQAEAAkAAAAEAAsAAQAAAAYAAAAEAAwAAQAAAAYAAAAEAA0AAQAHAAkAAAAEAA4AAQAAAAYAAAAFAPb/AQAAAAYAAAAFAPf/AQAAAAYAAAAFAPj/AQAAAAYAAAAFAPn/AQAAAAYAAAAFAP7/AQAEAAkAAAAFAAoAAQAAAAYAAAAFAAsAAQAHAAkAAAAFAAwAAQAAAAYAAAAFAA0AAQAAAAYAAAAFAA4AAQAEAAkAAAAGAPb/AQAAAAYAAAAGAPf/AQAAAAYAAAAGAPj/AQAAAAYAAAAGAPn/AQAAAAYAAAAGAPr/AQAAAAYAAAAGAPv/AQAAAAYAAAAGAPz/AQAAAAYAAAAGAP3/AQAEAAkAAAAGAP7/AQAAAAYAAAAGAAoAAQAAAAYAAAAGAAsAAQAAAAYAAAAGAAwAAQAAAAYAAAAGAA0AAQAEAAkAAAAGAA4AAQAAAAYAAAAHAPb/AQAAAAYAAAAHAPf/AQAAAAYAAAAHAPj/AQAAAAYAAAAHAPn/AQAAAAYAAAAHAPr/AQAAAAYAAAAHAPv/AQAAAAYAAAAHAPz/AQAAAAYAAAAHAP3/AQAAAAYAAAAHAP7/AQAAAAYAAAAHAAoAAQAAAAYAAAAHAAsAAQAAAAYAAAAHAAwAAQAAAAYAAAAHAA0AAQAEAAkAAAAHAA4AAQADAAkAAAAIAPb/AQAAAAYAAAAIAPf/AQAAAAYAAAAIAPj/AQAAAAYAAAAIAPn/AQAAAAYAAAAIAPr/AQAAAAYAAAAIAPv/AQAAAAYAAAAIAPz/AQAAAAYAAAAIAP3/AQAAAAYAAAAIAP7/AQAAAAYAAAAIAAoAAQAAAAYAAAAIAAsAAQAAAAYAAAAIAAwAAQAAAAYAAAAIAA0AAQAAAAYAAAAIAA4AAQAAAAYAAAAJAPb/AQAAAAYAAAAJAPf/AQAAAAYAAAAJAPj/AQAAAAYAAAAJAPn/AQAAAAYAAAAJAPr/AQAAAAYAAAAJAPv/AQAAAAYAAAAJAPz/AQAAAAYAAAAJAP3/AQADAAkAAAAJAP7/AQAAAAYAAAAJAAoAAQAAAAYAAAAJAAsAAQAAAAYAAAAJAAwAAQAAAAYAAAAJAA0AAQAAAAYAAAAJAA4AAQAAAAYAAAAKAPb/AQAAAAYAAAAKAPf/AQAAAAYAAAAKAPj/AQAAAAYAAAAKAPn/AQAAAAYAAAAKAPr/AQAAAAYAAAAKAPv/AQAAAAYAAAAKAPz/AQAAAAYAAAAKAP3/AQAAAAYAAAAKAP7/AQAAAAYAAAAKAP//AQAAAAYAAAAKAAAAAQADAAkAAAAKAAEAAQAAAAYAAAAKAAIAAQAAAAYAAAAKAAMAAQAAAAYAAAAKAAQAAQAHAAkAAAAKAAUAAQAAAAYAAAAKAAYAAQAEAAkAAAAKAAcAAQAAAAYAAAAKAAgAAQAAAAYAAAAKAAkAAQAAAAYAAAAKAAoAAQAAAAYAAAAKAAsAAQAAAAYAAAAKAAwAAQAAAAYAAAAKAA0AAQAAAAYAAAAKAA4AAQAAAAYAAAALAPb/AQAAAAYAAAALAPf/AQAAAAYAAAALAPj/AQAAAAYAAAALAPn/AQAAAAYAAAALAPr/AQAAAAYAAAALAPv/AQAAAAYAAAALAPz/AQAAAAYAAAALAP3/AQAAAAYAAAALAP7/AQAAAAYAAAALAP//AQAAAAYAAAALAAAAAQAAAAYAAAALAAEAAQAAAAYAAAALAAIAAQADAAkAAAALAAMAAQAAAAYAAAALAAQAAQAAAAYAAAALAAUAAQAAAAYAAAALAAYAAQAAAAYAAAALAAcAAQAHAAkAAAALAAgAAQAAAAYAAAALAAkAAQAAAAYAAAALAAoAAQAAAAYAAAALAAsAAQAAAAYAAAALAAwAAQAAAAYAAAALAA0AAQAAAAYAAAALAA4AAQAAAAYAAAAMAPb/AQAAAAYAAAAMAPf/AQAAAAYAAAAMAPj/AQAAAAYAAAAMAPn/AQAAAAYAAAAMAPr/AQAAAAYAAAAMAPv/AQAAAAYAAAAMAPz/AQAAAAYAAAAMAP3/AQAAAAYAAAAMAP7/AQAAAAYAAAAMAP//AQAAAAYAAAAMAAAAAQAAAAYAAAAMAAEAAQAAAAYAAAAMAAIAAQAAAAYAAAAMAAMAAQAAAAYAAAAMAAQAAQAAAAYAAAAMAAUAAQAHAAkAAAAMAAYAAQAAAAYAAAAMAAcAAQAAAAYAAAAMAAgAAQADAAkAAAAMAAkAAQAAAAYAAAAMAAoAAQAAAAYAAAAMAAsAAQAAAAYAAAAMAAwAAQAAAAYAAAAMAA0AAQAAAAYAAAAMAA4AAQAAAAYAAAANAPb/AQAAAAYAAAANAPf/AQAAAAYAAAANAPj/AQAAAAYAAAANAPn/AQAAAAYAAAANAPr/AQAAAAYAAAANAPv/AQAAAAYAAAANAPz/AQAAAAYAAAANAP3/AQAAAAYAAAANAP7/AQAAAAYAAAANAP//AQAAAAYAAAANAAAAAQAAAAYAAAANAAEAAQAAAAYAAAANAAIAAQAAAAYAAAANAAMAAQAAAAYAAAANAAQAAQAAAAYAAAANAAUAAQAAAAYAAAANAAYAAQAAAAYAAAANAAcAAQAAAAYAAAANAAgAAQAAAAYAAAANAAkAAQAAAAYAAAANAAoAAQAAAAYAAAANAAsAAQAAAAYAAAANAAwAAQAAAAYAAAANAA0AAQAAAAYAAAANAA4AAQAAAAYAAAAOAPb/AQAAAAYAAAAOAPf/AQAAAAYAAAAOAPj/AQAAAAYAAAAOAPn/AQAAAAYAAAAOAPr/AQAAAAYAAAAOAPv/AQAAAAYAAAAOAPz/AQAAAAYAAAAOAP3/AQAAAAYAAAAOAP7/AQAAAAYAAAAOAP//AQAAAAYAAAAOAAAAAQAAAAYAAAAOAAEAAQAAAAYAAAAOAAIAAQAAAAYAAAAOAAMAAQAAAAYAAAAOAAQAAQAAAAYAAAAOAAUAAQAAAAYAAAAOAAYAAQAAAAYAAAAOAAcAAQAAAAYAAAAOAAgAAQAAAAYAAAAOAAkAAQAAAAYAAAAOAAoAAQAAAAYAAAAOAAsAAQAAAAYAAAAOAAwAAQAAAAYAAAAOAA0AAQAAAAYAAAAOAA4AAQAAAAYAAAAPAPb/AQAAAAYAAAAPAPf/AQAAAAYAAAAPAPj/AQAAAAYAAAAPAPn/AQAAAAYAAAAPAPr/AQAAAAYAAAAPAPv/AQAAAAYAAAAPAPz/AQAAAAYAAAAPAP3/AQAAAAYAAAAPAP7/AQAAAAYAAAAPAP//AQAAAAYAAAAPAAAAAQAAAAYAAAAPAAEAAQAAAAYAAAAPAAIAAQAAAAYAAAAPAAMAAQAAAAYAAAAPAAQAAQAAAAYAAAAPAAUAAQAAAAYAAAAPAAYAAQAAAAYAAAAPAAcAAQAAAAYAAAAPAAgAAQAAAAYAAAAPAAkAAQAAAAYAAAAPAAoAAQAAAAYAAAAPAAsAAQAAAAYAAAAPAAwAAQAAAAYAAAAPAA0AAQAAAAYAAAAPAA4AAQAAAAYAAAAQAPb/AQAAAAYAAAAQAPf/AQAAAAYAAAAQAPj/AQAAAAYAAAAQAPn/AQAAAAYAAAAQAPr/AQAAAAYAAAAQAPv/AQAAAAYAAAAQAPz/AQAAAAYAAAAQAP3/AQAAAAYAAAAQAP7/AQAAAAYAAAAQAP//AQAAAAYAAAAQAAAAAQAAAAYAAAAQAAEAAQAAAAYAAAAQAAIAAQAAAAYAAAAQAAMAAQAAAAYAAAAQAAQAAQAAAAYAAAAQAAUAAQAAAAYAAAAQAAYAAQAAAAYAAAAQAAcAAQAAAAYAAAAQAAgAAQAAAAYAAAAQAAkAAQAAAAYAAAAQAAoAAQAAAAYAAAAQAAsAAQAAAAYAAAAQAAwAAQAAAAYAAAAQAA0AAQAAAAYAAAAQAA4AAQAAAAYAAAD4/w8AAQAAAAYAAAD4/xAAAQAAAAYAAAD4/xEAAQAAAAYAAAD5/w8AAQAAAAYAAAD5/xAAAQAAAAYAAAD5/xEAAQAAAAYAAAD6/w8AAQAAAAYAAAD6/xAAAQAAAAYAAAD6/xEAAQAAAAYAAAD7/w8AAQAAAAYAAAD7/xAAAQAAAAYAAAD7/xEAAQAAAAYAAAD8/w8AAQAAAAYAAAD8/xAAAQAAAAYAAAD8/xEAAQAAAAYAAAD9/w8AAQAAAAYAAAD9/xAAAQAAAAYAAAD9/xEAAQAAAAYAAAD+/w8AAQAAAAYAAAD+/xAAAQAAAAYAAAD+/xEAAQAAAAYAAAD//w8AAQAAAAYAAAD//xAAAQAAAAYAAAD//xEAAQAAAAYAAAAAAA8AAQAAAAYAAAAAABAAAQAAAAYAAAAAABEAAQAAAAYAAAABAA8AAQAAAAYAAAABABAAAQAAAAYAAAABABEAAQAAAAYAAAACAA8AAQAAAAYAAAACABAAAQAAAAYAAAACABEAAQAAAAYAAAADAA8AAQAAAAYAAAADABAAAQAAAAYAAAADABEAAQAAAAYAAAAEAA8AAQAAAAYAAAAEABAAAQAAAAYAAAAEABEAAQAAAAYAAAAFAA8AAQAAAAYAAAAFABAAAQAAAAYAAAAFABEAAQAAAAYAAAAGAA8AAQAAAAYAAAAGABAAAQAAAAYAAAAGABEAAQAAAAYAAAAHAA8AAQAAAAYAAAAHABAAAQAAAAYAAAAHABEAAQAAAAYAAAAIAA8AAQAAAAYAAAAIABAAAQAAAAYAAAAIABEAAQAAAAYAAAAJAA8AAQAAAAYAAAAJABAAAQAAAAYAAAAJABEAAQAAAAYAAAAKAA8AAQAAAAYAAAAKABAAAQAAAAYAAAAKABEAAQAAAAYAAAALAA8AAQAAAAYAAAALABAAAQAAAAYAAAALABEAAQAAAAYAAAAMAA8AAQAAAAYAAAAMABAAAQAAAAYAAAAMABEAAQAAAAYAAAANAA8AAQAAAAYAAAANABAAAQAAAAYAAAANABEAAQAAAAYAAAAOAA8AAQAAAAYAAAAOABAAAQAAAAYAAAAOABEAAQAAAAYAAAAPAA8AAQAAAAYAAAAPABAAAQAAAAYAAAAPABEAAQAAAAYAAAAQAA8AAQAAAAYAAAAQABAAAQAAAAYAAAAQABEAAQAAAAYAAAARAPb/AQAAAAYAAAARAPf/AQAAAAYAAAARAPj/AQAAAAYAAAARAPn/AQAAAAYAAAARAPr/AQAAAAYAAAARAPv/AQAAAAYAAAARAPz/AQAAAAYAAAARAP3/AQAAAAYAAAARAP7/AQAAAAYAAAARAP//AQAAAAYAAAARAAAAAQAAAAYAAAARAAEAAQAAAAYAAAARAAIAAQAAAAYAAAARAAMAAQAAAAYAAAARAAQAAQAAAAYAAAARAAUAAQAAAAYAAAARAAYAAQAAAAYAAAARAAcAAQAAAAYAAAARAAgAAQAAAAYAAAARAAkAAQAAAAYAAAARAAoAAQAAAAYAAAARAAsAAQAAAAYAAAARAAwAAQAAAAYAAAARAA0AAQAAAAYAAAARAA4AAQAAAAYAAAARAA8AAQAAAAYAAAARABAAAQAAAAYAAAARABEAAQAAAAYAAAASAPb/AQAAAAYAAAASAPf/AQAAAAYAAAASAPj/AQAAAAYAAAASAPn/AQAAAAYAAAASAPr/AQAAAAYAAAASAPv/AQAAAAYAAAASAPz/AQAAAAYAAAASAP3/AQAAAAYAAAASAP7/AQAAAAYAAAASAP//AQAAAAYAAAASAAAAAQAAAAYAAAASAAEAAQAAAAYAAAASAAIAAQAAAAYAAAASAAMAAQAAAAYAAAASAAQAAQAAAAYAAAASAAUAAQAAAAYAAAASAAYAAQAAAAYAAAASAAcAAQAAAAYAAAASAAgAAQAAAAYAAAASAAkAAQAAAAYAAAASAAoAAQAAAAYAAAASAAsAAQAAAAYAAAASAAwAAQAAAAYAAAASAA0AAQAAAAYAAAASAA4AAQAAAAYAAAASAA8AAQAAAAYAAAASABAAAQAAAAYAAAASABEAAQAAAAYAAAD///z/AQAAAAYAAAD///3/AQAJAAYAAAD///7/AQAAAAYAAAAAAPv/AQAAAAYAAAAAAPz/AQAAAAYAAAAAAP3/AQAJAAYAAAAAAP7/AQAAAAYAAAABAPz/AQAAAAYAAAABAP3/AQAJAAYAAAABAP7/AQAAAAYAAAD4//v/AQADAAkAAAD5//r/AQAAAAYAAAD5//3/AQAAAAYAAAD5//7/AQADAAkAAAD6//n/AQADAAkAAAD6//r/AQAAAAYAAAD6//z/AQAHAAkAAAD7//3/AQADAAkAAAD8////AQADAAkAAAD5/wEAAQAAAAYAAAD5/wIAAQAAAAYAAAD5/wMAAQAAAAYAAAD5/wQAAQAAAAYAAAD6/wEAAQAAAAYAAAD6/wMAAQAAAAYAAAD7/wAAAQAAAAYAAAD7/wEAAQAHAAkAAAD7/wIAAQAAAAYAAAD7/wMAAQAAAAYAAAD4//3/AQAHAAkAAAD4//7/AQAAAAYAAAD4////AQADAAkAAAD4/wAAAQADAAkAAAD4/wEAAQAAAAYAAAD4/wIAAQAAAAYAAAD4/wMAAQAAAAYAAAD4/wQAAQAAAAYAAAD4/wUAAQAHAAkAAAD5////AQAAAAYAAAD5/wAAAQAAAAYAAAD5/wUAAQADAAkAAAD6//3/AQAAAAYAAAD6//7/AQAHAAkAAAD6/wAAAQAAAAYAAAD6/wIAAQAAAAYAAAD6/wQAAQADAAkAAAD6/wUAAQAHAAkAAAD7//7/AQAEAAkAAAD7/wQAAQAAAAYAAAD7/wUAAQAHAAkAAAD8//7/AQADAAkAAAD9//7/AQACAAYAAAD9////AQACAAYAAAD+//7/AQAHAAkAAAD3/w0AAQAAAAYAAAD3/w4AAQAAAAYAAAD4//z/AQAAAAYAAAD5//v/AQAAAAYAAAD6//v/AQAAAAYAAAD7//z/AQAAAAYAAAD4//r/AQAAAAYAAAD5//n/AQAAAAYAAAAJAP//AQAGAAcAAAAJAAkAAQAGAAcAAAD/////AQAGAAcAAAD//wkAAQAGAAcAAAAAAAkAAQADAAkAAAABAAkAAQADAAkAAAACAAkAAQADAAkAAAADAAkAAQADAAkAAAAEAAkAAQADAAkAAAAFAAkAAQADAAkAAAAGAAkAAQADAAkAAAAHAAkAAQADAAkAAAAIAAkAAQADAAkAAAAJAAgAAQADAAkAAAAJAAcAAQADAAkAAAAJAAYAAQADAAkAAAAJAAUAAQADAAkAAAAJAAQAAQADAAkAAAAJAAMAAQADAAkAAAAJAAIAAQADAAkAAAAJAAEAAQADAAkAAAAJAAAAAQADAAkAAAAIAP//AQADAAkAAAAHAP//AQADAAkAAAAGAP//AQADAAkAAAAFAP//AQADAAkAAAAEAP//AQADAAkAAAADAP//AQADAAkAAAACAP//AQADAAkAAAABAP//AQADAAkAAAAAAP//AQADAAkAAAD//wAAAQADAAkAAAD//wEAAQADAAkAAAD//wIAAQADAAkAAAD//wMAAQADAAkAAAD//wQAAQADAAkAAAD//wUAAQADAAkAAAD//wYAAQADAAkAAAD//wcAAQADAAkAAAD//wgAAQADAAkAAAD3//b/AQAAAAYAAAD3//f/AQAAAAYAAAD3//j/AQAAAAYAAAD3//n/AQAAAAYAAAD3//r/AQAAAAYAAAD3//v/AQAAAAYAAAD3//z/AQAAAAYAAAD3//3/AQAAAAYAAAD3//7/AQAAAAYAAAD3////AQAAAAYAAAD3/wAAAQAAAAYAAAD3/wEAAQAAAAYAAAD3/wIAAQAAAAYAAAD3/wMAAQAAAAYAAAD3/wQAAQAAAAYAAAD3/wUAAQAAAAYAAAD3/wYAAQAAAAYAAAD3/wcAAQAAAAYAAAD3/wgAAQAAAAYAAAD3/wkAAQAAAAYAAAD3/woAAQAAAAYAAAD3/wsAAQAAAAYAAAD3/wwAAQAAAAYAAAD3/w8AAQAAAAYAAAD3/xAAAQAAAAYAAAD3/xEAAQAAAAYAAAA=")
+tile_set = ExtResource("13_aotfg")
+collision_enabled = false
+navigation_enabled = false
+navigation_visibility_mode = 1
+
+[node name="Foliage" type="TileMapLayer" parent="World" unique_id=12265081]
+editor_description = "DESIGN HERE: scenery tiles and child sprites/scenes such as trees, roads and foliage."
+z_index = 2
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAACAPv/BAAFAAIAAAADAPv/BAAEAAMAAAAEAPv/AwAAAAAAAAAFAPv/AwAAAAAAAAAFAPr/BQAAAAYAAAAEAPr/BAAEAAQAAAADAPr/BAACAAEAAAACAPr/BAAAAAQAAAACAPn/BAABAAQAAAADAPn/BAADAAQAAAAEAPn/BQAAAAgAAAAFAPn/BQAAAAYAAAAGAPn/BQAAAAYAAAAGAPr/BQAAAAYAAAAGAPv/AwAAAAAAAAAGAPz/BQAAAAYAAAAHAPz/CAAHAAEAAAAIAPv/BQAAAAYAAAAHAPv/CAAGAAEAAAAIAPr/BQAAAAYAAAAHAPr/BQAAAAYAAAAHAPn/BQAAAAYAAAAIAPn/BQAAAAYAAAAQAAAABAACAAMAAAAQAP//BAACAAEAAAAQAP7/BAAFAAEAAAAQAP3/BAABAAEAAAAQAPz/BAADAAQAAAAPAAAABAACAAMAAAAPAP//BAAFAAEAAAAPAP7/BAADAAEAAAAPAP3/BAAEAAIAAAAPAPz/BAACAAQAAAAOAAAABAAEAAMAAAAOAP//BAAEAAEAAAAOAP7/BAAFAAEAAAAOAP3/CAAJAAEAAAAOAPz/CAAJAAEAAAANAAAABAADAAMAAAANAP//BAADAAEAAAANAP7/BAACAAEAAAANAP3/BAAAAAIAAAANAPz/CAAHAAEAAAAMAAAABAAFAAIAAAAMAP//BAAAAAQAAAAMAP7/BAAFAAMAAAAMAP3/BAAAAAQAAAAMAPz/CAAJAAEAAAAJAPv/BQAAAAgAAAAJAPr/BQAAAAgAAAD7/wIACAAGAAEAAAD7/wQACAAHAAEAAAABAP7/CAAIAAEAAAD9//z/CAAJAAEAAAD7//z/CAAJAAEAAAD8//v/CAAJAAEAAAD///r/CAAJAAEAAAD8//z/CAAIAAEAAAD+//z/CAAIAAEAAAD///z/CAAHAAEAAAD+//r/CAAHAAEAAAD9//n/CAAHAAEAAAD7/wgACAAIAAEAAAD6/wgACAAJAAEAAAD5/woACAAJAAEAAAD5/wYACAAJAAEAAAD5/wcACAAIAAEAAAD7/wYACAAIAAEAAAADAP7/CAAGAAEAAAAJAPz/CAAGAAEAAAAMAPv/CAAJAAEAAAALAPv/CAAJAAEAAAALAPr/CAAGAAEAAAALAPn/CAAJAAEAAAALAPj/CAAJAAEAAAALAPz/CAAIAAEAAAAMAAMACAAGAAEAAAANAAMACAAHAAEAAAANAAQACAAGAAEAAAAOAAcACAAIAAEAAAAOAAYACAAJAAEAAAAPAAYACAAJAAEAAAAPAAUACAAJAAEAAAAQAAUACAAJAAEAAAAQAAQACAAJAAEAAAAQAAMACAAJAAEAAAAQAAIACAAJAAEAAAAQAAEACAAJAAEAAAANAAgACAAIAAEAAAANAAkACAAIAAEAAAANAAoACAAIAAEAAAAMAAsACAAIAAEAAAAJAAwACAAIAAEAAAAGAA0ACAAGAAEAAAAFAA0ACAAGAAEAAAAIAAsACAAGAAEAAAD+////AwAAAAAAAAD7/wEAAwAAAAAAAAD+/wUAAwAAAAAAAAD+/wkAAwAAAAAAAAAGAAoAAwAAAAAAAAAFAAoAAwAAAAAAAAAFAAsAAwAAAAAAAAAKAAQAAwAAAAAAAAAKAP//AwAAAAAAAAAKAP7/AwAAAAAAAAABAP//CQAEAAQAAAACAP//CQAEAAQAAAADAP//CQAEAAQAAAAEAP//CQAEAAQAAAAFAP//CQAEAAQAAAAGAP//CQAEAAQAAAAHAP//CQAEAAQAAAAJAP//CQAGAAQAAAAIAP//CQAEAAQAAAAJAAAACQAFAAQAAAAJAAEACQAFAAQAAAAJAAIACQAFAAQAAAAJAAMACQAFAAQAAAAJAAQACQAFAAQAAAAJAAYACQAFAAQAAAAJAAUACQAFAAQAAAAJAAcACQAFAAQAAAAJAAgACQAFAAQAAAAJAAkACQAGAAQAAAAIAAkACQAEAAQAAAAHAAkACQAEAAQAAAAGAAkACQAEAAQAAAAFAAkACQAEAAQAAAAEAAkACQAEAAQAAAADAAkACQAEAAQAAAACAAkACQAEAAQAAAABAAkACQAEAAQAAAAAAAkACQAEAAQAAAD//wkACQAGAAQAAAD/////CQAGAAQAAAAAAP//CQAEAAQAAAD///7/CQAEAAMAAAA=")
+tile_set = ExtResource("13_aotfg")
+navigation_enabled = false
+
+[node name="Trees" type="TileMapLayer" parent="World" unique_id=707212342]
+editor_description = "DESIGN HERE: scenery tiles and child sprites/scenes such as trees, roads and foliage."
+z_index = 2
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAD+//z/BgAAAAAAAAD///3/BgAAAAAAAAALAAgABAAAAAAAAAANAAYABAAAAAAAAAAMAAcABAAAAAAAAAD9////BgAAAAAAAAALAAkABgAAAAAAAAALAAcABgAAAAAAAAANAAgABgAAAAAAAAD8/wAABwACAAIAAAD8////BwACAAIAAAAJAAEABwACAAIAAAAKAP//BwACAAIAAAA=")
+tile_set = SubResource("TileSet_cmj2x")
+collision_enabled = false
+navigation_enabled = false
+
+[node name="TerrainPreview" type="Node2D" parent="World" unique_id=405278774 node_paths=PackedStringArray("field_configuration", "world_view")]
+editor_description = "EDITOR GUIDE: previews the 9x9 playable area. Do not paint here; generated preview is not saved."
+visible = false
+y_sort_enabled = true
+script = ExtResource("25_gxe8k")
+background_preview_enabled = false
+field_configuration = NodePath("../../FarmingController")
+world_view = NodePath("..")
+
 [node name="Terrain" type="TileMapLayer" parent="World" unique_id=103210629]
-tile_set = SubResource("TileSet_qtxmo")
+editor_description = "RUNTIME: playable terrain generated by FarmingController. Manual tiles here are overwritten."
+tile_set = ExtResource("13_aotfg")
 
 [node name="GrassOverlayLayer" type="TileMapLayer" parent="World" unique_id=244161567]
-tile_set = SubResource("TileSet_qtxmo")
+editor_description = "RUNTIME: animated grass tufts on playable grass cells; cleared when plots are dug."
+z_index = 2
+y_sort_enabled = true
+tile_set = ExtResource("13_aotfg")
 
 [node name="CropOverlay" type="Node2D" parent="World" unique_id=1543953079 node_paths=PackedStringArray("terrain_layer")]
+editor_description = "DIAGNOSTICS: hidden crop-state overlay retained for debugging and integration checks."
 visible = false
 script = ExtResource("6_g68ao")
 terrain_layer = NodePath("../Terrain")
 label_font = SubResource("FontFile_g68ao")
 
 [node name="Camera2D" type="Camera2D" parent="World" unique_id=1022865643]
+editor_description = "RUNTIME: camera controlled by FieldWorldView framing, pan and zoom."
 
 [node name="Crops" type="TileMapLayer" parent="World" unique_id=1383247297]
-z_index = 1
+editor_description = "RUNTIME: crop growth artwork, updated by planting and farming actions."
+z_index = 2
 y_sort_enabled = true
 tile_set = SubResource("TileSet_k753q")
 metadata/crop_growth_setup = true
 
-[node name="TerrainPreview" type="Node2D" parent="World" unique_id=405278774 node_paths=PackedStringArray("field_configuration", "world_view")]
+[node name="FarmerAgent" type="Node2D" parent="World" unique_id=2124607433]
+editor_description = "RUNTIME: placeholder farmer that walks to queued tasks."
+z_index = 2
+script = ExtResource("27_bct15")
+
+[node name="SelectionOverlay" type="Node2D" parent="World" unique_id=1356376111 node_paths=PackedStringArray("terrain_layer")]
+editor_description = "RUNTIME: eligible, selected and queued plot highlights."
+z_index = 3
+script = ExtResource("28_3wfy2")
+terrain_layer = NodePath("../Terrain")
+
+[node name="CropShadows" type="Node2D" parent="World" unique_id=1294482079 node_paths=PackedStringArray("terrain_layer")]
+editor_description = "RUNTIME: procedural shadows beneath occupied plots."
+z_index = 1
+scale = Vector2(1.3, 1.3)
+script = ExtResource("29_3wfy2")
+terrain_layer = NodePath("../Terrain")
+
+[node name="Lighting" type="Node2D" parent="World" unique_id=832886728]
+editor_description = "Adjust Ambient color, Sunlight color/energy, and SoftLight texture/scale/position. World only; HUD uses its own canvas."
 visible = false
-script = ExtResource("25_gxe8k")
-field_configuration = NodePath("../../FarmingController")
-world_view = NodePath("..")
+
+[node name="Ambient" type="CanvasModulate" parent="World/Lighting" unique_id=750346854]
+color = Color(0.7588539, 0.8019278, 0.9314976, 1)
+
+[node name="Sunlight" type="DirectionalLight2D" parent="World/Lighting" unique_id=838271170]
+color = Color(0.87753177, 0.965138, 0.99999994, 1)
+energy = 0.22
+
+[node name="SoftLight" type="PointLight2D" parent="World/Lighting" unique_id=883445928]
+editor_description = "Soft scenery shadows: PCF5. Adjust Shadow Filter Smooth and Color alpha. Occluder mask uses layer 2."
+texture_filter = 2
+position = Vector2(608.5, -189)
+color = Color(0.062458597, 0.67136997, 0.77353424, 1)
+energy = 0.18
+shadow_enabled = true
+shadow_color = Color(0.08, 0.1, 0.16, 0.65)
+shadow_filter = 1
+shadow_filter_smooth = 1.5
+shadow_item_cull_mask = 2
+texture = SubResource("GradientTexture2D_ia13u")
+texture_scale = 6.62
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=222609720]
 
 [node name="Panel" type="PanelContainer" parent="HUD" unique_id=423698777]
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -147.0
 offset_right = 454.0
-grow_vertical = 0
+offset_bottom = 208.0
 mouse_force_pass_scroll_events = false
 
 [node name="Margin" type="MarginContainer" parent="HUD/Panel" unique_id=1575669002]
@@ -788,10 +942,12 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -148.0
-offset_top = -64.0
-offset_right = -16.0
-offset_bottom = -16.0
+offset_left = -145.0
+offset_top = -52.0
+offset_right = -13.0
+offset_bottom = -4.0
+grow_horizontal = 0
+grow_vertical = 0
 size_flags_horizontal = 8
 mouse_force_pass_scroll_events = false
 text = "Zoom in"
@@ -852,6 +1008,25 @@ size_flags_horizontal = 8
 mouse_force_pass_scroll_events = false
 toggle_mode = true
 text = "Fertilize"
+script = ExtResource("26_6a3lw")
+
+[node name="WaterBucketButton" type="Button" parent="HUD" unique_id=1429296836]
+custom_minimum_size = Vector2(132, 48)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -350.0
+offset_top = -51.0
+offset_right = -218.0
+offset_bottom = -3.0
+grow_horizontal = 0
+grow_vertical = 0
+size_flags_horizontal = 8
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Water Bucket"
 script = ExtResource("26_6a3lw")
 
 [node name="WeatherManager" type="Node" parent="." unique_id=673066105]
@@ -937,3 +1112,10 @@ custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 mouse_force_pass_scroll_events = false
 text = "Exit to Main Menu"
+
+[node name="DiseaseActivationController" type="Node" parent="." unique_id=1604470398]
+script = ExtResource("37_jeedr")
+policy = ExtResource("38_7a55d")
+
+[node name="GameStateManager" type="Node" parent="." unique_id=215483027]
+script = ExtResource("39_0n7ni")
