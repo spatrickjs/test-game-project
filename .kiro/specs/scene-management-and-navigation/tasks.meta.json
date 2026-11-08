@@ -1,0 +1,337 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Create NavigationEnums with Screen, SettingsTab, GraphicsQuality, and Difficulty enums": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698657
+      },
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023709365
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794024410993
+      }
+    ],
+    "1.2 Create SettingsState model with sound, graphics, and difficulty fields": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698666
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025296654
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025818153
+      }
+    ],
+    "1.3 Create SavedGameMetadata model": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698668
+      },
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023709370
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794024410984
+      }
+    ],
+    "1.4 Create property test runner helper": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698669
+      },
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023709374
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794024787712
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025291858
+      }
+    ],
+    "2.1 Implement SettingsController with load, set_value, save, revert, and dirty tracking": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698671
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025837880
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794028075557
+      }
+    ],
+    "3.1 Implement NavigationController with state machine transitions": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698672
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025296662
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025818147
+      }
+    ],
+    "4.1 Implement SaveGameController with save existence check and metadata": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698675
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025837865
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794027799933
+      }
+    ],
+    "5. Checkpoint — logic and data layer": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698676
+      }
+    ],
+    "6.1 Implement MainMenuView with four navigation buttons and signals": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698677
+      },
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023709378
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794024410973
+      }
+    ],
+    "6.2 Implement SettingsView with TabContainer and setting controls": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698679
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025296671
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025818141
+      }
+    ],
+    "6.3 Implement AboutUsView with info display and back signal": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698680
+      },
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023709384
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794024427580
+      }
+    ],
+    "6.4 Implement PlayMenuView with New Game and Continue buttons": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698682
+      },
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023709388
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794024427572
+      }
+    ],
+    "7.1 Implement MainMenuPresenter wiring controllers to views and dialogs": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698684
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794028116189
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794029001524
+      }
+    ],
+    "7.2 Build MainMenuScene.tscn composing all views, controllers, and dialogs": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698685
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794029029316
+      }
+    ],
+    "7.3 Set MainMenuScene as the project main scene in project.godot": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698687
+      }
+    ],
+    "8.1 Register menu test files in the test runner": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698689
+      }
+    ],
+    "9. Final checkpoint — ensure all tests pass": [
+      {
+        "executionId": "9ecacb97-c9f7-4054-8b88-64fac1208546",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794023698691
+      }
+    ],
+    "6. Presentation views — menu UI components": [
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025818161
+      }
+    ],
+    "3. NavigationController — navigation state machine": [
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025818186
+      }
+    ],
+    "1. Data layer — enums, state models, and property test infrastructure": [
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025818195
+      }
+    ],
+    "1.5 Write unit tests for SettingsState validation and copy/equals": [
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794025837885
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794028106560
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794028111695
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794028116182
+      },
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794029001539
+      }
+    ],
+    "4. SaveGameController — save existence management": [
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794027799935
+      }
+    ],
+    "2. SettingsController — dirty tracking and persistence": [
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794028075566
+      }
+    ],
+    "2.2 Write property test: save clears dirty state": [
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794029029325
+      }
+    ],
+    "3.2 Write property test: navigation transitions are valid": [
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794029029332
+      }
+    ],
+    "4.2 Write property test: continue option disabled without save": [
+      {
+        "executionId": "1da57a49-1489-4358-aaae-6b4f7b8525eb",
+        "chatSessionId": "sess_88aa4c8a-5111-44ef-ad13-3d58cdef9dda",
+        "timestamp": 1794029029521
+      }
+    ]
+  }
+}
