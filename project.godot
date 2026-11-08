@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Test Game Project"
-run/main_scene="uid://beit4bfuaevfp"
+run/main_scene="res://src/presentation/menu/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 

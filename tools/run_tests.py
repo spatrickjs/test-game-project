@@ -27,6 +27,10 @@ tests = [
     "tests/presentation/terrain_preview_editor_test.gd",
     "tests/presentation/terrain_preview_runtime_test.gd",
     "tests/presentation/grass_overlay_test.gd",
+    "tests/menu/settings_state_unit_test.gd",
+    "tests/menu/settings_state_property_test.gd",
+    "tests/menu/navigation_controller_property_test.gd",
+    "tests/menu/save_game_controller_property_test.gd",
 ]
 failed = False
 for test in tests:
