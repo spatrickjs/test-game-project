@@ -1,10 +1,26 @@
 # Weather Cycle Tasks
 
-Status: planned work; no implementation or test execution is claimed by this checklist.
+Status: reviewed against `main` at `198fca1e7c3a63e7bdf43979a8f0ad59876a6340`. This is a source review; no Godot tests were run for this review. Tasks remain open until their completion evidence is satisfied.
 
 Suggested location: `.kiro/specs/weather-cycle/tasks.md`.
 
 The repository already contains weather implementation and regression tests. Each implementation task means inspect, reuse, verify, and repair only confirmed gaps. A task may complete without a production-code change if coverage demonstrates compliance.
+
+## Repository review findings
+
+| Finding | Evidence and effect on this plan |
+|---|---|
+| Weather implementation is already present | WeatherManager still has balanced defaults, deterministic fluctuations, validation, null-soil skipping, and committed summaries. T2–T4 are verification/gap-fix tasks, not new system construction. |
+| Weather artifacts are not yet in the reviewed main tree | Neither `features/weather_cycle.feature` nor `.kiro/specs/weather-cycle/` is present. T1 publication and T8 steering-reference work remain open. |
+| Existing weather tests cover part of the contract | Tests cover moisture clamps, settings changes, disabled weather, CSV rejection, NaN rainfall, factor caps, repetition at indices 1/5, growth ordering, selected rollback fields, and native balanced/wet/dry input. T5/T6 should extend these checks, not duplicate them. |
+| Exact cycle and failure assertions remain incomplete | The weather test uses zero temperature amplitude for repetition and disables fluctuations for failure/retry. It does not establish the feature's nonzero-temperature phase examples or full RNG/activation rollback. Preserve these as explicit T5/T6 gaps. |
+| Fences introduce another null-soil lifecycle | `_apply_fence()` sets grass, clears crop state, and removes soil. `_remove_fence()` leaves null soil until digging. Add weather/fence integration to T5/T7 under the existing all-soil/no-soil contract. |
+| Test runner has expanded | `tools/run_tests.py` registers 29 tests and supports repeatable `--test` selections, including four fence tests and four menu tests. Use the current runner rather than historical counts. |
+| Documentation is behind the runner | Weather documentation refers to 16 tests; the handoff refers to 21. Neither establishes the current 29-test result. T8 must reconcile counts and result provenance. |
+
+No parent task is marked complete solely because corresponding production code or a checked checklist exists. The fence task document itself contains checked parent tasks with unchecked children; use implementation and run evidence rather than copying its completion status.
+
+Review sources (pinned to the inspected revision): [weather tests](https://github.com/spatrickjs/test-game-project/blob/198fca1e7c3a63e7bdf43979a8f0ad59876a6340/tests/logic/weather_soil_tools_test.gd), [farming and fence transactions](https://github.com/spatrickjs/test-game-project/blob/198fca1e7c3a63e7bdf43979a8f0ad59876a6340/src/logic/farming/farming_controller.gd), [test runner](https://github.com/spatrickjs/test-game-project/blob/198fca1e7c3a63e7bdf43979a8f0ad59876a6340/tools/run_tests.py), [weather documentation](https://github.com/spatrickjs/test-game-project/blob/198fca1e7c3a63e7bdf43979a8f0ad59876a6340/docs/WEATHER_AND_SOIL_TOOLS.md).
 
 ## Dependency graph
 
@@ -42,10 +58,12 @@ flowchart TD
 
 - [ ] **T1 — Audit the current baseline and reconcile acceptance criteria**
   - Record repository branch, commit SHA, Godot version, and baseline test status.
+  - Start from the reviewed SHA above, then record any newer revision before implementation. Read the current repository instructions before changing code.
   - Read WeatherManager, SoilMoistureModel, FarmingController turn staging, TurnController, the existing weather test, and test-runner registration.
   - Place the three spec documents under `.kiro/specs/weather-cycle/` and `weather_cycle.feature` under `features/` in the implementation checkout.
   - Map all 16 scenario declarations, including every Scenario Outline row, to existing assertions or explicit gaps.
   - Add supplemental Gherkin cases for guards/reset, sequential accumulation, re-enable phase, validation boundaries, and committed diagnostic behavior required by this specification.
+  - Add fence/no-soil lifecycle examples: fencing removes soil, fence removal alone does not recreate it, and digging restores eligibility for later weather updates.
   - Document any conflict between code, feature, and requirements before changing behavior. Follow the repository's proposal/approval workflow for subsequent implementation; preparing these specification files does not itself approve game-code changes.
   - Done when: scope, touched files, missing coverage, and baseline failures are recorded.
 
@@ -63,6 +81,7 @@ flowchart TD
   - Preserve zero-based phase selection, deterministic sine calculation, rainfall clamping, and independently capped evaporation factors.
   - Confirm temperature and rainfall amplitudes, disabled fluctuations, and length-one behavior.
   - Apply bounded moisture changes to every soil state and skip null soil.
+  - Treat fenced grass and newly unfenced grass as null-soil cells; weather must not recreate their soil or remove fences.
   - Preserve other soil fields, crop state, and shared abiotic temperature/humidity during the weather stage.
   - Primary files: WeatherManager and `src/simulation/models/soil_moisture_model.gd`.
   - Done when: formulas match `design.md` and any discrepancy has a focused fix or documented resolution.
@@ -96,12 +115,15 @@ flowchart TD
   - Resolve the failure and retry; verify the same phase and exactly one successful completion.
   - Check idle frames, runtime setting edits, new-session phase zero, and disabled/re-enabled phase selection.
   - Check debug output enabled/disabled, zero-soil summaries, balanced summaries, and failed-attempt silence.
+  - Extend the existing `RejectedTurn` fixture to actually alter RNG/cap counters before failure; otherwise equality checks would not prove restoration. Use an activation-enabled fixture and nonzero weather amplitudes for rollback/retry coverage.
   - Done when: ordering and transaction invariants have passing regression assertions.
 
 - [ ] **T7 — Verify the saved scene and player input route**
   - Depends on: T4.
   - Confirm saved WeatherManager references and the presenter's Next Turn connection.
   - Exercise actual button input for balanced, wetting, and drying configurations; verify displayed soil values and committed turn numbering.
+  - Reuse `GameplayFixture` and `QueueDriver` as the existing weather test does. Complete queued actions before requesting successful turns, and test pending-action rejection separately.
+  - Fence a soil tile through the action queue, advance a turn, and verify null soil and fence state remain intact while neighboring soil updates. Remove the fence, verify it remains soil-free, then dig and verify weather resumes on the restored soil on the next turn.
   - Confirm queued farmer actions, unavailable gameplay state, and applicable turn-limit guards prevent weather advancement.
   - Confirm field tools and camera interactions do not independently advance weather.
   - Repair scene wiring only if a gap is demonstrated, using Godot Editor APIs.
@@ -113,6 +135,7 @@ flowchart TD
   - Map every final Gherkin scenario/example to the exact test file and assertion or test function.
   - Update `.kiro/steering/game-acceptance-criteria.md` to reference `features/weather_cycle.feature`.
   - Update `docs/WEATHER_AND_SOIL_TOOLS.md` with a reproducible opt-in cycle demo and the difference between balanced moisture and skipped weather.
+  - Reconcile outdated test counts in weather documentation and the handoff with the runner. Date and label historical results; only publish current pass/fail claims after T9 supplies execution evidence.
   - Record that Godot tests verify the Gherkin behavior; do not imply direct `.feature` execution without a runner and step bindings.
   - Keep Inspector defaults unchanged and external climate sources marked unsupported.
   - Done when: no acceptance case is silently omitted and the docs reflect verified behavior.
@@ -120,10 +143,14 @@ flowchart TD
 - [ ] **T9 — Run final regression checks and prepare handoff**
   - Depends on: T8.
   - Run targeted tests using the repository's supported invocation discovered in T1.
+  - Supported weather command: `python tools/run_tests.py --godot "<path-to-Godot-executable>" --test tests/logic/weather_soil_tools_test.gd`.
+  - Run integration selections using repeated `--test` arguments for `tests/logic/queued_field_actions_test.gd`, `tests/logic/fence_treatment_test.gd`, `tests/logic/fence_treatment_property_test.gd`, `tests/simulation/fence_containment_test.gd`, and `tests/presentation/fence_presentation_test.gd` where affected.
   - Run the registered suite with `python tools/run_tests.py --godot "<path-to-Godot-executable>"`.
   - Register any new standalone test with the runner; no registration change is needed when extending an existing registered test.
   - Record commit SHA, engine version, commands, PASS markers, exit status, and relevant logs.
+  - The runner requires exit code zero, an `_PASS` marker, and no `ERROR:`, `WARNING:`, or `FAIL:` diagnostics. A marker alone does not establish success.
   - Compare failures against the T1 baseline; distinguish new regressions, existing failures, and unverified device checks.
+  - Finalize the result sections drafted in T8 using this run's evidence; this is T9's handoff output and does not add a reverse dependency from T8 to T9.
   - Review the diff for generated `.godot/` files, unrelated asset changes, and accidental scene/default changes.
   - Done when: weather acceptance checks pass, new regressions are resolved, and any unrelated blockers are explicitly reported. Do not call the full suite green if any registered test still fails.
 
