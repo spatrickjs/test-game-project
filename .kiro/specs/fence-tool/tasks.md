@@ -58,13 +58,13 @@ flowchart TD
 
 ## Tasks
 
-- [ ] 1. Add fence action kinds
+- [x] 1. Add fence action kinds
   - Append `FENCE` and `REMOVE_FENCE` to `SimulationEnums.FieldActionKind` in `src/data/enums/simulation_enums.gd`
   - Keep existing values unchanged (`FENCE = 8`, `REMOVE_FENCE = 9`)
   - Depends on: none
   - _Requirements: 4.6_
 
-- [ ] 2. Add `has_fence` to `FieldCellState`
+- [x] 2. Add `has_fence` to `FieldCellState`
   - [ ] 2.1 Add `var has_fence: bool = false` with doc comment
     - Do not touch it in `reset_crop_state()`
     - _Requirements: 4.1, 4.5_
@@ -75,12 +75,12 @@ flowchart TD
   - Depends on: none
   - _Requirements: 4.1, 4.2, 4.3, 4.5_
 
-- [ ] 3. Add fence invariant to `FieldGridQueries.validate_terrain_assignments`
+- [x] 3. Add fence invariant to `FieldGridQueries.validate_terrain_assignments`
   - Report an error for a fenced cell on non-grass terrain
   - Depends on: 2
   - _Requirements: 4.4_
 
-- [ ] 4. Add fence validation to `FarmingController`
+- [x] 4. Add fence validation to `FarmingController`
   - [ ] 4.1 Extend `action_error()` for `FENCE` and `REMOVE_FENCE`
     - `FENCE` rejected when already fenced
     - `REMOVE_FENCE` rejected when not fenced
@@ -96,7 +96,7 @@ flowchart TD
   - Depends on: 1, 2, 3
   - _Requirements: 1.3–1.7, 5.1–5.4, 6.3_
 
-- [ ] 5. Add fence commit logic to `FarmingController`
+- [x] 5. Add fence commit logic to `FarmingController`
   - [ ] 5.1 Implement `_apply_fence()` on a copied grid, clear crop and disease via `reset_crop_state()`, set GRASS, null soil, `has_fence`, validate, commit, emit `cell_changed`
     - _Requirements: 2.1, 2.2, 3.1, 3.2, 3.4, 8.2, 8.3_
   - [ ] 5.2 Implement `_remove_fence()` with the same transaction pattern
@@ -110,7 +110,7 @@ flowchart TD
   - Depends on: 4
   - _Requirements: 2.1–2.3, 3.1–3.4, 5.5, 6.2, 6.6, 8.1–8.3_
 
-- [ ] 6. Write Logic tests
+- [x] 6. Write Logic tests
   - [ ] 6.1 `tests/logic/fence_treatment_test.gd`
     - Implement every scenario in `fence_treatment.feature` (empty, occupied, infected, rejections, queue, arrival, stale action, shovel, dig after removal, turn persistence, new game)
     - Print `FENCE_TREATMENT_PASS`
@@ -126,7 +126,7 @@ flowchart TD
   - Depends on: 5
   - _Requirements: 1–6, 8, 10_
 
-- [ ] 7. Write Simulation containment test
+- [x] 7. Write Simulation containment test
   - `tests/simulation/fence_containment_test.gd`
   - Fenced cell is not a host and gives no pressure, for SIR, SEIR and CA
   - Fencing an infected crop clears its disease; `validate_turn` passes
@@ -136,7 +136,7 @@ flowchart TD
   - Depends on: 2, 5
   - _Requirements: 7.1–7.6_
 
-- [ ] 8. Add fence rendering (separate atlas, shared asset)
+- [x] 8. Add fence rendering (separate atlas, shared asset)
   - [ ] 8.1 Supply the fence PNG at `res://assets/art/tilesets/fence/fence.png`
     - One tile, sized to the terrain tile footprint
     - Manual art step
@@ -155,13 +155,13 @@ flowchart TD
   - Depends on: 2
   - _Requirements: 9.1, 9.2, 9.3, 9.7, 9.8_
 
-- [ ] 9. Show fenced status in `TileInspectorView`
+- [x] 9. Show fenced status in `TileInspectorView`
   - Append " (fenced)" to the terrain text when `has_fence`
   - No new nodes or bindings
   - Depends on: 2
   - _Requirements: 9.4_
 
-- [ ] 10. Wire the Fence tool in `FieldPrototypePresenter`
+- [x] 10. Wire the Fence tool in `FieldPrototypePresenter`
   - [ ] 10.1 Add `TOOL_FENCE` to `ToolMode` and `@export var fence_button: Button`
     - _Requirements: 1.1, 9.5_
   - [ ] 10.2 Update `_ready()`, `_connect_signals()`, `_set_controls_enabled()`, `_show_failure()`, `_update_crop_buttons()` for `fence_button`
@@ -177,7 +177,7 @@ flowchart TD
   - Depends on: 5, 8
   - _Requirements: 1.1, 1.2, 6.1, 6.5, 9.5, 9.6_
 
-- [ ] 11. Bake UI and wire the scene
+- [x] 11. Bake UI and wire the scene
   - [ ] 11.1 Update `tools/bake_ui_to_scene.gd`: `NODE_TYPES`, `HUD_BINDINGS`, button offsets (-344 / -296), script list, toggle list, `_preview_text`
     - _Requirements: 9.5, 11.2_
   - [ ] 11.2 Create `tools/setup_fence_tool.gd` (idempotent EditorScript)
@@ -192,7 +192,7 @@ flowchart TD
   - Depends on: 8, 10
   - _Requirements: 9.1, 9.5, 11.2_
 
-- [ ] 12. Write Presentation tests
+- [x] 12. Write Presentation tests
   - `tests/presentation/fence_presentation_test.gd`
   - `FenceLayer` has tiles on fenced cells and erases them when the fence is removed
   - Fence layer `TileSet` is independent of the terrain and crop `TileSet`
@@ -207,7 +207,7 @@ flowchart TD
   - Depends on: 9, 10, 11
   - _Requirements: 6.5, 9.1–9.8, 10.2_
 
-- [ ] 13. Register tests and run the full suite
+- [x] 13. Register tests and run the full suite
   - Add the four new tests to `tools/run_tests.py`
   - Run `python tools/run_tests.py --godot <path>`
   - Fix regressions in existing tests, especially `tile_inspector_builder_editor_test.gd`, `field_scene_integration.gd`, `queued_field_actions_test.gd`
