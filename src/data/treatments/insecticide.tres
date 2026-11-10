@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="TreatmentData" format=3]
+
+[ext_resource type="Script" path="res://src/data/resources/treatment_data.gd" id="1_main"]
+
+[resource]
+script = ExtResource("1_main")
+treatment_id = &"insecticide"
+display_name = "Insecticide"
+cost = 0
+cooldown_turns = 2
+duration_turns = 2
+target_mode = 0
+area_radius = 1
+applies_to = 2
+allowed_categories = Array[int]([])
+requires_vector_borne = true
+resistance_group = 0
+hazard_mult = 1.0
+susceptibility_mult = 1.0
+recovery_period_mult = 1.0
+resilience_bonus = 0.0
+vitality_loss_mult = 1.0
+vector_pressure_override = 0.0
+beneficial_index_delta = -0.3

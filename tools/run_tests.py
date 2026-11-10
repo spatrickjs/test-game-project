@@ -37,6 +37,11 @@ tests = [
     "tests/menu/settings_state_property_test.gd",
     "tests/menu/navigation_controller_property_test.gd",
     "tests/menu/save_game_controller_property_test.gd",
+    "tests/logic/treatment_test.gd",
+    "tests/logic/treatment_gherkin_test.gd",
+    "tests/logic/treatment_property_test.gd",
+    "tests/logic/treatment_integration_test.gd",
+    "tests/presentation/treatment_panel_test.gd",
 ]
 if args.test:
     unknown = set(args.test) - set(tests)
