@@ -25,6 +25,7 @@ extends Node
 @export var harvest_button: Button
 @export var water_button: Button
 @export var fertilize_button: Button
+@export var fence_button: Button
 
 @export_group("Pause")
 @export var pause_button: Button
@@ -34,7 +35,7 @@ extends Node
 @export var soil_tool_controller: SoilToolController
 @export var water_bucket_button: Button
 @export var game_state_manager: GameStateManager
-enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE, TOOL_WATER_BUCKET }
+enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE, TOOL_WATER_BUCKET, TOOL_FENCE }
 var _tool_mode: ToolMode = ToolMode.INSPECT
 var _transfer_source: Vector2i = Vector2i(-1, -1)
 @export var playtest_disease_id: SimulationEnums.DiseaseId = SimulationEnums.DiseaseId.RICE_BLAST
@@ -61,11 +62,15 @@ func _ready() -> void:
 		button.toggle_mode = true
 		button.button_group = null
 		button.set_pressed_no_signal(false)
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, water_bucket_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, water_bucket_button, fence_button]:
 		if button != null:
 			button.toggle_mode = true
 			button.set_pressed_no_signal(false)
 	_connect_signals()
+	if fence_button != null and world_view != null:
+		var fence_icon: Texture2D = world_view.get_fence_icon()
+		if fence_icon != null:
+			fence_button.icon = fence_icon
 	errors = world_view.validate_configuration()
 	if not errors.is_empty():
 		_show_failure("\n".join(errors))
@@ -92,6 +97,9 @@ func _connect_signals() -> void:
 	if water_bucket_button != null:
 		world_view.register_ui_input_root(water_bucket_button)
 		_connect_once(water_bucket_button.pressed, _on_water_bucket_pressed)
+	if fence_button != null:
+		world_view.register_ui_input_root(fence_button)
+		_connect_once(fence_button.pressed, _on_fence_pressed)
 	if world_view.farmer_agent != null:
 		_connect_once(world_view.farmer_agent.arrived, _on_farmer_arrived)
 	_connect_once(world_view.cells_selected, _on_cells_selected)
@@ -189,7 +197,7 @@ func _on_field_initialized() -> void:
 
 
 func _set_controls_enabled(enabled: bool) -> void:
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button, fence_button]:
 		if button != null:
 			button.disabled = not enabled
 	next_turn_button.disabled = not enabled
@@ -234,6 +242,8 @@ func _update_crop_buttons() -> void:
 	_refresh_tool_targets(true)
 	if water_bucket_button != null:
 		water_bucket_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_WATER_BUCKET)
+	if fence_button != null:
+		fence_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_FENCE)
 	if water_button != null:
 		water_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_WATER)
 	if fertilize_button != null:
@@ -367,6 +377,10 @@ func _on_water_bucket_pressed() -> void:
 	_select_management_tool(ToolMode.TOOL_WATER_BUCKET)
 
 
+func _on_fence_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_FENCE)
+
+
 func _on_fertilize_pressed() -> void:
 	_select_management_tool(ToolMode.TOOL_FERTILIZE)
 
@@ -395,6 +409,10 @@ func _select_management_tool(mode: ToolMode) -> void:
 	_inspected_coordinates = Vector2i(-1, -1)
 	tile_inspector.clear_display()
 	_update_crop_buttons()
+	if mode == ToolMode.TOOL_FENCE:
+		selected_crop_label.text = "Tool: Fence"
+		status_label.text = "Click or drag over tiles to fence them."
+		return
 	if mode == ToolMode.TOOL_WATER_BUCKET:
 		selected_crop_label.text = "Tool: Water Bucket"
 		status_label.text = "Drag over empty dry soil to queue paddy conversion."
@@ -448,7 +466,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _show_failure(message: String) -> void:
 	_running = false
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button, fence_button]:
 		if button != null:
 			button.disabled = true
 	if tile_inspector != null:
@@ -509,7 +527,14 @@ func _make_action(coordinates: Vector2i, known_cell: FieldCellState = null) -> F
 	match _tool_mode:
 		ToolMode.TOOL_REMOVE:
 			var cell: FieldCellState = known_cell if known_cell != null else farming_controller.get_grid_snapshot().get_cell(coordinates)
-			action.kind = SimulationEnums.FieldActionKind.REMOVE_CROP if cell != null and cell.has_crop else SimulationEnums.FieldActionKind.DIG_GRASS
+			if cell != null and cell.has_fence:
+				action.kind = SimulationEnums.FieldActionKind.REMOVE_FENCE
+			elif cell != null and cell.has_crop:
+				action.kind = SimulationEnums.FieldActionKind.REMOVE_CROP
+			else:
+				action.kind = SimulationEnums.FieldActionKind.DIG_GRASS
+		ToolMode.TOOL_FENCE:
+			action.kind = SimulationEnums.FieldActionKind.FENCE
 		ToolMode.TOOL_WATER_BUCKET:
 			action.kind = SimulationEnums.FieldActionKind.MAKE_PADDY
 		ToolMode.TOOL_TRANSFER:
