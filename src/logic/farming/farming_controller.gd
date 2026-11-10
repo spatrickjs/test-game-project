@@ -346,10 +346,8 @@ func action_error(action: FieldAction, check_reservations: bool = true) -> Strin
 		SimulationEnums.FieldActionKind.REMOVE_CROP:
 			return "Choose a crop to remove." if not cell.has_crop else ""
 		SimulationEnums.FieldActionKind.DIG_GRASS:
-			if cell.has_fence:
-				return "Remove the fence before digging."
-			if cell.has_crop or cell.terrain_type != SimulationEnums.TerrainType.GRASS:
-				return "Shovel conversion requires empty grass."
+			if cell.has_fence or cell.has_crop or cell.terrain_type != SimulationEnums.TerrainType.GRASS:
+				return "Hoe requires empty grass."
 			if initial_soil == null or not initial_soil.validate().is_empty():
 				return "Configure valid initial soil before digging."
 			return _conversion_catalog_error(SimulationEnums.TerrainType.DRY_SOIL)

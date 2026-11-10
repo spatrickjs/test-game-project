@@ -26,6 +26,7 @@ extends Node
 @export var water_button: Button
 @export var fertilize_button: Button
 @export var fence_button: Button
+@export var hoe_button: Button
 
 @export_group("Pause")
 @export var pause_button: Button
@@ -35,7 +36,7 @@ extends Node
 @export var soil_tool_controller: SoilToolController
 @export var water_bucket_button: Button
 @export var game_state_manager: GameStateManager
-enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE, TOOL_WATER_BUCKET, TOOL_FENCE }
+enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE, TOOL_WATER_BUCKET, TOOL_FENCE, TOOL_HOE }
 var _tool_mode: ToolMode = ToolMode.INSPECT
 var _transfer_source: Vector2i = Vector2i(-1, -1)
 @export var playtest_disease_id: SimulationEnums.DiseaseId = SimulationEnums.DiseaseId.RICE_BLAST
@@ -62,7 +63,7 @@ func _ready() -> void:
 		button.toggle_mode = true
 		button.button_group = null
 		button.set_pressed_no_signal(false)
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, water_bucket_button, fence_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, water_bucket_button, fence_button, hoe_button]:
 		if button != null:
 			button.toggle_mode = true
 			button.set_pressed_no_signal(false)
@@ -131,6 +132,8 @@ func _connect_signals() -> void:
 
 	if remove_button != null:
 		_connect_once(remove_button.pressed, _on_remove_pressed)
+	if hoe_button != null:
+		_connect_once(hoe_button.pressed, _on_hoe_pressed)
 	if transfer_button != null:
 		_connect_once(transfer_button.pressed, _on_transfer_pressed)
 	_connect_once(sugarcane_button.pressed, _on_sugarcane_pressed)
@@ -197,7 +200,7 @@ func _on_field_initialized() -> void:
 
 
 func _set_controls_enabled(enabled: bool) -> void:
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button, fence_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button, fence_button, hoe_button]:
 		if button != null:
 			button.disabled = not enabled
 	next_turn_button.disabled = not enabled
@@ -393,6 +396,10 @@ func _on_remove_pressed() -> void:
 	_select_management_tool(ToolMode.TOOL_REMOVE)
 
 
+func _on_hoe_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_HOE)
+
+
 func _on_transfer_pressed() -> void:
 	_select_management_tool(ToolMode.TOOL_TRANSFER)
 
@@ -425,8 +432,12 @@ func _select_management_tool(mode: ToolMode) -> void:
 		selected_crop_label.text = "Tool: Harvest"
 		status_label.text = "Click a mature crop to collect its yield quality."
 		return
+	if mode == ToolMode.TOOL_HOE:
+		selected_crop_label.text = "Tool: Hoe"
+		status_label.text = "Click or drag over empty grass to till it."
+		return
 	selected_crop_label.text = "Tool: Shovel" if mode == ToolMode.TOOL_REMOVE else "Tool: Move"
-	status_label.text = "Drag over crops to remove, or empty grass to dig. The first eligible plot locks the action." if mode == ToolMode.TOOL_REMOVE else "Click a crop, then an empty compatible tile."
+	status_label.text = "Drag over crops or fences to remove. The first eligible plot locks the action." if mode == ToolMode.TOOL_REMOVE else "Click a crop, then an empty compatible tile."
 
 
 func _handle_transfer_click(coordinates: Vector2i) -> void:
@@ -525,14 +536,14 @@ func _make_action(coordinates: Vector2i, known_cell: FieldCellState = null) -> F
 	action.crop_type = _selected_crop
 	action.source = _transfer_source
 	match _tool_mode:
+		ToolMode.TOOL_HOE:
+			action.kind = SimulationEnums.FieldActionKind.DIG_GRASS
 		ToolMode.TOOL_REMOVE:
 			var cell: FieldCellState = known_cell if known_cell != null else farming_controller.get_grid_snapshot().get_cell(coordinates)
 			if cell != null and cell.has_fence:
 				action.kind = SimulationEnums.FieldActionKind.REMOVE_FENCE
-			elif cell != null and cell.has_crop:
-				action.kind = SimulationEnums.FieldActionKind.REMOVE_CROP
 			else:
-				action.kind = SimulationEnums.FieldActionKind.DIG_GRASS
+				action.kind = SimulationEnums.FieldActionKind.REMOVE_CROP
 		ToolMode.TOOL_FENCE:
 			action.kind = SimulationEnums.FieldActionKind.FENCE
 		ToolMode.TOOL_WATER_BUCKET:

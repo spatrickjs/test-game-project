@@ -4,10 +4,11 @@ Implemented November 6, 2026 (Asia/Shanghai), following the user's explicit feat
 
 ## Player controls
 
-- **Shovel** retains crop removal on occupied cells. On empty grass it digs dry soil. A drag locks to the first eligible cell's action: removing crops or digging grass. It never mixes these actions.
+- **Hoe** converts empty grass into dry soil. A drag locks to the first eligible cell's action; it never mixes actions across tile kinds.
+- **Shovel** removes crops on occupied cells and destroys fences. A drag locks to the first eligible cell's action: removing crops or destroying fences. It never mixes these actions and no longer digs grass.
 - **Water Bucket** converts empty dry soil into paddy mud. Grass must first be dug, and occupied plots cannot be converted. The existing **Water** button still adds soil moisture; it is a separate tool.
 - **Move** reuses the existing button: select a source crop, then an empty compatible destination. Click the source again to cancel that selection. The farmer visits the source before the destination and commits the transfer at delivery.
-- Planting, Shovel, Bucket, Harvest, Water and Fertilize support mouse/single-finger drag selection. Move uses two single-plot selections.
+- Planting, Hoe, Shovel, Bucket, Harvest, Water and Fertilize support mouse/single-finger drag selection. Move uses two single-plot selections.
 - Pale green diamonds show eligibility. Cyan diamonds pulse during selection; amber diamonds pulse for queued plots and a pending Move source.
 - Release queues actions in encounter order. A plot can be reserved by only one task at a time; transfers reserve both endpoints. Select a converted plot for its next operation after the current task finishes.
 - Inspect mode keeps the existing left-mouse/single-finger camera pan. Middle mouse and two-finger camera gestures work with a tool selected. A second finger cancels an uncommitted selection before controlling the camera.
@@ -25,7 +26,7 @@ Implemented November 6, 2026 (Asia/Shanghai), following the user's explicit feat
 | Presentation | `src/presentation/world/field_world_view.gd` | Viewport conversion, filtered drag selection, terrain/tuft refresh and beside-plot standing positions |
 | Presentation | `src/presentation/world/field_selection_overlay.gd` | Procedural diamonds and time-based alpha pulse |
 | Presentation | `src/presentation/world/farmer_agent.gd` | Procedural character, foot ellipse, visual locomotion and arrival signal |
-| Editor tools | `tools/bake_ui_to_scene.gd`, `tools/setup_field_tools.gd` | Persistent Water Bucket control, actor, overlay, exported references and depth-sort wiring |
+| Editor tools | `tools/bake_ui_to_scene.gd`, `tools/setup_field_tools.gd` | Persistent Hoe and Water Bucket controls, actor, overlay, exported references and depth-sort wiring |
 
 `FieldGridState` and `FieldCellState` remain passive data. Presentation receives detached snapshots and copied tasks, and never changes authoritative cells. No simulation formulas were changed. Existing immediate Logic APIs (`try_plant`, `remove_crop`, `transfer_crop`, `harvest_crop`, `apply_soil_additions`) remain usable by tests, fixtures and internal callers; player HUD actions now enqueue them.
 
@@ -37,7 +38,7 @@ The presenter asks FarmerAgent to walk to the current stop. The actor reports `(
 
 Move has two stops. The source visit changes only the task's visit phase. The crop remains in the source cell until destination arrival, when the existing atomic `transfer_crop` transaction preserves its full crop payload and retains each plot's soil. Cancellation or failure after the source visit cannot lose a crop. The placeholder does not yet show a carried crop.
 
-Digging creates a distinct copy of `initial_soil`, changes only empty grass to dry soil, validates the candidate grid and commits once. Bucket conversion preserves existing soil values and changes empty dry soil to paddy mud. Bucket conversion does not itself add moisture; **Water** retains that operation. Queue actions do not advance growth or turn count. Harvest retains the quality receipt displayed by the HUD.
+The Hoe's `DIG_GRASS` creates a distinct copy of `initial_soil`, changes only empty grass to dry soil, validates the candidate grid and commits once. Bucket conversion preserves existing soil values and changes empty dry soil to paddy mud. Bucket conversion does not itself add moisture; **Water** retains that operation. Queue actions do not advance growth or turn count. Harvest retains the quality receipt displayed by the HUD.
 
 State changes refresh terrain, crops, the inspector and eligibility without reframing the camera or interrupting another drag. Grass decoration uses one seeded random sample per logical coordinate so conversion removes only the converted plot's tuft.
 

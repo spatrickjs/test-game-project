@@ -19,18 +19,26 @@
 [ext_resource type="TileSet" uid="uid://bh0d55kljfsfl" path="res://assets/art/tilesets/terrain/resource/tile_set.tres" id="13_aotfg"]
 [ext_resource type="Texture2D" uid="uid://bxq27t3duh3v7" path="res://assets/art/tilesets/crops/normalized/rice_stage_1.res" id="14_6a3lw"]
 [ext_resource type="Texture2D" uid="uid://dnfltekubkekq" path="res://assets/art/tilesets/tree/Isometric Assets 5.png" id="14_aotfg"]
+[ext_resource type="Texture2D" uid="uid://dvc5tw8bxyink" path="res://assets/art/tilesets/terrain/Isometric Assets.png" id="14_fe2in"]
 [ext_resource type="Texture2D" uid="uid://bg1dp5fsf3rn2" path="res://assets/art/tilesets/tree/sprite_sheettree.png" id="15_7a55d"]
+[ext_resource type="Texture2D" uid="uid://bhfl6ahhj4ry0" path="res://assets/art/tilesets/extras/store.png" id="15_cmj2x"]
 [ext_resource type="Texture2D" uid="uid://b108hwxfd4hl6" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_2.res" id="15_fbqid"]
 [ext_resource type="Texture2D" uid="uid://cpygagx0xslap" path="res://assets/art/tilesets/tree/sprite_sheettree2.png" id="16_0n7ni"]
+[ext_resource type="Texture2D" uid="uid://no3xanjc0pec" path="res://assets/art/tilesets/extras/table.png" id="16_luuir"]
 [ext_resource type="Texture2D" uid="uid://b4efhtf46mjr5" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_3.res" id="16_mfnx3"]
 [ext_resource type="Texture2D" uid="uid://dblvnis68hd22" path="res://assets/art/tilesets/tree/sprite_sheettree3.png" id="17_0xwph"]
 [ext_resource type="Texture2D" uid="uid://dya1c6h6dk1q3" path="res://assets/art/tilesets/crops/normalized/rice_stage_2.res" id="17_gxe8k"]
 [ext_resource type="Texture2D" uid="uid://eqbcm1k1ekfg" path="res://assets/art/tilesets/crops/normalized/rice_stage_3.res" id="18_dqm82"]
 [ext_resource type="Texture2D" uid="uid://b4njqd508orli" path="res://assets/art/tilesets/crops/normalized/corn_stage_0.res" id="19_2l5e1"]
+[ext_resource type="Texture2D" uid="uid://140jba4yao2i" path="res://assets/art/tilesets/foliage/animated_grass_tuft1.png" id="19_xs0x3"]
 [ext_resource type="Texture2D" uid="uid://bthfbu1p301il" path="res://assets/art/tilesets/crops/normalized/corn_stage_1.res" id="20_bct15"]
+[ext_resource type="Texture2D" uid="uid://bh0u6vur8l0uc" path="res://assets/art/tilesets/foliage/grass2.png" id="20_cw631"]
+[ext_resource type="Texture2D" uid="uid://c2oq5ik36bl3b" path="res://assets/art/tilesets/extras/caar.png" id="21_2jo8s"]
 [ext_resource type="Texture2D" uid="uid://6nmdcy1646u7" path="res://assets/art/tilesets/crops/normalized/corn_stage_2.res" id="21_3wfy2"]
 [ext_resource type="Texture2D" uid="uid://csfml1v1ks5po" path="res://assets/art/tilesets/crops/normalized/corn_stage_3.res" id="22_iu8er"]
+[ext_resource type="Texture2D" uid="uid://bmrn6dubqs6xm" path="res://assets/art/tilesets/foliage/Isometric Assets 5.png" id="22_x7otb"]
 [ext_resource type="Texture2D" uid="uid://vdgtdhkjf8rs" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_0.res" id="23_aotfg"]
+[ext_resource type="Texture2D" uid="uid://dxgn88ud4p3t7" path="res://assets/art/tilesets/foliage/Isometric Assets 6.png" id="23_yyn44"]
 [ext_resource type="Texture2D" uid="uid://cq8lexkbo264a" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_1.res" id="24_ia13u"]
 [ext_resource type="Script" uid="uid://cp76etb7tv8y4" path="res://src/presentation/world/field_terrain_preview.gd" id="25_gxe8k"]
 [ext_resource type="Script" uid="uid://c7x4cbtfkuilb" path="res://src/presentation/ui/camera_zoom_button.gd" id="26_6a3lw"]
@@ -84,6 +92,211 @@ shader_parameter/wash_scale = 0.0008
 shader_parameter/grain_scale = 0.006
 shader_parameter/wash_strength = 0.65
 shader_parameter/grain_strength = 0.08
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_m6h4y"]
+resource_name = "dry_soil"
+texture = ExtResource("14_fe2in")
+texture_region_size = Vector2i(256, 256)
+9:9/0 = 0
+9:9/0/texture_origin = Vector2i(4, -1)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_40f52"]
+resource_name = "grass"
+texture = ExtResource("14_fe2in")
+texture_region_size = Vector2i(256, 256)
+0:6/0 = 0
+3:9/0 = 0
+7:9/0 = 0
+4:9/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+4:6/0 = 0
+6:6/0 = 0
+6:7/0 = 0
+5:6/0 = 0
+8:6/0 = 0
+7:6/0 = 0
+9:6/0 = 0
+1:7/0 = 0
+0:7/0 = 0
+1:6/0 = 0
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_qmqd6"]
+load_path = "res://.godot/imported/dry_soil.png.png-1a6462df813c7b924cf0c9552dd5120a.ctex"
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ldrfw"]
+resource_name = "dry_soil"
+texture = SubResource("CompressedTexture2D_qmqd6")
+texture_region_size = Vector2i(512, 478)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(4, -14)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_nljt5"]
+load_path = "res://.godot/imported/grass.png.png-b7a38354c4577d6470e0b8cbdcc01659.ctex"
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wqwag"]
+resource_name = "grass1"
+texture = SubResource("CompressedTexture2D_nljt5")
+texture_region_size = Vector2i(512, 512)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(4, -14)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_b7n81"]
+texture = ExtResource("15_cmj2x")
+texture_region_size = Vector2i(571, 853)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(0, 199)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_nyiue"]
+texture = ExtResource("16_luuir")
+texture_region_size = Vector2i(571, 853)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(0, 200)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_meqy7"]
+resource_name = "paddy_mud"
+texture = ExtResource("14_fe2in")
+texture_region_size = Vector2i(256, 256)
+8:9/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_e2grg"]
+resource_name = "paddy_mud"
+texture = ExtResource("5_ql0s4")
+texture_region_size = Vector2i(512, 470)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(4, -14)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_b6ahj"]
+texture = ExtResource("26_dqm82")
+texture_region_size = Vector2i(875, 875)
+0:0/animation_columns = 4
+0:0/animation_speed = 7.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1aj0j"]
+texture = ExtResource("19_xs0x3")
+texture_region_size = Vector2i(875, 875)
+2:2/0 = 0
+6:2/0 = 0
+10:2/0 = 0
+14:2/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+5:3/0 = 0
+6:3/0 = 0
+9:3/0 = 0
+10:3/0 = 0
+14:3/0 = 0
+0:0/animation_columns = 4
+0:0/animation_speed = 7.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_u6cg6"]
+texture = ExtResource("20_cw631")
+texture_region_size = Vector2i(875, 875)
+1:2/0 = 0
+2:2/0 = 0
+5:2/0 = 0
+6:2/0 = 0
+9:2/0 = 0
+10:2/0 = 0
+14:2/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+5:3/0 = 0
+6:3/0 = 0
+9:3/0 = 0
+10:3/0 = 0
+13:3/0 = 0
+14:3/0 = 0
+2:4/0 = 0
+6:4/0 = 0
+9:4/0 = 0
+10:4/0 = 0
+14:4/0 = 0
+0:0/animation_columns = 4
+0:0/animation_speed = 7.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wdwau"]
+texture = ExtResource("21_2jo8s")
+texture_region_size = Vector2i(571, 853)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(15, 223)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_l555d"]
+polygon = PackedVector2Array(-80, -9, -36, -94, -23, -98, 49, -74, 80, -14, 1, 32, -80, -8)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_t0rup"]
+polygon = PackedVector2Array(-104, -32, -87, -86, -14, -146, 76, -100, 107, -26, 99, -13, 9, 44, -99, -16)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_dx83q"]
+polygon = PackedVector2Array(-85, -46, -57, -118, 13, -162, 39, -148, 78, -28, 63, -2, 2, 31, -65, -7)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_dni1f"]
+polygon = PackedVector2Array(-126, -112, -91, -172, -13, -189, 110, -156, 123, -87, 111, -2, 3, 60, -104, 5)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2tfc1"]
+resource_name = "foliage"
+texture = ExtResource("22_x7otb")
+texture_region_size = Vector2i(256, 256)
+7:1/0 = 0
+7:1/0/texture_origin = Vector2i(0, 61)
+7:1/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_t0rup")
+8:1/0 = 0
+8:1/0/texture_origin = Vector2i(0, 61)
+8:1/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_dx83q")
+9:1/0 = 0
+9:1/0/texture_origin = Vector2i(0, 61)
+9:1/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_dni1f")
+6:1/0 = 0
+6:1/0/texture_origin = Vector2i(0, 61)
+6:1/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_l555d")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_xq5lu"]
+resource_name = "fence"
+texture = ExtResource("23_yyn44")
+texture_region_size = Vector2i(256, 256)
+4:4/0 = 0
+4:4/0/texture_origin = Vector2i(3, 62)
+5:4/0 = 0
+5:4/0/texture_origin = Vector2i(21, 59)
+6:4/0 = 0
+6:4/0/texture_origin = Vector2i(-3, 67)
+4:3/0 = 0
+4:3/0/texture_origin = Vector2i(15, 64)
+
+[sub_resource type="TileSet" id="TileSet_utpka"]
+tile_shape = 1
+tile_layout = 4
+tile_size = Vector2i(213, 122)
+occlusion_layer_0/light_mask = 2
+sources/3 = SubResource("TileSetAtlasSource_b6ahj")
+sources/11 = SubResource("TileSetAtlasSource_wqwag")
+sources/1 = SubResource("TileSetAtlasSource_40f52")
+sources/10 = SubResource("TileSetAtlasSource_ldrfw")
+sources/0 = SubResource("TileSetAtlasSource_m6h4y")
+sources/22 = SubResource("TileSetAtlasSource_e2grg")
+sources/2 = SubResource("TileSetAtlasSource_meqy7")
+sources/8 = SubResource("TileSetAtlasSource_2tfc1")
+sources/9 = SubResource("TileSetAtlasSource_xq5lu")
+sources/4 = SubResource("TileSetAtlasSource_1aj0j")
+sources/5 = SubResource("TileSetAtlasSource_u6cg6")
+sources/7 = SubResource("TileSetAtlasSource_wdwau")
+sources/12 = SubResource("TileSetAtlasSource_b7n81")
+sources/13 = SubResource("TileSetAtlasSource_nyiue")
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_og163"]
 load_path = "res://.godot/imported/dry_soil.png.png-1a6462df813c7b924cf0c9552dd5120a.ctex"
@@ -484,7 +697,7 @@ tile_layout = 4
 tile_size = Vector2i(213, 122)
 sources/0 = SubResource("TileSetAtlasSource_whdnl")
 
-[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "fence_button", "pause_button", "pause_menu", "soil_tool_controller", "water_bucket_button", "game_state_manager")]
+[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "fence_button", "hoe_button", "pause_button", "pause_menu", "soil_tool_controller", "water_bucket_button", "game_state_manager")]
 script = ExtResource("1_44tld")
 farming_controller = NodePath("FarmingController")
 turn_controller = NodePath("TurnController")
@@ -506,6 +719,7 @@ harvest_button = NodePath("HUD/HarvestButton")
 water_button = NodePath("HUD/WaterButton")
 fertilize_button = NodePath("HUD/FertilizeButton")
 fence_button = NodePath("HUD/FenceButton")
+hoe_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/HoeButton")
 pause_button = NodePath("PauseLayer/PauseButton")
 pause_menu = NodePath("PauseLayer/PauseMenu")
 soil_tool_controller = NodePath("SoilToolController")
@@ -534,7 +748,7 @@ y_sort_enabled = true
 script = ExtResource("4_34f8n")
 terrain_layer = NodePath("Terrain")
 background_terrain_layer = NodePath("BackgroundTerrain")
-background_decorations = NodePath("Foliage")
+background_decorations = NodePath("BackgroundDecorations")
 visual_map = ExtResource("5_jfjlv")
 crop_overlay = NodePath("CropOverlay")
 crop_layer = NodePath("Crops")
@@ -564,6 +778,13 @@ z_index = 2
 y_sort_enabled = true
 tile_map_data = PackedByteArray("AAD7/wIABAAAAAAAAAD7/wQABQAAAAAAAAABAP7/BQAAAAAAAAADAP7/BQAAAAAAAAD+////AwAAAAAAAAD7/wEABwAAAAAAAAD+/wUAAwAAAAAAAAD+/wkAAwAAAAAAAAAGAAoAAwAAAAAAAAAFAAoAAwAAAAAAAAAFAAsAAwAAAAAAAAAKAAQAAwAAAAAAAAAKAP//AwAAAAAAAAAKAP7/AwAAAAAAAAABAP//CQAEAAQAAAACAP//CQAEAAQAAAADAP//CQAEAAQAAAAEAP//CQAEAAQAAAAFAP//CQAEAAQAAAAGAP//CQAEAAQAAAAHAP//CQAEAAQAAAAJAP//AwAAAAAAAAAIAP//CQAEAAQAAAAJAAAACQAFAAQAAAAJAAEACQAFAAQAAAAJAAIACQAFAAQAAAAJAAMACQAFAAQAAAAJAAQACQAFAAQAAAAJAAYACQAFAAQAAAAJAAUACQAFAAQAAAAJAAcACQAFAAQAAAAJAAgACQAFAAQAAAAJAAkABQAAAAAAAAAIAAkACQAEAAQAAAAHAAkACQAEAAQAAAAGAAkACQAEAAQAAAAFAAkACQAEAAQAAAAEAAkACQAEAAQAAAADAAkACQAEAAQAAAACAAkACQAEAAQAAAABAAkACQAEAAQAAAAAAAkACQAEAAQAAAD//wkABQAAAAAAAAD/////BAAAAAAAAAAAAP//CQAEAAQAAAD+/wQABAAAAAAAAAAEAAoABAAAAAAAAAAEAAsABQAAAAAAAAACAP7/BAAAAAAAAAAJAP7/BQAAAAAAAAAJAAoABAAAAAAAAAD7/woABAAAAAAAAAD8/woAAwAAAAAAAAD7/wsABQAAAAAAAAD8/wwABQAAAAAAAAD9/wMABQAAAAAAAAD8/wIADAAAAAAAAAD8/wgABQAAAAAAAAD9/wkABQAAAAAAAAAEAP7/BAAAAAAAAAD+/wAABAAAAAAAAAD//woABAAAAAAAAAD+/woABAAAAAAAAAD9/woABAAAAAAAAAADAAsABAAAAAAAAAACAAsABQAAAAAAAAADAA0ABQAAAAAAAAACAA0ABQAAAAAAAAABAP3/BAAAAAAAAAAGAP3/BAAAAAAAAAAGAPz/BAAAAAAAAAAIAP3/BAAAAAAAAAAIAP7/BAAAAAAAAAAFAPz/AwAAAAAAAAAFAP3/AwAAAAAAAAAHAP3/AwAAAAAAAAACAPz/AwAAAAAAAAD6//7/BAAAAAAAAAD6////BQAAAAAAAAD5//7/BQAAAAAAAAD7/wMADQAAAAAAAAANAP//BQAAAAAAAAANAP7/BQAAAAAAAAANAAAABAAAAAAAAAANAAUABAAAAAAAAAANAAYABAAAAAAAAAA=")
 tile_set = ExtResource("13_aotfg")
+navigation_enabled = false
+
+[node name="BackgroundDecorations" type="TileMapLayer" parent="World" unique_id=1081508747]
+z_index = 2
+y_sort_enabled = true
+tile_set = SubResource("TileSet_utpka")
+collision_enabled = false
 navigation_enabled = false
 
 [node name="Trees" type="TileMapLayer" parent="World" unique_id=707212342]
@@ -725,6 +946,14 @@ size_flags_horizontal = 8
 mouse_force_pass_scroll_events = false
 toggle_mode = true
 text = "Move"
+
+[node name="HoeButton" type="Button" parent="HUD/Panel/Margin/Controls/CropButtons" unique_id=2028367947]
+custom_minimum_size = Vector2(64, 44)
+layout_mode = 2
+size_flags_horizontal = 8
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Hoe"
 
 [node name="NextTurnButton" type="Button" parent="HUD/Panel/Margin/Controls" unique_id=1080894110]
 layout_mode = 2
