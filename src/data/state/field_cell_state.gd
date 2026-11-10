@@ -11,6 +11,13 @@ var coordinates: Vector2i = Vector2i.ZERO
 var terrain_type: SimulationEnums.TerrainType = SimulationEnums.TerrainType.GRASS
 var soil: SoilState = null
 
+var inoculation_turns_remaining: int = 0
+var inoculation_bonus: float = 0.0
+
+func is_inoculated() -> bool:
+	return has_crop and dead_fraction < 1.0 and removed_outcome != SimulationEnums.RemovedOutcome.DEAD and inoculation_turns_remaining > 0 and inoculation_bonus > 0.0
+
+
 var has_crop: bool = false
 ## Ignored when has_crop is false.
 var crop_type: SimulationEnums.CropType = SimulationEnums.CropType.SUGARCANE
@@ -36,6 +43,8 @@ var dead_fraction: float = 0.0
 
 ## Reset crop state after setting has_crop/crop_type. Preserve soil and terrain.
 func reset_crop_state() -> void:
+	inoculation_turns_remaining = 0
+	inoculation_bonus = 0.0
 	growth_elapsed_ticks = 0
 	growth_remainder = 0.0
 	vitality = 1.0
@@ -64,6 +73,11 @@ func is_mature(crop_data: CropData) -> bool:
 ## Structural validation only; terrain permissions need the terrain catalog.
 func validate() -> PackedStringArray:
 	var errors: PackedStringArray = PackedStringArray()
+	_validate_fraction("inoculation_bonus", inoculation_bonus, errors)
+	if inoculation_turns_remaining < 0 or ((inoculation_turns_remaining == 0) != (inoculation_bonus == 0.0)):
+		errors.append("Inoculation duration and bonus must both be active or both zero.")
+	if not has_crop and (inoculation_turns_remaining != 0 or inoculation_bonus != 0.0):
+		errors.append("Empty cells must clear inoculation.")
 	_validate_fraction("vitality", vitality, errors)
 	_validate_fraction("yield_quality_loss", yield_quality_loss, errors)
 	if not is_finite(growth_remainder) or growth_remainder < 0.0 or growth_remainder >= 1.0:
@@ -120,6 +134,8 @@ func validate() -> PackedStringArray:
 ## Copies values without repairing invalid state or retaining shared soil.
 func copy() -> FieldCellState:
 	var result: FieldCellState = FieldCellState.new()
+	result.inoculation_turns_remaining = inoculation_turns_remaining
+	result.inoculation_bonus = inoculation_bonus
 	result.coordinates = coordinates
 	result.terrain_type = terrain_type
 	result.has_crop = has_crop

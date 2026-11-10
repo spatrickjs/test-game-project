@@ -5,6 +5,7 @@ extends RefCounted
 
 class Result:
 	extends RefCounted
+	var protection: float = 1.0
 	var weather: float = 1.0
 	var nutrient: float = 1.0
 	var effective_beta: float = 0.0
@@ -18,7 +19,7 @@ static func needs_crop(profile: TransmissionModifierProfile) -> bool:
 	return profile != null and (profile.nitrogen_excess_strength > 0.0 or profile.potassium_protection_strength > 0.0)
 
 
-static func evaluate(disease: DiseaseData, environment: AbioticState, soil: SoilState, crop: CropData, pressure: float) -> Result:
+static func evaluate(disease: DiseaseData, environment: AbioticState, soil: SoilState, crop: CropData, pressure: float, protection_bonus: float = 0.0) -> Result:
 	var result: Result = Result.new()
 	var profile: TransmissionModifierProfile = disease.transmission_modifier_profile
 	var beta_cap: float = 1.7976931348623157e308
@@ -44,7 +45,8 @@ static func evaluate(disease: DiseaseData, environment: AbioticState, soil: Soil
 					var distance: float = maxf(0.0, maxf(rule.optimal_range.min_value - soil.potassium, soil.potassium - rule.optimal_range.max_value))
 					var benefit: float = 1.0 - clampf(distance / profile.potassium_falloff, 0.0, 1.0)
 					result.nutrient *= 1.0 - profile.potassium_protection_strength * benefit
-	var beta_factors: Array[float] = [disease.beta, result.weather, result.nutrient]
+	result.protection = 1.0 - protection_bonus
+	var beta_factors: Array[float] = [disease.beta, result.weather, result.nutrient, result.protection]
 	result.beta_capped = _exceeds(beta_factors, beta_cap)
 	result.effective_beta = _product(beta_factors, beta_cap)
 	var hazard_factors: Array[float] = [result.effective_beta, pressure]

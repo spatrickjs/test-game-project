@@ -3,6 +3,9 @@ extends EditorPlugin
 
 
 func _enter_tree() -> void:
+	if OS.get_environment("GODOT_INOCULATION_SETUP") == "1":
+		_run_inoculation_setup.call_deferred()
+		return
 	if OS.get_environment("GODOT_DRAFT_DISEASE_PLAYTEST_SETUP") == "1":
 		_run_draft_disease_playtest_setup.call_deferred()
 		return
@@ -106,6 +109,13 @@ func _run_crop_setup() -> void:
 func _run_field_tools_setup() -> void:
 	var setup_script: Script = load("res://tools/setup_field_tools.gd") as Script
 	var setup: EditorScript = setup_script.new() as EditorScript
+	var result: int = await setup.run_setup()
+	setup = null
+	get_tree().quit(result)
+
+
+func _run_inoculation_setup() -> void:
+	var setup: EditorScript = (load("res://tools/setup_inoculation.gd") as Script).new() as EditorScript
 	var result: int = await setup.run_setup()
 	setup = null
 	get_tree().quit(result)

@@ -142,7 +142,7 @@ func clear_display() -> void:
 
 func _show_empty_crop() -> void:
 	crop_name_label.text = "No crop"
-	growth_label.text = "Growth: Not applicable"
+	growth_label.text = "Growth: Not applicable\nInoculated: Inactive"
 	disease_label.text = "Disease: Not applicable"
 	state_label.text = "Categorical state: Not applicable"
 	removed_outcome_label.text = "Removed outcome: Not applicable"
@@ -174,6 +174,7 @@ func _show_crop(cell: FieldCellState, crop: CropData) -> void:
 		growth_bar.value = minf(100.0, 100.0 * float(cell.growth_elapsed_ticks) / float(crop.growth_ticks))
 		growth_bar.show()
 	growth_label.text += "\nVitality: %s | Yield quality: %s" % [_normalized_text(cell.vitality), _normalized_text(1.0 - cell.yield_quality_loss)]
+	growth_label.text += "\nInoculated: Active\nProtection: %d turns | Resistance bonus: %.0f%%" % [cell.inoculation_turns_remaining, cell.inoculation_bonus * 100.0] if cell.is_inoculated() else "\nInoculated: Inactive"
 	disease_label.text = "Active disease: None"
 	if cell.has_active_disease:
 		var disease: DiseaseData = null
@@ -273,3 +274,12 @@ func set_seed_available(available: bool) -> void:
 
 func _on_seed_pressed() -> void:
 	seed_infection_requested.emit()
+
+
+func show_action_error(reason: String) -> void:
+	clear_display()
+	if title_label != null:
+		title_label.text = "Invalid target"
+	if growth_label != null:
+		growth_label.text = reason
+	show()

@@ -149,7 +149,7 @@ func _evaluate_cell(cell: FieldCellState, disease: DiseaseData, neighbors: Array
 
 func _transmission(cell: FieldCellState, disease: DiseaseData, neighbors: Array[FieldCellState], environment: AbioticState) -> TransmissionModifiers.Result:
 	var crop: CropData = crop_database.get_crop(cell.crop_type) if crop_database != null else null
-	return TransmissionModifiers.evaluate(disease, environment, cell.soil, crop, _pressure(cell, disease, neighbors))
+	return TransmissionModifiers.evaluate(disease, environment, cell.soil, crop, _pressure(cell, disease, neighbors), cell.inoculation_bonus if cell.is_inoculated() else 0.0)
 
 
 func _algorithm(disease: DiseaseData) -> int:

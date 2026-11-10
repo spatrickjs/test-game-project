@@ -25,6 +25,8 @@ extends Node
 @export var harvest_button: Button
 @export var water_button: Button
 @export var fertilize_button: Button
+@export var inoculate_button: Button
+@export var inoculation_cursor: Texture2D
 
 @export_group("Pause")
 @export var pause_button: Button
@@ -34,7 +36,7 @@ extends Node
 @export var soil_tool_controller: SoilToolController
 @export var water_bucket_button: Button
 @export var game_state_manager: GameStateManager
-enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE, TOOL_WATER_BUCKET }
+enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE, TOOL_WATER_BUCKET, TOOL_INOCULATE }
 var _tool_mode: ToolMode = ToolMode.INSPECT
 var _transfer_source: Vector2i = Vector2i(-1, -1)
 @export var playtest_disease_id: SimulationEnums.DiseaseId = SimulationEnums.DiseaseId.RICE_BLAST
@@ -61,7 +63,7 @@ func _ready() -> void:
 		button.toggle_mode = true
 		button.button_group = null
 		button.set_pressed_no_signal(false)
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, water_bucket_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, water_bucket_button, inoculate_button]:
 		if button != null:
 			button.toggle_mode = true
 			button.set_pressed_no_signal(false)
@@ -89,6 +91,10 @@ func _connect_once(source: Signal, callback: Callable) -> void:
 
 
 func _connect_signals() -> void:
+	_connect_once(world_view.invalid_tool_target, _on_invalid_tool_target)
+	if inoculate_button != null:
+		world_view.register_ui_input_root(inoculate_button)
+		_connect_once(inoculate_button.pressed, _on_inoculate_pressed)
 	if water_bucket_button != null:
 		world_view.register_ui_input_root(water_bucket_button)
 		_connect_once(water_bucket_button.pressed, _on_water_bucket_pressed)
@@ -189,7 +195,7 @@ func _on_field_initialized() -> void:
 
 
 func _set_controls_enabled(enabled: bool) -> void:
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button, inoculate_button]:
 		if button != null:
 			button.disabled = not enabled
 	next_turn_button.disabled = not enabled
@@ -231,6 +237,9 @@ func _enter_inspect_mode() -> void:
 
 
 func _update_crop_buttons() -> void:
+	Input.set_custom_mouse_cursor(inoculation_cursor if _tool_mode == ToolMode.TOOL_INOCULATE else null)
+	if inoculate_button != null:
+		inoculate_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_INOCULATE)
 	_refresh_tool_targets(true)
 	if water_bucket_button != null:
 		water_bucket_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_WATER_BUCKET)
@@ -395,6 +404,10 @@ func _select_management_tool(mode: ToolMode) -> void:
 	_inspected_coordinates = Vector2i(-1, -1)
 	tile_inspector.clear_display()
 	_update_crop_buttons()
+	if mode == ToolMode.TOOL_INOCULATE:
+		selected_crop_label.text = "Tool: Inoculate"
+		status_label.text = "Apply protection to living crops with adequate soil moisture."
+		return
 	if mode == ToolMode.TOOL_WATER_BUCKET:
 		selected_crop_label.text = "Tool: Water Bucket"
 		status_label.text = "Drag over empty dry soil to queue paddy conversion."
@@ -441,6 +454,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if not _running or get_tree().paused or not (event is InputEventKey):
 		return
 	var key: InputEventKey = event as InputEventKey
+	if key.pressed and not key.echo and key.keycode == KEY_O:
+		world_view.crop_overlay.visible = not world_view.crop_overlay.visible
+		get_viewport().set_input_as_handled()
 	if key.pressed and not key.echo and key.keycode == KEY_ESCAPE:
 		_open_pause_menu()
 		get_viewport().set_input_as_handled()
@@ -448,7 +464,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _show_failure(message: String) -> void:
 	_running = false
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button, inoculate_button]:
 		if button != null:
 			button.disabled = true
 	if tile_inspector != null:
@@ -510,6 +526,8 @@ func _make_action(coordinates: Vector2i, known_cell: FieldCellState = null) -> F
 		ToolMode.TOOL_REMOVE:
 			var cell: FieldCellState = known_cell if known_cell != null else farming_controller.get_grid_snapshot().get_cell(coordinates)
 			action.kind = SimulationEnums.FieldActionKind.REMOVE_CROP if cell != null and cell.has_crop else SimulationEnums.FieldActionKind.DIG_GRASS
+		ToolMode.TOOL_INOCULATE:
+			action.kind = SimulationEnums.FieldActionKind.INOCULATE
 		ToolMode.TOOL_WATER_BUCKET:
 			action.kind = SimulationEnums.FieldActionKind.MAKE_PADDY
 		ToolMode.TOOL_TRANSFER:
@@ -536,6 +554,8 @@ func _queue_at(coordinates: Vector2i, expected_kind: int = -1) -> bool:
 		return false
 	var success: bool = farming_controller.enqueue_action(action)
 	status_label.text = "Action queued. The farmer is on the way." if success else farming_controller.last_error
+	if not success and _tool_mode == ToolMode.TOOL_INOCULATE:
+		tile_inspector.show_action_error(farming_controller.last_error)
 	return success
 
 
@@ -590,6 +610,8 @@ func _on_farmer_arrived(action_id: int, coordinates: Vector2i) -> void:
 
 func _on_action_finished(_action_id: int, success: bool, reason: String) -> void:
 	status_label.text = "Action complete." if success else reason
+	if not success:
+		tile_inspector.show_action_error(reason)
 
 
 func _on_queued_harvest_completed(result: HarvestResult) -> void:
@@ -722,3 +744,14 @@ func _on_play_again_pressed() -> void:
 		_show_failure(farming_controller.last_error)
 		return
 	game_state_manager.start_game()
+
+
+func _on_inoculate_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_INOCULATE)
+
+func _on_invalid_tool_target(coordinates: Vector2i) -> void:
+	if _running and game_state_manager.is_playing() and _tool_mode == ToolMode.TOOL_INOCULATE:
+		_queue_at(coordinates)
+
+func _exit_tree() -> void:
+	Input.set_custom_mouse_cursor(null)

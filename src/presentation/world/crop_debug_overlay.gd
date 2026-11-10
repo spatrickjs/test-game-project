@@ -79,6 +79,8 @@ func _draw() -> void:
 			var tint: Color = mature_color if cell.is_mature(crop) else growing_color
 			var radius: float = maxf(1.0, marker_radius)
 			draw_circle(center, radius, tint)
+			if cell.is_inoculated():
+				draw_arc(center, radius + 6.0, 0.0, TAU, 32, Color(0.35, 0.95, 1.0, 0.85), 3.0, true)
 			var abbreviation: String = _abbreviation(cell.crop_type)
 			if font != null:
 				var text_size: Vector2 = font.get_string_size(

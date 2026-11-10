@@ -6,7 +6,7 @@
 
 ## State and configuration
 
-Introduce a validated `InoculationProfile` resource with duration, moisture bounds, pre-mature/mature bonuses, and weather decay configuration. Proposed defaults are defined in requirements.md. Reject nonfinite/out-of-range bonuses and moisture bounds, invalid durations, and negative decay.
+Introduce a validated `InoculationProfile` resource with duration, moisture bounds, pre-mature/mature bonuses, and weather decay configuration. User-approved defaults are defined in requirements.md. Reject nonfinite/out-of-range bonuses and moisture bounds, invalid durations, and negative decay. Weather decay interpolates dry/humid endpoints using the turn's relative humidity.
 
 Add `inoculation_turns_remaining: int = 0` and `inoculation_bonus: float = 0.0` to `FieldCellState`. Active means both values are positive on a living occupied cell. Inactive state is canonically zero/zero. Extend copy, reset, and validation; inspect all manually copied crop payloads, especially crop transfer, to preserve these fields. Do not infer protection from UI state.
 

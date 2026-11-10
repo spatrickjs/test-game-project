@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cv57j7qhuge76" path="res://src/presentation/world/field_prototype_presenter.gd" id="1_44tld"]
 [ext_resource type="Script" uid="uid://b5c7chugjxt0o" path="res://src/logic/farming/farming_controller.gd" id="2_jfjlv"]
+[ext_resource type="Texture2D" uid="uid://ds8ofa6asp3bu" path="res://assets/inoculation_cursor.svg" id="2_pj3s3"]
 [ext_resource type="Resource" uid="uid://bsijc06et0wly" path="res://src/data/databases/crop_database.tres" id="3_g68ao"]
 [ext_resource type="Script" uid="uid://bghaw4686gwwc" path="res://src/logic/turns/turn_controller.gd" id="3_r0odj"]
 [ext_resource type="Script" uid="uid://bs822juxs21vk" path="res://src/presentation/world/field_world_view.gd" id="4_34f8n"]
@@ -471,7 +472,7 @@ fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 0.5)
 
-[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "pause_button", "pause_menu", "soil_tool_controller", "water_bucket_button", "game_state_manager")]
+[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "inoculate_button", "pause_button", "pause_menu", "soil_tool_controller", "water_bucket_button", "game_state_manager")]
 script = ExtResource("1_44tld")
 farming_controller = NodePath("FarmingController")
 turn_controller = NodePath("TurnController")
@@ -492,6 +493,8 @@ camera_zoom_button = NodePath("HUD/CameraZoomButton")
 harvest_button = NodePath("HUD/HarvestButton")
 water_button = NodePath("HUD/WaterButton")
 fertilize_button = NodePath("HUD/FertilizeButton")
+inoculate_button = NodePath("HUD/InoculateButton")
+inoculation_cursor = ExtResource("2_pj3s3")
 pause_button = NodePath("PauseLayer/PauseButton")
 pause_menu = NodePath("PauseLayer/PauseMenu")
 soil_tool_controller = NodePath("SoilToolController")
@@ -1076,6 +1079,22 @@ toggle_mode = true
 text = "Water Bucket"
 script = ExtResource("26_6a3lw")
 
+[node name="InoculateButton" type="Button" parent="HUD" unique_id=1417229034]
+custom_minimum_size = Vector2(132, 48)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -206.0
+offset_top = -51.0
+offset_right = -74.0
+offset_bottom = -3.0
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Inoculate"
+script = ExtResource("26_6a3lw")
+
 [node name="WeatherManager" type="Node" parent="." unique_id=673066105]
 script = ExtResource("27_mfnx3")
 fluctuations_enabled = true
@@ -1113,6 +1132,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0, 0, 0, 0.6)
 
 [node name="CenterContainer" type="CenterContainer" parent="PauseLayer/PauseMenu" unique_id=2137092682]

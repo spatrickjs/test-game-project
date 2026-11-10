@@ -3,6 +3,7 @@ extends Node2D
 ## Converts input to logical intent and renders detached snapshots.
 
 signal cell_clicked(coordinates: Vector2i)
+signal invalid_tool_target(coordinates: Vector2i)
 signal camera_view_changed
 signal cells_selected(coordinates: Array[Vector2i], action_kind: int)
 
@@ -655,6 +656,9 @@ func show_queued(coordinates: Array[Vector2i], pending_source: Vector2i = Vector
 
 func _begin_selection(screen_position: Vector2) -> void:
 	_cancel_selection()
+	var coordinates: Vector2i = get_cell_at_viewport_position(screen_position)
+	if not _eligible.has(coordinates):
+		invalid_tool_target.emit(coordinates)
 	_selecting = true
 	_selection_last = screen_position
 	_select_at(screen_position)

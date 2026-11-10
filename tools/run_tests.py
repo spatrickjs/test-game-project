@@ -12,6 +12,8 @@ args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 logs = root / ".godot"
 tests = [
+    "tests/logic/seed_inoculation_test.gd",
+    "tests/presentation/seed_inoculation_ui_test.gd",
     "tests/logic/field_prototype_smoke.gd",
     "tests/logic/disease_activation_test.gd",
     "tests/logic/disease_catalog_test.gd",
@@ -48,6 +50,7 @@ for test in tests:
     command = [args.godot, "--headless", "--path", str(root),
                "--script", "res://" + test, "--log-file", str(logs / (Path(test).stem + ".log"))]
     environment = os.environ.copy()
+    environment.pop("GODOT_INOCULATION_SETUP", None)
     environment.pop("GODOT_EDITOR_TEST", None)
     environment.pop("GODOT_PLAYTEST_SETUP", None)
     environment.pop("GODOT_CROP_VISUAL_SETUP", None)

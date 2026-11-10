@@ -11,6 +11,7 @@ signal queued_harvest_completed(result: HarvestResult)
 
 @export var crop_database: CropDatabase
 @export var terrain_database: TerrainDatabase
+@export var inoculation_profile: InoculationProfile = InoculationProfile.new()
 @export var initial_soil: SoilState
 @export var initial_abiotic: AbioticState
 @export var field_size: Vector2i = Vector2i(9, 6)
@@ -99,6 +100,8 @@ func advance_growth() -> bool:
 		return _fail("Initialize the field before advancing turns.")
 	var candidate: FieldGridState = _grid.copy()
 	var reason: String = _stage_growth(candidate)
+	if reason.is_empty():
+		reason = _stage_inoculation_age(candidate)
 	if not reason.is_empty():
 		return _fail(reason)
 	_grid = candidate
@@ -213,6 +216,8 @@ func advance_simulated_turn(simulation: SimulationController, diseases: DiseaseD
 		reason = _stage_growth(candidate)
 	if reason.is_empty() and not simulation.process_turn(candidate, diseases):
 		reason = simulation.last_error
+	if reason.is_empty():
+		reason = _stage_inoculation_age(candidate)
 	var proposal: DiseaseActivationController.Result
 	if reason.is_empty() and activation != null:
 		proposal = activation.evaluate(candidate.copy(), diseases, turn_index + 1, simulation.active_disease_filter, allow_introduction)
@@ -341,6 +346,8 @@ func action_error(action: FieldAction, check_reservations: bool = true) -> Strin
 		if reserved.has(action.target) or (action.kind == SimulationEnums.FieldActionKind.MOVE_CROP and reserved.has(action.source)):
 			return "This plot already has a queued action."
 	match action.kind:
+		SimulationEnums.FieldActionKind.INOCULATE:
+			return _inoculation_error(cell)
 		SimulationEnums.FieldActionKind.REMOVE_CROP:
 			return "Choose a crop to remove." if not cell.has_crop else ""
 		SimulationEnums.FieldActionKind.DIG_GRASS:
@@ -416,6 +423,8 @@ func arrive_at_action(action_id: int, stop: Vector2i) -> bool:
 	var success: bool = false
 	var harvest: HarvestResult = null
 	match action.kind:
+		SimulationEnums.FieldActionKind.INOCULATE:
+			success = inoculate_crop(action.target)
 		SimulationEnums.FieldActionKind.REMOVE_CROP:
 			success = remove_crop(action.target)
 		SimulationEnums.FieldActionKind.DIG_GRASS, SimulationEnums.FieldActionKind.MAKE_PADDY:
@@ -516,3 +525,57 @@ func apply_soil_additions(coordinates: Vector2i, additions: Vector3) -> bool:
 	last_error = ""
 	_emit_cell_changed(coordinates)
 	return true
+
+
+func _inoculation_error(cell: FieldCellState) -> String:
+	if cell == null or not cell.has_crop or cell.dead_fraction >= 1.0 or cell.removed_outcome == SimulationEnums.RemovedOutcome.DEAD:
+		return "Choose a living planted crop to inoculate."
+	if inoculation_profile == null:
+		return "Assign an inoculation profile."
+	var errors: PackedStringArray = inoculation_profile.validate()
+	if not errors.is_empty():
+		return "\n".join(errors)
+	if crop_database == null or crop_database.get_crop(cell.crop_type) == null:
+		return "The crop is not registered."
+	if cell.soil == null or not cell.soil.validate().is_empty():
+		return "Inoculation requires valid soil."
+	if cell.soil.moisture < inoculation_profile.minimum_moisture or cell.soil.moisture > inoculation_profile.maximum_moisture:
+		return "Soil moisture is inadequate for inoculation."
+	return ""
+
+
+func inoculate_crop(coordinates: Vector2i) -> bool:
+	if _grid == null:
+		return _fail("Initialize the field before inoculating.")
+	var reason: String = _inoculation_error(_grid.get_cell(coordinates))
+	if not reason.is_empty():
+		return _fail(reason)
+	var candidate: FieldGridState = _grid.copy()
+	var cell: FieldCellState = candidate.get_cell(coordinates)
+	cell.inoculation_turns_remaining = inoculation_profile.duration_turns
+	cell.inoculation_bonus = inoculation_profile.mature_bonus if cell.is_mature(crop_database.get_crop(cell.crop_type)) else inoculation_profile.growing_bonus
+	var errors: PackedStringArray = FieldGridQueries.validate_terrain_assignments(candidate, crop_database, terrain_database)
+	if not errors.is_empty():
+		return _fail("\n".join(errors))
+	_grid = candidate
+	last_error = ""
+	_emit_cell_changed(coordinates)
+	return true
+
+
+func _stage_inoculation_age(candidate: FieldGridState) -> String:
+	if inoculation_profile == null:
+		return "Assign an inoculation profile."
+	var errors: PackedStringArray = inoculation_profile.validate()
+	if not errors.is_empty():
+		return "\n".join(errors)
+	for y: int in range(candidate.height):
+		for x: int in range(candidate.width):
+			var cell: FieldCellState = candidate.get_cell(Vector2i(x, y))
+			if cell.is_inoculated():
+				cell.inoculation_turns_remaining -= 1
+				cell.inoculation_bonus = maxf(0.0, cell.inoculation_bonus - inoculation_profile.decay(candidate.abiotic_state))
+			if not cell.is_inoculated():
+				cell.inoculation_turns_remaining = 0
+				cell.inoculation_bonus = 0.0
+	return "\n".join(candidate.validate())

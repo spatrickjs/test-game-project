@@ -2,7 +2,7 @@
 
 ## Scope and sources
 
-Implement the game mechanic described by `features/seed_inoculation.feature`, `features/inoculation_simulation_impact.feature`, and `features/seed_inoculation_ui.feature`. This specification covers runtime crop protection, queued player actions, simulation integration, and UI feedback on the existing 9x6 field.
+Implement the game mechanic described by `features/seed_inoculation.feature`, `features/inoculation_simulation_impact.feature`, and `features/seed_inoculation_ui.feature`. This specification covers runtime crop protection, queued player actions, simulation integration, and UI feedback. Preserve the saved 9x9 field and use 9x6 acceptance fixtures.
 
 ## Acceptance requirements
 
@@ -17,9 +17,9 @@ Implement the game mechanic described by `features/seed_inoculation.feature`, `f
 - **R9 — Overlay:** Enabling the crop debug/status overlay shall show a subtle protection icon or aura only on actively protected crops, based on detached snapshots. Changes and expiration shall refresh the overlay.
 - **R10 — Compatibility:** Neutral protection defaults shall preserve existing untreated behavior and existing enum identifiers. All shared transmission evaluator callers shall remain compatible.
 
-## Proposed decisions where features are incomplete
+## Approved decisions where features were incomplete
 
-These are implementation defaults, not facts specified by the source features. Keep them configurable and verify them in tests.
+The user approved these implementation defaults on 2026-11-10. Keep them configurable and verify them in tests. Preserve the saved 9x9 scene; use 9x6 acceptance fixtures.
 
 - Duration: 3 successful simulation turns, including the first transition after application.
 - Adequate moisture: inclusive normalized range [0.3, 1.0].
@@ -32,4 +32,4 @@ These are implementation defaults, not facts specified by the source features. K
 
 ## Feature clarification
 
-The duration scenario contains `<turn_count>` in a plain Scenario without Examples. During implementation, convert it to a Scenario Outline with explicit boundary examples or replace the placeholder with concrete steps. Add SEIR coverage: the impact feature names SEIR but currently exercises only SIR. Replace “significantly lower” with the deterministic checks in R4.
+The impact feature now uses concrete second/third-turn expiration steps, a model Scenario Outline covering SIR and SEIR, and the deterministic coefficient/risk checks in R4.
