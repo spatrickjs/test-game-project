@@ -13,6 +13,8 @@ var crop_database: CropDatabase = null
 var weather_cap_count: int = 0
 var beta_cap_count: int = 0
 var hazard_cap_count: int = 0
+## Print a line each time a cell newly acquires an active disease via spread.
+var debug_infections: bool = true
 
 var _sir: SpatialSIRModel = SpatialSIRModel.new()
 var _seir: SpatialSEIRModel = SpatialSEIRModel.new()
@@ -122,6 +124,7 @@ func process_turn(grid_state: FieldGridState, disease_database: DiseaseDatabase)
 	# No authoritative state has been changed before this commit.
 	for next: FieldCellState in staged:
 		var target: FieldCellState = grid_state.get_cell(next.coordinates)
+		var was_infected: bool = target.has_active_disease
 		target.susceptible_fraction = next.susceptible_fraction
 		target.exposed_fraction = next.exposed_fraction
 		target.infected_fraction = next.infected_fraction
@@ -131,6 +134,10 @@ func process_turn(grid_state: FieldGridState, disease_database: DiseaseDatabase)
 		target.removed_outcome = next.removed_outcome
 		target.has_active_disease = next.has_active_disease
 		target.active_disease_id = next.active_disease_id
+		if debug_infections and not was_infected and next.has_active_disease:
+			var disease: DiseaseData = disease_database.get_disease(next.active_disease_id)
+			var disease_name: String = disease.display_name if disease != null else str(next.active_disease_id)
+			print("Infection spread: %s infected cell %s (infected_fraction=%.2f)." % [disease_name, next.coordinates, next.infected_fraction])
 	return true
 
 
