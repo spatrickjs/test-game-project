@@ -27,6 +27,9 @@ func _enter_tree() -> void:
 	if OS.get_environment("GODOT_FENCE_TOOL_SETUP") == "1":
 		_run_fence_tool_setup.call_deferred()
 		return
+	if OS.get_environment("GODOT_FENCE_AUTOTILE_SETUP") == "1":
+		_run_fence_autotile_setup.call_deferred()
+		return
 	if OS.get_environment("GODOT_CROP_VISUAL_SETUP") == "1":
 		_run_crop_setup.call_deferred()
 		return
@@ -115,6 +118,14 @@ func _run_field_tools_setup() -> void:
 
 
 func _run_fence_tool_setup() -> void:
+	var setup_script: Script = load("res://tools/setup_fence_tool.gd") as Script
+	var setup: EditorScript = setup_script.new() as EditorScript
+	var result: int = await setup.run_setup()
+	setup = null
+	get_tree().quit(result)
+
+
+func _run_fence_autotile_setup() -> void:
 	var setup_script: Script = load("res://tools/setup_fence_tool.gd") as Script
 	var setup: EditorScript = setup_script.new() as EditorScript
 	var result: int = await setup.run_setup()

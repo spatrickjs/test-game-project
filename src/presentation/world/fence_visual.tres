@@ -4,4 +4,23 @@
 
 [resource]
 script = ExtResource("1_1ude4")
-source_id = 0
+source_id = 2
+atlas_coords = Vector2i(4, 8)
+tile_mapping = {
+0: [2, Vector2i(4, 8), 0],
+1: [2, Vector2i(0, 8), 0],
+2: [2, Vector2i(1, 8), 0],
+3: [2, Vector2i(2, 7), 0],
+4: [2, Vector2i(2, 8), 0],
+5: [2, Vector2i(0, 7), 0],
+6: [2, Vector2i(3, 7), 0],
+7: [2, Vector2i(1, 6), 0],
+8: [2, Vector2i(3, 8), 0],
+9: [2, Vector2i(4, 7), 0],
+10: [2, Vector2i(1, 7), 0],
+11: [2, Vector2i(2, 6), 0],
+12: [2, Vector2i(5, 7), 0],
+13: [2, Vector2i(4, 6), 0],
+14: [2, Vector2i(3, 6), 0],
+15: [2, Vector2i(0, 6), 0]
+}

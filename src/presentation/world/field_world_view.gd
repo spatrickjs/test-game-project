@@ -284,7 +284,9 @@ func _align_layer(layer: TileMapLayer) -> void:
 	layer.global_transform = terrain_layer.global_transform
 
 
-## Optional fence overlay. Draws the fence tile on every fenced cell and erases the rest.
+## Optional fence overlay. Draws the connection-mapped tile on every fenced cell and erases the rest.
+## Uses FieldGridQueries.fence_connections to pick the correct atlas tile per mask.
+## Falls back to the legacy single tile when tile_mapping is empty.
 ## Null-safe; never clears a layer that belongs to terrain, crops, grass or background.
 func render_fences(snapshot: FieldGridState) -> void:
 	if fence_layer == null or fence_visual == null or snapshot == null:
@@ -300,24 +302,41 @@ func render_fences(snapshot: FieldGridState) -> void:
 	for y: int in range(snapshot.height):
 		for x: int in range(snapshot.width):
 			var cell: FieldCellState = snapshot.get_cell(Vector2i(x, y))
-			if cell != null and cell.has_fence:
+			if cell == null or not cell.has_fence:
+				continue
+			if fence_visual.tile_mapping.is_empty():
+				# Legacy fallback: single tile for all masks.
 				fence_layer.set_cell(cell.coordinates, fence_visual.source_id, fence_visual.atlas_coords, fence_visual.alternative_tile)
+			else:
+				var mask: int = FieldGridQueries.fence_connections(snapshot, cell.coordinates)
+				var entry: Array = fence_visual.get_tile_for_mask(mask)
+				if entry.size() >= 3:
+					fence_layer.set_cell(cell.coordinates, int(entry[0]), entry[1] as Vector2i, int(entry[2]))
 
 
 ## Loads the fence TileSet from its standalone .tres when the scene's inline tile set
-## lacks a valid atlas source (a Godot serialization limitation for inline TileSetAtlasSource).
+## lacks a valid atlas source. Checks for the autotile source (id=2) when tile_mapping
+## is populated; falls back to the legacy source check otherwise.
 func _ensure_fence_tile_set() -> void:
-	if fence_layer == null:
+	if fence_layer == null or fence_visual == null:
 		return
+	# Determine which source and tile to verify.
+	var check_source_id: int = fence_visual.source_id
+	var check_coords: Vector2i = fence_visual.atlas_coords
+	if not fence_visual.tile_mapping.is_empty():
+		var post_entry: Array = fence_visual.get_tile_for_mask(0)
+		if post_entry.size() >= 3:
+			check_source_id = int(post_entry[0])
+			check_coords = post_entry[1] as Vector2i
 	var ts: TileSet = fence_layer.tile_set
-	if ts != null and ts.has_source(fence_visual.source_id):
-		var src: TileSetAtlasSource = ts.get_source(fence_visual.source_id) as TileSetAtlasSource
-		if src != null and src.has_tile(fence_visual.atlas_coords):
+	if ts != null and ts.has_source(check_source_id):
+		var src: TileSetAtlasSource = ts.get_source(check_source_id) as TileSetAtlasSource
+		if src != null and src.has_tile(check_coords):
 			return
 	var loaded: TileSet = load(FENCE_TILESET_PATH) as TileSet
-	if loaded != null and loaded.has_source(fence_visual.source_id):
-		var src: TileSetAtlasSource = loaded.get_source(fence_visual.source_id) as TileSetAtlasSource
-		if src != null and src.has_tile(fence_visual.atlas_coords):
+	if loaded != null and loaded.has_source(check_source_id):
+		var src: TileSetAtlasSource = loaded.get_source(check_source_id) as TileSetAtlasSource
+		if src != null and src.has_tile(check_coords):
 			fence_layer.tile_set = loaded
 
 
@@ -325,12 +344,14 @@ func _ensure_fence_tile_set() -> void:
 func validate_fence_visual() -> PackedStringArray:
 	if fence_layer == null or fence_visual == null:
 		return PackedStringArray()
+	# Determine which source to verify for TileSet loading.
+	var check_source_id: int = fence_visual.source_id
+	if not fence_visual.tile_mapping.is_empty():
+		var post_entry: Array = fence_visual.get_tile_for_mask(0)
+		if post_entry.size() >= 3:
+			check_source_id = int(post_entry[0])
 	var ts: TileSet = fence_layer.tile_set
-	if ts != null and ts.has_source(fence_visual.source_id):
-		var src: TileSetAtlasSource = ts.get_source(fence_visual.source_id) as TileSetAtlasSource
-		if src == null or not src.has_tile(fence_visual.atlas_coords):
-			ts = null
-	if ts == null or not ts.has_source(fence_visual.source_id):
+	if ts == null or not ts.has_source(check_source_id):
 		ts = load(FENCE_TILESET_PATH) as TileSet
 	if ts == null:
 		return PackedStringArray(["FenceVisual: fence TileSet not available."])
@@ -341,8 +362,13 @@ func validate_fence_visual() -> PackedStringArray:
 func get_fence_icon() -> Texture2D:
 	if fence_layer == null or fence_visual == null:
 		return null
+	var check_source_id: int = fence_visual.source_id
+	if not fence_visual.tile_mapping.is_empty():
+		var post_entry: Array = fence_visual.get_tile_for_mask(0)
+		if post_entry.size() >= 3:
+			check_source_id = int(post_entry[0])
 	var ts: TileSet = fence_layer.tile_set
-	if ts == null or not ts.has_source(fence_visual.source_id):
+	if ts == null or not ts.has_source(check_source_id):
 		ts = load(FENCE_TILESET_PATH) as TileSet
 	if ts == null:
 		return null
