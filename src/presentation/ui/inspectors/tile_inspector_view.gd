@@ -125,8 +125,12 @@ func display_cell(cell_state: FieldCellState, crop_data: CropData) -> void:
 		macronutrients_label.text += "\nSoil moisture: " + _normalized_text(soil.moisture)
 	if not cell_state.has_crop:
 		_show_empty_crop()
+		if cell_state.has_infected_debris:
+			disease_label.text = "Infected debris"
 	else:
 		_show_crop(cell_state, crop_data)
+		if cell_state.has_infected_debris:
+			disease_label.text += "\nInfected debris"
 	show()
 
 

@@ -13,6 +13,8 @@ var soil: SoilState = null
 
 ## Tile-level fence. A fenced cell is empty grass with no soil.
 var has_fence: bool = false
+## Tile residue; independent of crop disease and preserved by crop resets.
+var has_infected_debris: bool = false
 
 var has_crop: bool = false
 ## Ignored when has_crop is false.
@@ -136,6 +138,7 @@ func copy() -> FieldCellState:
 	result.coordinates = coordinates
 	result.terrain_type = terrain_type
 	result.has_fence = has_fence
+	result.has_infected_debris = has_infected_debris
 	result.has_crop = has_crop
 	result.crop_type = crop_type
 	result.growth_elapsed_ticks = growth_elapsed_ticks

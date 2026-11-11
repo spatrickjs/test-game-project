@@ -1,12 +1,9 @@
-@draft @infected_debris
+@infected_debris
 Feature: Infected debris integrates with queued harvesting
 	As a player
 	I want infected debris to be resolved when harvesting completes
 	So that queued or cancelled actions do not change my field prematurely
 
-	# Proposed acceptance criteria, not implemented behavior.
-	# Eligibility and debris behavior require decisions recorded in
-	# infected_debris_chance.feature before gameplay implementation.
 
 	Background:
 		Given the field is initialized

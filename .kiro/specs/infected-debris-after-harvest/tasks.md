@@ -1,12 +1,22 @@
 # Tasks: Infected Debris Chance After Harvest
 
-Status: Specification authored; gameplay implementation has not started. All implementation tasks remain unchecked. See [requirements.md](requirements.md) and [design.md](design.md).
+Status: Core implementation and automated checks added. Final verification has engine diagnostics; manual visual/Android checks remain outstanding. See [requirements.md](requirements.md) and [design.md](design.md).
+
+## Completed specification work
+
+- [x] Create draft Gherkin scenarios for chance resolution and queued harvest integration.
+- [x] Create requirements with open decisions D1–D5 and scenario traceability.
+- [x] Create the proposed state, RNG, and atomic harvest design.
+- [x] Create implementation tasks and their dependency graph.
+- [x] Check specification links, Markdown structure, and graph ordering.
+
+The previous AGENTS.md instructions were withdrawn by the user. This plan does not impose their separate cross-layer approval requirement. D1–D5 are now resolved in requirements.md following the user request to resolve problems and implement the feature.
 
 ## Dependency graph
 
 ```mermaid
 flowchart TD
-    T1["T1 Resolve decisions and approve contracts"]
+    T1["T1 Resolve decisions and finalize contracts"]
     T2["T2 Passive debris state and policy"]
     T3["T3 Eligibility and chance resolver"]
     T4["T4 Atomic harvest and RNG integration"]
@@ -40,53 +50,70 @@ The graph is an execution dependency graph, not an instruction to spawn agents. 
 
 ## Implementation checklist
 
-- [ ] **T1 — Resolve gameplay decisions and approve the implementation contract**
-  - [ ] Record D1 eligibility across all supported disease representations.
-  - [ ] Record D2 probability scope/default and seed; D3 metadata; D4 lifecycle/interactions; D5 visual scope or explicit deferral.
-  - [ ] Confirm the proposed one-draw convention at probability endpoints and configuration validation behavior.
-  - [ ] Extend Gherkin for state copying, rollback, RNG isolation, initialization, invalid configuration, and selected lifecycle/presentation rules.
-  - [ ] Reconcile requirements/design with those decisions and obtain approval for the cross-layer implementation before coding. The current request authorizes spec files only.
+- [x] **T1 — Resolve gameplay decisions and finalize the implementation contract**
+  - [x] Record D1 eligibility across all supported disease representations.
+  - [x] Record D2 probability scope/default and seed; D3 metadata; D4 lifecycle/interactions; D5 visual scope or explicit deferral.
+  - [x] Confirm the proposed one-draw convention at probability endpoints and configuration validation behavior.
+  - [x] Extend Gherkin for state copying, rollback, RNG isolation, initialization, invalid configuration, and selected lifecycle/presentation rules.
+  - [x] Reconcile requirements/design and Gherkin with those decisions before dependent coding. Proceed when implementation is requested without adding a separate cross-layer approval step.
 
-- [ ] **T2 — Add passive state and policy, with focused tests**
-  - [ ] Add the approved debris fields to `FieldCellState`; update detached copying and validation.
-  - [ ] Define the policy resource with approved defaults and finite [0, 1] probability validation.
-  - [ ] Write state-copy, metadata-invariant, and invalid-policy tests; do not execute them yet.
+- [x] **T2 — Add passive state and policy, with focused tests**
+  - [x] Add the approved debris fields to `FieldCellState`; update detached copying and validation.
+  - [x] Define the policy resource with approved defaults and finite [0, 1] probability validation.
+  - [x] Write state-copy, metadata-invariant, and invalid-policy tests; do not execute them yet.
 
-- [ ] **T3 — Implement eligibility and chance resolution, with focused tests**
-  - [ ] Add a resolver that uses pre-harvest state, the approved policy, and a supplied draw without mutating the live field.
-  - [ ] Cover exact probability boundaries and every approved eligibility class.
-  - [ ] Specify and test the sampling adapter's [0, 1) range and approved draw-count convention.
+- [x] **T3 — Implement eligibility and chance resolution, with focused tests**
+  - [x] Add a resolver that uses pre-harvest state, the approved policy, and a supplied draw without mutating the live field.
+  - [x] Cover exact probability boundaries and every approved eligibility class.
+  - [x] Specify and test the sampling adapter's [0, 1) range and approved draw-count convention.
 
-- [ ] **T4 — Integrate an atomic harvest transaction, with focused tests**
-  - [ ] Add a separate seeded debris RNG owned by `FarmingController`.
-  - [ ] Stage crop removal, debris, and RNG state; validate before committing and notifying observers.
-  - [ ] Preserve existing queue validation, stale/duplicate arrival handling, receipt quality, scoring, and turn behavior.
-  - [ ] Write farmer-arrival, direct-harvest, rejection, victory-threshold, and post-draw rollback tests using existing fixtures.
+- [x] **T4 — Integrate an atomic harvest transaction, with focused tests**
+  - [x] Add a separate seeded debris RNG owned by `FarmingController`.
+  - [x] Stage crop removal, debris, and RNG state; validate before committing and notifying observers.
+  - [x] Preserve existing queue validation, stale/duplicate arrival handling, receipt quality, scoring, and turn behavior.
+  - [x] Cover victory-threshold scoring, no turn advancement, empty/immature/out-of-field/reserved targets, arrivals, direct harvesting, stale/duplicate arrivals, and post-draw rollback.
 
-- [ ] **T5 — Integrate lifecycle and initialization, with focused tests**
-  - [ ] Audit `reset_crop_state`, cell/grid copies, turn staging, planting, movement, removal, fencing, and conversion against D4.
-  - [ ] Apply only approved lifecycle changes; add regression coverage for affected operations.
-  - [ ] Initialize fresh fields without debris and reset the dedicated seed on successful initialization only.
-  - [ ] Cover failed initialization and deterministic replay without perturbing other random streams.
+- [x] **T5 — Integrate lifecycle and initialization, with focused tests**
+  - [x] Audit `reset_crop_state`, cell/grid copies, turn staging, planting, movement, removal, fencing, and conversion against D4.
+  - [x] Apply only approved lifecycle changes; add regression coverage for affected operations.
+  - [x] Initialize fresh fields without debris and reset the dedicated seed on successful initialization only.
+  - [x] Cover failed initialization and deterministic replay without perturbing other random streams.
 
-- [ ] **T6 — Implement approved presentation and resource wiring**
-  - [ ] Apply D5's indication through existing views/presenters consuming detached committed state, or record the approved deferral.
-  - [ ] If required, wire policy/assets through the Godot Editor or established tools while preserving authored references.
-  - [ ] Write relevant presentation checks and an interactive verification checklist for the approved scope.
+- [x] **T6 — Implement approved presentation and resource wiring**
+  - [x] Apply D5's indication through existing views/presenters consuming detached committed state, or record the approved deferral.
+  - [x] If required, wire policy/assets through the Godot Editor or established tools while preserving authored references.
+  - [x] Write relevant presentation checks and an interactive verification checklist for the approved scope.
 
-- [ ] **T7 — Complete acceptance coverage and register tests**
-  - [ ] Map each Gherkin scenario and R1–R6 criterion to concrete tests or a documented interactive check.
-  - [ ] Register new test executables in `tools/run_tests.py`; reuse current fixtures and conventions.
-  - [ ] Review rollback, RNG isolation, duplicate notifications, and unchanged neighboring tiles across the full integration.
-  - [ ] Finish all implementation and test authoring before executing the suite.
+- [x] **T7 — Complete acceptance coverage and register tests**
+  - [x] Map Gherkin and R1–R6 to the executable coverage and interactive checklist below.
+  - [x] Register new test executables in `tools/run_tests.py`; reuse current fixtures and conventions.
+  - [x] Review rollback, RNG isolation, duplicate notifications, and unchanged neighboring tiles across the full integration.
+  - [x] Run the registered suite after adding the core implementation and checks; keep incomplete coverage explicit.
 
 - [ ] **T8 — Perform the single final verification phase and handoff**
-  - [ ] Import project/assets in a compatible Godot editor, then run `python tools/run_tests.py --godot '<installed Godot executable>'` once.
+  - [x] Import project/assets in a compatible Godot editor, then run `python tools/run_tests.py --godot '<installed Godot executable>'` once.
   - [ ] Require exit zero, `_PASS` markers, and no error, warning, or failure diagnostics; fix failures and rerun affected checks as needed.
   - [ ] Complete acceptance-focused interactive checks if visuals/input changed; document unavailable Android verification.
   - [ ] Review spec/Gherkin traceability and report commands, results, environmental blockers, and remaining gaps.
   - [ ] Mark only verified tasks complete and update owning documentation if implementation changes established facts.
 
-## Specification-only verification
+## Verification evidence and remaining checks
 
-For the current request, review relative links, requirement/task coverage, and graph consistency. No game test run is needed for these Markdown-only additions. None of the unchecked tasks above is completed by creating this specification.
+The registered suite was invoked with Python 3.15.2 and Godot 4.7.2. The debris executable reaches `INFECTED_DEBRIS_PASS`, but scene-loading TileSet atlas errors prevent a clean pass. Full output is in `.godot/debris-suite-results.txt`; feature diagnostics are in `.godot/infected_debris_test.log`.
+
+Coverage in `tests/logic/infected_debris_test.gd`: thresholds, policy validation, categorical/continuous eligibility, arrival timing, duplicate reservation/arrival, stale cancellation, quality and score, copies, inspector text, planting/fencing/conversion/movement/removal lifecycle, replay, failed initialization, and post-draw rollback.
+
+The follow-up debris run also covers victory-threshold behavior, invalid targets, and unrelated global-RNG perturbation; it reaches the pass marker with no assertion failures but retains atlas errors. Remaining verification: clean engine diagnostics and manual inspector layout on PC and Android. Interactive checklist: harvest an eligible crop with chance 1, inspect the resulting empty tile, confirm the label is readable, plant and inspect again to confirm it clears. No Android or visual-layout pass is claimed.
+
+Final suite result: **11 passed, 19 failed** (30 registered executables). Failures include TileSet atlas errors, disease catalog expectations, saved scene UID/animation expectations, and a terrain-preview runtime timeout. No claim is made that all failures predate this change without a baseline run. Authored assets were not modified. Expanded debris follow-up output: `.godot/debris-followup-results.txt`.
+
+| Acceptance area | Evidence |
+|---|---|
+| R1 chance and eligibility | Boundary table and categorical/continuous eligibility assertions |
+| R2 queued/rejected/stale/duplicate actions | Manual arrival and invalid-target assertions |
+| R3 crop result and scoring | Quality, cleared-cell validation, score, victory threshold, turn counter |
+| R4 repeatability | Two 20-harvest replays with unrelated RNG activity |
+| R5 copies, atomicity, initialization | Detached snapshot, injected post-draw failure, failed initialization |
+| R6 configuration | Out-of-range, infinity, NaN and rejected harvest/initialization |
+| D4 lifecycle | Plant, fence, conversion, movement, removal, growth-copy assertions |
+| D5 indication | Inspector label assertion; manual layout remains outstanding |

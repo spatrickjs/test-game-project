@@ -1,17 +1,9 @@
-@draft @infected_debris
+@infected_debris
 Feature: Infected Debris chance after harvest
 	As a player
 	I want harvesting to have a chance of leaving infected debris
 	So that harvest can leave a visible consequence of crop disease
 
-	# Proposed acceptance criteria, not implemented behavior.
-	# Pending decisions: which harvested crops qualify, the default chance,
-	# and whether the chance varies by crop or disease.
-	# "Eligible" deliberately leaves infection eligibility undefined until agreed.
-	# Probabilities below are fictional test inputs, not agricultural predictions.
-	# Proposed rule: a controlled draw in [0, 1) succeeds when draw < chance.
-	# Debris appearance, persistence, removal, planting effects, and transmission
-	# are outside these scenarios and need separate requirements.
 
 	Background:
 		Given the field is initialized
@@ -49,3 +41,44 @@ Feature: Infected Debris chance after harvest
 		And both fields use the same infected debris chance
 		When the same sequence of eligible harvests completes in both fields
 		Then both fields have the same infected debris outcomes at each harvested tile
+
+	Scenario: Infected debris is shown in the inspector
+		Given an empty tile with infected debris
+		When the player inspects the tile
+		Then the inspector displays "Infected debris"
+
+	Scenario Outline: Tile operations apply the debris lifecycle
+		Given a tile with infected debris
+		When <operation> completes successfully on the tile
+		Then the tile <outcome>
+
+		Examples:
+			| operation          | outcome                |
+			| planting           | has no infected debris |
+			| fencing            | has no infected debris |
+			| terrain conversion | has no infected debris |
+			| crop removal       | has infected debris    |
+			| turn advancement   | has infected debris    |
+
+	Scenario: Moving a crop preserves residue at both locations
+		Given a crop can be moved between two tiles
+		When the crop is moved
+		Then each tile retains its original infected debris flag
+
+	Scenario: Candidate failure preserves the harvest and random sequence
+		Given an eligible mature crop
+		And candidate validation will fail after the debris draw
+		When harvesting is attempted
+		Then harvesting fails without changing the field or debris random state
+		And no successful harvest is recorded
+
+	Scenario: Invalid policy cannot replace a session
+		Given an existing field
+		And the configured debris probability is not finite or is outside zero to one
+		When a new field is initialized
+		Then initialization fails without changing the field or debris random state
+
+	Scenario: Detached snapshots preserve debris
+		Given a tile with infected debris
+		When a detached field snapshot is changed to clear that debris
+		Then the authoritative tile still has infected debris

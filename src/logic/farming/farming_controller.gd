@@ -13,6 +13,7 @@ signal queued_harvest_completed(result: HarvestResult)
 @export var terrain_database: TerrainDatabase
 @export var initial_soil: SoilState
 @export var initial_abiotic: AbioticState
+@export var infected_debris_policy: InfectedDebrisPolicy = InfectedDebrisPolicy.new()
 @export var field_size: Vector2i = Vector2i(9, 6)
 @export var terrain_bands: Array[SimulationEnums.TerrainType] = [
 	SimulationEnums.TerrainType.DRY_SOIL,
@@ -26,6 +27,7 @@ var last_turn_introduction: DiseaseActivationRequest
 var _actions: Array[FieldAction] = []
 var _next_action_id: int = 1
 var _revisions: Dictionary[Vector2i, int] = {}
+var _debris_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
 func is_initialized() -> bool:
@@ -34,6 +36,10 @@ func is_initialized() -> bool:
 
 func initialize_field() -> bool:
 	last_error = ""
+	if infected_debris_policy == null:
+		return _fail("Assign infected_debris_policy.")
+	if not infected_debris_policy.validate().is_empty():
+		return _fail("\n".join(infected_debris_policy.validate()))
 	if crop_database == null or terrain_database == null:
 		return _fail("Assign both crop_database and terrain_database.")
 	if initial_soil == null or initial_abiotic == null:
@@ -68,6 +74,7 @@ func initialize_field() -> bool:
 		return _fail("\n".join(errors))
 	_grid = candidate
 	_actions.clear()
+	_debris_rng.seed = infected_debris_policy.random_seed
 	last_turn_introduction = null
 	_revisions.clear()
 	action_queue_changed.emit()
@@ -85,6 +92,7 @@ func try_plant(coordinates: Vector2i, crop_type: SimulationEnums.CropType) -> bo
 	cell.has_crop = true
 	cell.crop_type = crop_type
 	cell.reset_crop_state()
+	cell.has_infected_debris = false
 	last_error = ""
 	_emit_cell_changed(coordinates)
 	return true
@@ -169,6 +177,8 @@ func transfer_crop(source: Vector2i, destination: Vector2i) -> bool:
 	moved.coordinates = destination
 	moved.terrain_type = target.terrain_type
 	moved.soil = target.soil
+	# Residue belongs to the location, not the moved crop.
+	moved.has_infected_debris = target.has_infected_debris
 	if not candidate.set_cell(moved):
 		return _fail("The source crop state is invalid; transfer was cancelled.")
 	var cleared: FieldCellState = candidate.get_cell(source)
@@ -457,6 +467,7 @@ func cancel_actions() -> void:
 func _convert_terrain(action: FieldAction) -> bool:
 	var candidate: FieldGridState = _grid.copy()
 	var cell: FieldCellState = candidate.get_cell(action.target)
+	cell.has_infected_debris = false
 	if action.kind == SimulationEnums.FieldActionKind.DIG_GRASS:
 		cell.terrain_type = SimulationEnums.TerrainType.DRY_SOIL
 		cell.soil = initial_soil.copy()
@@ -481,6 +492,7 @@ func _apply_fence(action: FieldAction) -> bool:
 	cell.terrain_type = SimulationEnums.TerrainType.GRASS
 	cell.soil = null
 	cell.has_fence = true
+	cell.has_infected_debris = false
 	var errors: PackedStringArray = FieldGridQueries.validate_terrain_assignments(candidate, crop_database, terrain_database)
 	if not errors.is_empty():
 		return _fail("\n".join(errors))
@@ -508,6 +520,10 @@ func _remove_fence(action: FieldAction) -> bool:
 func harvest_crop(coordinates: Vector2i) -> HarvestResult:
 	var result: HarvestResult = HarvestResult.new()
 	result.coordinates = coordinates
+	if infected_debris_policy == null or not infected_debris_policy.validate().is_empty():
+		result.reason = "Configure a valid infected debris policy."
+		last_error = result.reason
+		return result
 	if _grid == null or crop_database == null or terrain_database == null:
 		result.reason = "Initialize the field before harvesting."
 	else:
@@ -527,14 +543,29 @@ func harvest_crop(coordinates: Vector2i) -> HarvestResult:
 					result.quality_multiplier = 1.0 - cell.yield_quality_loss
 					var candidate: FieldGridState = _grid.copy()
 					var cleared: FieldCellState = candidate.get_cell(coordinates)
+					var staged_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+					staged_rng.state = _debris_rng.state
+					if InfectedDebrisResolver.is_eligible(cell):
+						# Integer conversion guarantees [0, 1), including the maximum draw.
+						var draw: float = float(staged_rng.randi()) / 4294967296.0
+						cleared.has_infected_debris = cleared.has_infected_debris or InfectedDebrisResolver.resolve(infected_debris_policy.chance, draw)
 					cleared.has_crop = false
 					cleared.reset_crop_state()
-					_grid = candidate
-					result.success = true
+					errors = _validate_harvest_candidate(candidate)
+					if errors.is_empty():
+						_grid = candidate
+						_debris_rng.state = staged_rng.state
+						result.success = true
+					else:
+						result.reason = "\n".join(errors)
 	last_error = result.reason
 	if result.success:
 		_emit_cell_changed(coordinates)
 	return result
+
+
+func _validate_harvest_candidate(candidate: FieldGridState) -> PackedStringArray:
+	return FieldGridQueries.validate_terrain_assignments(candidate, crop_database, terrain_database)
 
 
 ## Atomic local soil edit. Vector components are moisture, nitrogen, potassium.

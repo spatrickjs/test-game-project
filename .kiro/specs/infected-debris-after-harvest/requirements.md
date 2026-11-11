@@ -1,6 +1,6 @@
 # Requirements: Infected Debris Chance After Harvest
 
-Status: Draft specification. Authoring these documents does not approve unresolved gameplay decisions or implement the feature.
+Status: Decisions resolved and implementation added; verification limitations are recorded in tasks.md.
 
 ## Purpose and scope
 
@@ -11,27 +11,29 @@ Acceptance sources:
 - [Chance scenarios](../../../features/infected_debris_chance.feature)
 - [Harvest integration scenarios](../../../features/infected_debris_harvest_integration.feature)
 
-These sources remain tagged `@draft`. Requirements R1–R4 capture their proposed behavior; R5–R6 add architectural safeguards and configuration contracts for review.
+These sources define the resolved feature. Requirements R1–R4 capture their proposed behavior; R5–R6 add architectural safeguards and configuration contracts for review.
 
 ## Terms
 
-- **Eligible crop:** A harvested crop satisfying the rule to be decided in D1. This is not yet synonymous with `has_active_disease`, categorical I, or a positive infected fraction.
+- **Eligible crop:** A harvested crop satisfying the resolved D1 rule below.
 - **Debris:** Separate tile state created by this feature, not an occupied crop or an active crop-disease compartment.
 - **Chance p:** A configured finite probability in [0, 1].
 - **Draw u:** A controlled random value in [0, 1).
 - **Successful harvest:** A committed crop removal producing a successful `HarvestResult`.
 
-## Open decisions
+## Resolved decisions
 
-| ID | Decision needed before implementation | Why it matters |
-|---|---|---|
-| D1 | Define eligibility across categorical and continuous disease models, including exposed, recovered, and dead states. | Determines which pre-harvest cells receive a chance evaluation. |
-| D2 | Choose the default probability and seed, and whether probability varies by crop or disease. | Determines policy schema and authored configuration; 0.25 in Gherkin is only a test input. |
-| D3 | Decide whether debris retains disease identity or other metadata. | Determines passive state and validation requirements. |
-| D4 | Define debris lifetime and interactions with turns, planting, moving crops, shovel, fencing, terrain conversion, and subsequent harvests on debris-bearing tiles. | Prevents accidental clearing, copying, or blocking through existing cell operations. Current scenarios start without debris. |
-| D5 | Decide the minimum player-visible indication, approved art if any, and inspector/status wording. | The user story promises visibility, but existing scenarios specify no presentation contract. |
+D1: A crop qualifies when it has active disease and either categorical state I or a positive infected fraction. Exposed-only, recovered-only, and dead-only crops do not qualify without current infection. Harvest maturity checks still apply.
 
-Record decisions here, then update design, tasks, and Gherkin together. Transmission effects, cleanup tools, and planting restrictions are not implicitly authorized by the word “infected.” Any selected gameplay extension needs explicit acceptance criteria.
+D2: One probability applies to every crop/disease: default 0.25, configurable through `InfectedDebrisPolicy`; independent seed 2026. Every eligible harvest consumes one draw, including p = 0 and p = 1. Invalid configuration rejects initialization/harvesting without mutation.
+
+D3: Debris is a boolean tile flag; no disease identity or transmission effects.
+
+D4: Debris persists across turns, crop removal, and harvesting. Planting, fencing, and terrain conversion clear it. Moving crops leaves both tiles' debris flags at their original locations. Existing debris is retained even if a later harvest's draw fails. Fresh field initialization clears all debris. The shovel retains its existing targeting rules; no new debris-cleanup action is added.
+
+D5: The existing inspector displays “Infected debris” on affected tiles, including when a crop occupies one. No new sprite or scene wiring is required.
+
+These defaults were selected after the user requested resolution of the open problems and implementation. They are fictional gameplay tuning.
 
 ## Requirements
 
@@ -70,7 +72,7 @@ Record decisions here, then update design, tasks, and Gherkin together. Transmis
 3. Crop removal and debris outcome commit together after candidate validation. A failed operation preserves field state, debris RNG state, counters, and clock, and emits no successful harvest notification.
 4. Notify observers only after committed state is available.
 5. A newly initialized field starts without debris; successful session initialization resets the debris stream to the configured seed. Failed initialization preserves the previous session state.
-6. Other cell operations must follow the D4 lifecycle contract once it is specified; do not infer that crop reset also means debris removal.
+6. Other cell operations must follow the D4 lifecycle contract; do not infer that crop reset also means debris removal.
 
 ### R6 — Configuration validation
 
@@ -80,7 +82,7 @@ Record decisions here, then update design, tasks, and Gherkin together. Transmis
 
 ## Non-goals
 
-No disease-spread model changes, scientifically calibrated parameters, inventory/currency rewards, new action kinds, autoloads, save-game restoration, or automatic turn advancement. Visual implementation and lifecycle interactions require D4/D5 acceptance criteria before inclusion.
+No disease-spread model changes, scientifically calibrated parameters, inventory/currency rewards, new action kinds, autoloads, save-game restoration, or automatic turn advancement. Visual implementation and lifecycle interactions follow D4/D5.
 
 ## Acceptance traceability
 
@@ -96,4 +98,4 @@ No disease-spread model changes, scientifically calibrated parameters, inventory
 | A stale queued harvest does not resolve debris | R2, R4, R5 |
 | Duplicate arrival does not repeat debris resolution | R2, R4 |
 
-Add acceptance scenarios for R5–R6 and resolved D1–D5 in task T1; do not represent those additions as already present in the feature files.
+Additional lifecycle and integrity scenarios are in infected_debris_chance.feature; executable coverage is in tests/logic/infected_debris_test.gd.
