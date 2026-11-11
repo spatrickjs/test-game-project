@@ -13,7 +13,7 @@ class Result:
 	var hydration: float = 1.0
 	var growth_credit: float = 0.0
 
-static func evaluate(cell: FieldCellState, crop: CropData) -> Result:
+static func evaluate(cell: FieldCellState, crop: CropData, vitality_loss_mult: float = 1.0) -> Result:
 	var result: Result = Result.new()
 	if cell == null or crop == null:
 		result.errors.append("Cell and crop definition are required.")
@@ -38,7 +38,7 @@ static func evaluate(cell: FieldCellState, crop: CropData) -> Result:
 		var water_stress: float = _interval_stress(cell.soil.moisture, profile.moisture_minimum, profile.moisture_maximum, profile.moisture_falloff)
 		result.hydration = 1.0 - water_stress
 		result.stress = maxf(maxf(n_stress, k_stress), maxf(ph_stress, water_stress))
-		result.vitality = maxf(0.0, cell.vitality - result.stress * profile.vitality_loss_per_turn)
+		result.vitality = maxf(0.0, cell.vitality - result.stress * profile.vitality_loss_per_turn * vitality_loss_mult)
 		result.yield_quality_loss = minf(1.0, cell.yield_quality_loss + result.stress * profile.quality_loss_per_turn)
 	# Use pre-turn vitality. Mature crops still accumulate neglect penalties.
 	if cell.growth_elapsed_ticks < crop.growth_ticks:
