@@ -1,6 +1,15 @@
 [gd_resource type="TileSet" format=3 uid="uid://yyjepvrala7y"]
 
 [ext_resource type="Texture2D" uid="uid://qaokkgso2k0a" path="res://assets/art/tilesets/fence/fence.png" id="1_p3mde"]
+[ext_resource type="Texture2D" uid="uid://bh72riytidxkf" path="res://assets/art/tilesets/foliage/Isometric Assets 6 - Copy.png" id="1_whdnl"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_h8wss"]
+texture = ExtResource("1_whdnl")
+texture_region_size = Vector2i(256, 256)
+5:4/0 = 0
+5:4/0/texture_origin = Vector2i(7, 58)
+4:4/0 = 0
+4:4/0/texture_origin = Vector2i(7, 58)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_whdnl"]
 texture = ExtResource("1_p3mde")
@@ -11,4 +20,5 @@ texture_region_size = Vector2i(213, 122)
 tile_shape = 1
 tile_layout = 4
 tile_size = Vector2i(213, 122)
-sources/0 = SubResource("TileSetAtlasSource_whdnl")
+sources/2 = SubResource("TileSetAtlasSource_whdnl")
+sources/0 = SubResource("TileSetAtlasSource_h8wss")
