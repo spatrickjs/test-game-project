@@ -30,6 +30,7 @@ script = ExtResource("3_4ox8a")
 crop_type = 1
 display_name = "Rice"
 growth_ticks = 3
+base_score = 100
 growth_profile = SubResource("Resource_n77a8")
 growth_stage_source_ids = Array[int]([0, 1, 2, 3])
 disease_visuals = Array[ExtResource("2_dkkuf")]([SubResource("Resource_4ox8a"), SubResource("Resource_dkkuf"), SubResource("Resource_n5lmq")])

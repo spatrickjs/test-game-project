@@ -18,6 +18,14 @@ signal cells_selected(coordinates: Array[Vector2i], action_kind: int)
 @export var crop_overlay: CropDebugOverlay
 @export var crop_layer: TileMapLayer
 @export var crop_shadows: CropShadowOverlay
+## Owns its own TileSet with a single fence atlas source. Optional; fences stay absent when null.
+@export var fence_layer: TileMapLayer
+## Single fence atlas tile reference shared by the map layer and HUD button icon.
+@export var fence_visual: FenceVisual
+## Path to the standalone fence TileSet resource; loaded at runtime if the scene's
+## inline tile set lacks a valid atlas source (Godot does not serialize TileSetAtlasSource
+## children inside inline scene sub-resources).
+const FENCE_TILESET_PATH: String = "res://src/presentation/world/fence_tile_set.tres"
 @export var camera: Camera2D
 @export var farmer_agent: FarmerAgent
 @export var selection_overlay: FieldSelectionOverlay
@@ -148,6 +156,7 @@ func render_grid(grid_state: FieldGridState) -> bool:
 			terrain_layer.set_cell(cell.coordinates, visual.source_id, visual.atlas_coords, visual.alternative_tile)
 	_render_cosmetic_border(grid_state)
 	_render_grass_overlay(grid_state)
+	render_fences(grid_state)
 	_snapshot = grid_state.copy()
 	last_error = ""
 	set_interaction_enabled(true)
@@ -172,13 +181,14 @@ func _render_grass_overlay(grid_state: FieldGridState) -> void:
 			var cell: FieldCellState = grid_state.get_cell(Vector2i(x, y))
 			# Consume one value per coordinate so digging never relocates other tufts.
 			var spawn: bool = decoration_rng.randf() < tuft_spawn_chance
-			if cell.terrain_type == SimulationEnums.TerrainType.GRASS and spawn:
+			if cell.terrain_type == SimulationEnums.TerrainType.GRASS and not cell.has_fence and spawn:
 				grass_overlay_layer.set_cell(cell.coordinates, animated_grass_source_id, grass_tuft_atlas_coords)
 
 
 func refresh_crops(snapshot: FieldGridState, crops: CropDatabase) -> void:
 	_snapshot = snapshot
 	render_crops(snapshot, crops)
+	render_fences(snapshot)
 	if crop_overlay != null:
 		crop_overlay.show_snapshot(snapshot, crops)
 
@@ -257,7 +267,7 @@ func validate_crop_visuals(crops: CropDatabase) -> PackedStringArray:
 
 ## Validate before drawing, erase vacant cells, then refresh occupied tiles.
 func render_crops(snapshot: FieldGridState, crops: CropDatabase) -> bool:
-	_align_crop_grid()
+	_align_layer(crop_layer)
 	if crop_shadows != null:
 		crop_shadows.show_snapshot(snapshot)
 	if crop_layer == null:
@@ -297,23 +307,114 @@ func render_crops(snapshot: FieldGridState, crops: CropDatabase) -> bool:
 	return true
 
 
-## Crop artwork keeps its own atlas and root origins, but uses terrain geometry.
-## Duplicate before changing geometry so shared authoring resources stay intact.
-func _align_crop_grid() -> void:
-	if crop_layer == null or crop_layer == terrain_layer or crop_layer.tile_set == null:
+## Aligns a TileMapLayer's geometry to the terrain layer so art keeps its own atlas
+## and root origins. Duplicate before changing geometry so shared authoring resources stay intact.
+func _align_layer(layer: TileMapLayer) -> void:
+	if layer == null or layer == terrain_layer or layer.tile_set == null:
 		return
 	if terrain_layer == null or terrain_layer.tile_set == null:
 		return
 	var ground: TileSet = terrain_layer.tile_set
-	var crops: TileSet = crop_layer.tile_set
-	if crops.tile_size != ground.tile_size or crops.tile_shape != ground.tile_shape or crops.tile_layout != ground.tile_layout or crops.tile_offset_axis != ground.tile_offset_axis:
-		crops = crops.duplicate() as TileSet
-		crops.tile_shape = ground.tile_shape
-		crops.tile_layout = ground.tile_layout
-		crops.tile_offset_axis = ground.tile_offset_axis
-		crops.tile_size = ground.tile_size
-		crop_layer.tile_set = crops
-	crop_layer.global_transform = terrain_layer.global_transform
+	var tiles: TileSet = layer.tile_set
+	if tiles.tile_size != ground.tile_size or tiles.tile_shape != ground.tile_shape or tiles.tile_layout != ground.tile_layout or tiles.tile_offset_axis != ground.tile_offset_axis:
+		tiles = tiles.duplicate() as TileSet
+		tiles.tile_shape = ground.tile_shape
+		tiles.tile_layout = ground.tile_layout
+		tiles.tile_offset_axis = ground.tile_offset_axis
+		tiles.tile_size = ground.tile_size
+		layer.tile_set = tiles
+	layer.global_transform = terrain_layer.global_transform
+
+
+## Optional fence overlay. Draws the connection-mapped tile on every fenced cell and erases the rest.
+## Uses FieldGridQueries.fence_connections to pick the correct atlas tile per mask.
+## Falls back to the legacy single tile when tile_mapping is empty.
+## Null-safe; never clears a layer that belongs to terrain, crops, grass or background.
+func render_fences(snapshot: FieldGridState) -> void:
+	if fence_layer == null or fence_visual == null or snapshot == null:
+		return
+	if fence_layer in [terrain_layer, crop_layer, grass_overlay_layer, background_fill_layer, background_terrain_layer, background_decorations]:
+		return
+	_ensure_fence_tile_set()
+	_align_layer(fence_layer)
+	for coords: Vector2i in fence_layer.get_used_cells():
+		var cell: FieldCellState = snapshot.get_cell(coords)
+		if cell == null or not cell.has_fence:
+			fence_layer.erase_cell(coords)
+	for y: int in range(snapshot.height):
+		for x: int in range(snapshot.width):
+			var cell: FieldCellState = snapshot.get_cell(Vector2i(x, y))
+			if cell == null or not cell.has_fence:
+				continue
+			if fence_visual.tile_mapping.is_empty():
+				# Legacy fallback: single tile for all masks.
+				fence_layer.set_cell(cell.coordinates, fence_visual.source_id, fence_visual.atlas_coords, fence_visual.alternative_tile)
+			else:
+				var mask: int = FieldGridQueries.fence_connections(snapshot, cell.coordinates)
+				var entry: Array = fence_visual.get_tile_for_mask(mask)
+				if entry.size() >= 3:
+					fence_layer.set_cell(cell.coordinates, int(entry[0]), entry[1] as Vector2i, int(entry[2]))
+
+
+## Loads the fence TileSet from its standalone .tres when the scene's inline tile set
+## lacks a valid atlas source. Checks for the autotile source (id=2) when tile_mapping
+## is populated; falls back to the legacy source check otherwise.
+func _ensure_fence_tile_set() -> void:
+	if fence_layer == null or fence_visual == null:
+		return
+	# Determine which source and tile to verify.
+	var check_source_id: int = fence_visual.source_id
+	var check_coords: Vector2i = fence_visual.atlas_coords
+	if not fence_visual.tile_mapping.is_empty():
+		var post_entry: Array = fence_visual.get_tile_for_mask(0)
+		if post_entry.size() >= 3:
+			check_source_id = int(post_entry[0])
+			check_coords = post_entry[1] as Vector2i
+	var ts: TileSet = fence_layer.tile_set
+	if ts != null and ts.has_source(check_source_id):
+		var src: TileSetAtlasSource = ts.get_source(check_source_id) as TileSetAtlasSource
+		if src != null and src.has_tile(check_coords):
+			return
+	var loaded: TileSet = load(FENCE_TILESET_PATH) as TileSet
+	if loaded != null and loaded.has_source(check_source_id):
+		var src: TileSetAtlasSource = loaded.get_source(check_source_id) as TileSetAtlasSource
+		if src != null and src.has_tile(check_coords):
+			fence_layer.tile_set = loaded
+
+
+## Fences stay optional; validation errors are reported separately from the terrain config.
+func validate_fence_visual() -> PackedStringArray:
+	if fence_layer == null or fence_visual == null:
+		return PackedStringArray()
+	# Determine which source to verify for TileSet loading.
+	var check_source_id: int = fence_visual.source_id
+	if not fence_visual.tile_mapping.is_empty():
+		var post_entry: Array = fence_visual.get_tile_for_mask(0)
+		if post_entry.size() >= 3:
+			check_source_id = int(post_entry[0])
+	var ts: TileSet = fence_layer.tile_set
+	if ts == null or not ts.has_source(check_source_id):
+		ts = load(FENCE_TILESET_PATH) as TileSet
+	if ts == null:
+		return PackedStringArray(["FenceVisual: fence TileSet not available."])
+	return fence_visual.validate(ts)
+
+
+## The HUD button icon comes from the same resource as the map tile, or null when unconfigured.
+func get_fence_icon() -> Texture2D:
+	if fence_layer == null or fence_visual == null:
+		return null
+	var check_source_id: int = fence_visual.source_id
+	if not fence_visual.tile_mapping.is_empty():
+		var post_entry: Array = fence_visual.get_tile_for_mask(0)
+		if post_entry.size() >= 3:
+			check_source_id = int(post_entry[0])
+	var ts: TileSet = fence_layer.tile_set
+	if ts == null or not ts.has_source(check_source_id):
+		ts = load(FENCE_TILESET_PATH) as TileSet
+	if ts == null:
+		return null
+	return fence_visual.make_icon(ts)
 
 
 func set_interaction_enabled(enabled: bool) -> void:
@@ -387,7 +488,7 @@ func frame_field() -> void:
 func _render_cosmetic_border(grid_state: FieldGridState) -> void:
 	if background_fill_layer == null:
 		return
-	if background_fill_layer in [terrain_layer, crop_layer, grass_overlay_layer, background_terrain_layer, background_decorations]:
+	if background_fill_layer in [terrain_layer, crop_layer, grass_overlay_layer, fence_layer, background_terrain_layer, background_decorations]:
 		return # A misassigned generated layer must never erase gameplay or artwork.
 	background_fill_layer.clear()
 	if not automatic_background_enabled:

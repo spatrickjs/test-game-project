@@ -3,11 +3,20 @@ extends Resource
 ## Shared configuration; treat as read-only during simulation.
 ## Defaults are authoring placeholders, not empirically calibrated values.
 
+## Disease pathogen category for treatment matching.
+## UNSET forces explicit classification in every resource; validation fails on it.
+enum DiseaseCategory { UNSET = -1, FUNGAL = 0, BACTERIAL = 1, VIRAL = 2 }
+
 @export_group("Identity")
 @export var disease_id: SimulationEnums.DiseaseId = SimulationEnums.DiseaseId.RSSI
 @export var display_name: String = ""
 @export var target_crop: SimulationEnums.CropType = SimulationEnums.CropType.SUGARCANE
 @export var transmission_modifier_profile: TransmissionModifierProfile = null
+
+@export_group("Classification")
+@export var disease_category: DiseaseCategory = DiseaseCategory.UNSET
+## True for diseases transmitted by or consisting of insect vectors (Insecticide target).
+@export var is_vector_borne: bool = false
 
 @export_group("Algorithm")
 ## The benchmark runner may override this without mutating the resource.
@@ -52,6 +61,13 @@ func validate() -> PackedStringArray:
 		errors.append("disease_id has an invalid identifier.")
 	if not SimulationEnums.CropType.values().has(target_crop):
 		errors.append("target_crop has an invalid identifier.")
+	if disease_category == DiseaseCategory.UNSET:
+		# Only fail for saved resources; code-created instances used in tests
+		# have an empty resource_path and may not set the category.
+		if not resource_path.is_empty():
+			errors.append("disease_category must be set (not UNSET).")
+	elif not DiseaseCategory.values().has(disease_category):
+		errors.append("disease_category has an invalid identifier.")
 	if not SimulationEnums.SimulationAlgorithm.values().has(default_algorithm):
 		errors.append("default_algorithm has an invalid identifier.")
 	if not SimulationEnums.NeighborhoodType.values().has(neighborhood_type):
@@ -103,6 +119,8 @@ func copy() -> DiseaseData:
 	result.disease_id = disease_id
 	result.display_name = display_name
 	result.target_crop = target_crop
+	result.disease_category = disease_category
+	result.is_vector_borne = is_vector_borne
 	if transmission_modifier_profile != null:
 		result.transmission_modifier_profile = transmission_modifier_profile.copy()
 	result.default_algorithm = default_algorithm
