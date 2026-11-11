@@ -60,6 +60,9 @@ var _end_overlay_button: Button
 var _score_label: Label
 
 
+var _contamination_label: Label
+
+
 func _ready() -> void:
 	var errors: PackedStringArray = _validate_references()
 	if not errors.is_empty():
@@ -88,6 +91,7 @@ func _ready() -> void:
 	if treatment_controller != null:
 		farming_controller.treatment_controller = treatment_controller
 	_create_overlays()
+	_create_contamination_bar()
 	_connect_game_signals()
 	next_turn_button.text = "End Turn"
 	# All listeners are connected before Logic emits its initialization signal.
@@ -193,8 +197,34 @@ func _validate_references() -> PackedStringArray:
 	return errors
 
 
+func _create_contamination_bar() -> void:
+	var controls: Node = turn_label.get_parent()
+	var bar: PanelContainer = PanelContainer.new()
+	bar.name = "FarmerContaminationBar"
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	controls.add_child(bar)
+	controls.move_child(bar, turn_label.get_index() + 1)
+	_contamination_label = Label.new()
+	_contamination_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_contamination_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_child(_contamination_label)
+	_update_contamination_bar()
+
+
+func _update_contamination_bar() -> void:
+	if _contamination_label == null:
+		return
+	var contaminated: bool = farming_controller.is_farmer_contaminated()
+	_contamination_label.text = "Farmer: Contaminated" if contaminated else "Farmer: Clean"
+	if contaminated:
+		_contamination_label.add_theme_color_override("font_color", Color("#ffcf78"))
+	else:
+		_contamination_label.remove_theme_color_override("font_color")
+
+
 func _on_field_initialized() -> void:
 	turn_controller.reset_clock()
+	_update_contamination_bar()
 	var snapshot: FieldGridState = farming_controller.get_grid_snapshot()
 	if not world_view.render_field(snapshot, farming_controller.crop_database):
 		_show_failure(world_view.last_error)
@@ -384,6 +414,7 @@ func _on_next_turn_pressed() -> void:
 
 
 func _on_turn_completed(turn_index: int) -> void:
+	_update_contamination_bar()
 	_transfer_source = Vector2i(-1, -1)
 	world_view.refresh_crops(farming_controller.get_grid_snapshot(), farming_controller.crop_database)
 	_refresh_tool_targets()
@@ -672,6 +703,7 @@ func _on_farmer_arrived(action_id: int, coordinates: Vector2i) -> void:
 
 
 func _on_action_finished(action_id: int, success: bool, reason: String) -> void:
+	_update_contamination_bar()
 	if not success and reason.is_empty():
 		status_label.text = "Action failed."
 	elif not success:

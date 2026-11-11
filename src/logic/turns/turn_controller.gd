@@ -21,6 +21,10 @@ var _advancing: bool = false
 
 func reset_clock() -> void:
 	if not _advancing:
+		if farming_controller != null:
+			farming_controller.vector_activation = disease_activation_controller
+			farming_controller.vector_diseases = disease_database
+			farming_controller.vector_simulation = simulation_controller
 		turn_index = 0
 		last_error = ""
 		if disease_activation_controller != null:

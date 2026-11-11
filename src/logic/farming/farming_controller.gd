@@ -30,6 +30,19 @@ var _revisions: Dictionary[Vector2i, int] = {}
 var treatment_controller: TreatmentController = null
 ## Updated by advance_simulated_turn; used by treatment commit for turn-based logic.
 var _current_turn_index: int = 0
+@export_range(0.0, 1.0) var farmer_transmission_chance: float = 0.25
+@export_range(1, 100) var farmer_contamination_duration: int = 3
+var vector_activation: DiseaseActivationController
+var vector_diseases: DiseaseDatabase
+var vector_simulation: SimulationController
+var _carried_disease: int = -1
+var _contamination_turns: int = 0
+var _staging_action: bool = false
+var _staged_changes: Array[Vector2i] = []
+
+
+func is_farmer_contaminated() -> bool:
+	return _contamination_turns > 0
 
 
 func is_initialized() -> bool:
@@ -38,6 +51,8 @@ func is_initialized() -> bool:
 
 func initialize_field() -> bool:
 	last_error = ""
+	if not is_finite(farmer_transmission_chance) or farmer_transmission_chance < 0.0 or farmer_transmission_chance > 1.0 or farmer_contamination_duration < 1:
+		return _fail("Configure a probability in [0, 1] and a positive contamination duration.")
 	if crop_database == null or terrain_database == null:
 		return _fail("Assign both crop_database and terrain_database.")
 	if initial_soil == null or initial_abiotic == null:
@@ -72,6 +87,8 @@ func initialize_field() -> bool:
 		return _fail("\n".join(errors))
 	_grid = candidate
 	_actions.clear()
+	_carried_disease = -1
+	_contamination_turns = 0
 	last_turn_introduction = null
 	_revisions.clear()
 	action_queue_changed.emit()
@@ -247,6 +264,9 @@ func advance_simulated_turn(simulation: SimulationController, diseases: DiseaseD
 	_grid = candidate
 	if treatment_controller != null:
 		treatment_controller.advance_turn(turn_index + 1)
+	_contamination_turns = maxi(0, _contamination_turns - 1)
+	if _contamination_turns == 0:
+		_carried_disease = -1
 	if proposal != null:
 		activation.commit_state(proposal.next_state)
 		last_turn_introduction = proposal.request
@@ -329,6 +349,10 @@ func _fail(message: String) -> bool:
 
 
 func _emit_cell_changed(coordinates: Vector2i) -> void:
+	if _staging_action:
+		if not _staged_changes.has(coordinates):
+			_staged_changes.append(coordinates)
+		return
 	_revisions[coordinates] = _revisions.get(coordinates, 0) + 1
 	cell_changed.emit(coordinates)
 
@@ -458,6 +482,18 @@ func arrive_at_action(action_id: int, stop: Vector2i) -> bool:
 		return true
 	var success: bool = false
 	var harvest: HarvestResult = null
+	var original_grid: FieldGridState = _grid
+	var contact: FieldCellState = _grid.get_cell(action.target)
+	var original_treatment: TreatmentController = treatment_controller
+	if original_treatment != null:
+		treatment_controller = TreatmentController.new()
+		treatment_controller.treatment_config = original_treatment.treatment_config
+		treatment_controller.disease_database = original_treatment.disease_database
+		treatment_controller.treatment_state = original_treatment.treatment_state.copy()
+		treatment_controller.resource_budget = original_treatment.resource_budget
+	_grid = _grid.copy()
+	_staging_action = true
+	_staged_changes.clear()
 	match action.kind:
 		SimulationEnums.FieldActionKind.REMOVE_CROP:
 			success = remove_crop(action.target)
@@ -481,7 +517,26 @@ func arrive_at_action(action_id: int, stop: Vector2i) -> bool:
 			success = _apply_fence(action)
 		SimulationEnums.FieldActionKind.REMOVE_FENCE:
 			success = _remove_fence(action)
+	if success:
+		success = _commit_farmer_contact(contact, action.target)
+	var staged_treatment: TreatmentController = treatment_controller
+	treatment_controller = original_treatment
+	_staging_action = false
+	if success:
+		if original_treatment != null:
+			original_treatment.treatment_state = staged_treatment.treatment_state
+			original_treatment.resource_budget = staged_treatment.resource_budget
+	else:
+		_grid = original_grid
+		if harvest != null:
+			harvest.success = false
+			harvest.reason = last_error
 	_actions.pop_front()
+	var changes: Array[Vector2i] = _staged_changes.duplicate()
+	_staged_changes.clear()
+	if success:
+		for coordinates: Vector2i in changes:
+			_emit_cell_changed(coordinates)
 	action_finished.emit(action.id, success, last_error)
 	if harvest != null:
 		queued_harvest_completed.emit(harvest)
@@ -492,6 +547,41 @@ func arrive_at_action(action_id: int, stop: Vector2i) -> bool:
 func cancel_actions() -> void:
 	_actions.clear()
 	action_queue_changed.emit()
+
+
+func _commit_farmer_contact(contact: FieldCellState, target: Vector2i) -> bool:
+	var errors: PackedStringArray = _grid.validate()
+	if not errors.is_empty():
+		return _fail("\n".join(errors))
+	var disease_id: int = _carried_disease
+	var duration: int = _contamination_turns
+	if contact.has_active_disease and contact.infected_fraction > 0.0:
+		disease_id = contact.active_disease_id
+		duration = farmer_contamination_duration
+	var next_state: DiseaseActivationState
+	var cell: FieldCellState = _grid.get_cell(target)
+	var protection: TreatmentEffect = treatment_controller.treatment_state.get_effect(target, &"protectant") if treatment_controller != null else null
+	if duration > 0 and cell.has_crop and not cell.has_active_disease and not cell.has_fence and (protection == null or protection.remaining_turns <= 0):
+		if vector_activation == null or vector_diseases == null or vector_simulation == null:
+			return _fail("Configure farmer disease transmission dependencies.")
+		var disease: DiseaseData = vector_diseases.get_disease(disease_id)
+		if DiseaseActivationController.is_eligible(cell, disease):
+			next_state = vector_activation.get_state_snapshot()
+			var random: RandomNumberGenerator = RandomNumberGenerator.new()
+			random.state = next_state.rng_state
+			var roll: float = random.randf()
+			next_state.rng_state = random.state
+			if farmer_transmission_chance == 1.0 or roll < farmer_transmission_chance:
+				var reason: String = _stage_infection(_grid, target, disease.disease_id, vector_diseases, vector_simulation)
+				if not reason.is_empty():
+					return _fail(reason)
+				_emit_cell_changed(target)
+	_carried_disease = disease_id
+	_contamination_turns = duration
+	if next_state != null:
+		vector_activation.commit_state(next_state)
+	last_error = ""
+	return true
 
 
 func _convert_terrain(action: FieldAction) -> bool:

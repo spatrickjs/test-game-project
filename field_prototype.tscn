@@ -521,6 +521,7 @@ initial_soil = SubResource("Resource_34f8n")
 initial_abiotic = SubResource("Resource_ql0s4")
 field_size = Vector2i(9, 9)
 terrain_bands = Array[int]([2])
+farmer_transmission_chance = 1.0
 
 [node name="TurnController" type="Node" parent="." unique_id=980371109 node_paths=PackedStringArray("farming_controller", "weather_manager", "disease_activation_controller", "game_state_manager")]
 script = ExtResource("3_r0odj")
