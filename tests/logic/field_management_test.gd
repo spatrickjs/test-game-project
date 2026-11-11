@@ -43,7 +43,8 @@ func _run() -> void:
 	await process_frame
 	var before: FieldCellState = farming.get_grid_snapshot().get_cell(dry[0])
 	var turn_before: String = scene.turn_label.text
-	_click(scene.transfer_button.get_global_rect().get_center())
+	_check(not scene.transfer_button.is_visible_in_tree(), "Move is hidden from the gameplay HUD")
+	scene.transfer_button.pressed.emit()
 	await process_frame
 	_check(not scene.corn_button.button_pressed and scene.transfer_button.button_pressed, "Move excludes Plant mode")
 	_click_cell(world, dry[0])
@@ -113,13 +114,13 @@ func _run() -> void:
 	_check(removed.validate().is_empty() and removed.infected_fraction == 0.0 and removed.exposed_fraction == 0.0 and removed.susceptible_fraction == 0.0 and removed.recovered_immune_fraction == 0.0 and removed.dead_fraction == 0.0, "Removal leaves zero compartment mass")
 	_check(not farming.remove_crop(rice[1]), "Empty removal rejected")
 	# Switching tools cancels a pending source selection.
-	_click(scene.transfer_button.get_global_rect().get_center())
+	scene.transfer_button.pressed.emit()
 	await process_frame
 	_click_cell(world, rice[2])
 	await process_frame
 	_click(scene.remove_button.get_global_rect().get_center())
 	await process_frame
-	_click(scene.transfer_button.get_global_rect().get_center())
+	scene.transfer_button.pressed.emit()
 	await process_frame
 	_click_cell(world, rice[3])
 	await process_frame

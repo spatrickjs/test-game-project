@@ -79,6 +79,7 @@
 [ext_resource type="Texture2D" uid="uid://c02jnwlh7jqsr" path="res://assets/art/tilesets/crops/normalized/sugarcane_leaf_scald_stage_1.res" id="61_fwll2"]
 [ext_resource type="Texture2D" uid="uid://b733sre0babc7" path="res://assets/art/tilesets/crops/normalized/sugarcane_leaf_scald_stage_2.res" id="62_4xsk4"]
 [ext_resource type="Texture2D" uid="uid://bvlelyjr4djsa" path="res://assets/art/tilesets/crops/normalized/sugarcane_leaf_scald_stage_3.res" id="63_iygra"]
+[ext_resource type="Texture2D" uid="uid://clbi1ly43oh4a" path="res://assets/art/buttons/pause_button.png" id="76_xq5lu"]
 
 [sub_resource type="Resource" id="Resource_34f8n"]
 script = ExtResource("7_p35bb")
@@ -1256,23 +1257,23 @@ hud_panel = NodePath("HUD/Panel")
 turn_label = NodePath("HUD/Panel/Margin/Controls/TurnLabel")
 selected_crop_label = NodePath("HUD/Panel/Margin/Controls/SelectedCropLabel")
 status_label = NodePath("HUD/Panel/Margin/Controls/StatusLabel")
-sugarcane_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/SugarcaneButton")
-rice_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/RiceButton")
-corn_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/CornButton")
-next_turn_button = NodePath("HUD/Panel/Margin/Controls/NextTurnButton")
+sugarcane_button = NodePath("HUD/PlantingTools/SugarcaneButton")
+rice_button = NodePath("HUD/PlantingTools/RiceButton")
+corn_button = NodePath("HUD/PlantingTools/CornButton")
+next_turn_button = NodePath("HUD/FieldToolArc/NextTurnButton")
 algorithm_selector = NodePath("HUD/Panel/Margin/Controls/AlgorithmSelector")
-remove_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/RemoveButton")
-transfer_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/TransferButton")
-camera_zoom_button = NodePath("HUD/CameraZoomButton")
-harvest_button = NodePath("HUD/HarvestButton")
-water_button = NodePath("HUD/WaterButton")
-fertilize_button = NodePath("HUD/FertilizeButton")
-fence_button = NodePath("HUD/FenceButton")
-hoe_button = NodePath("HUD/Panel/Margin/Controls/CropButtons/HoeButton")
+remove_button = NodePath("HUD/FieldToolArc/RemoveButton")
+transfer_button = NodePath("HUD/PlantingTools/TransferButton")
+camera_zoom_button = NodePath("HUD/FieldToolArc/CameraZoomButton")
+harvest_button = NodePath("HUD/FieldToolArc/HarvestButton")
+water_button = NodePath("HUD/FieldToolArc/WaterButton")
+fertilize_button = NodePath("HUD/PlantingTools/FertilizeButton")
+fence_button = NodePath("HUD/PlantingTools/FenceButton")
+hoe_button = NodePath("HUD/FieldToolArc/HoeButton")
 pause_button = NodePath("PauseLayer/PauseButton")
 pause_menu = NodePath("PauseLayer/PauseMenu")
 soil_tool_controller = NodePath("SoilToolController")
-water_bucket_button = NodePath("HUD/WaterBucketButton")
+water_bucket_button = NodePath("HUD/FieldToolArc/WaterBucketButton")
 game_state_manager = NodePath("GameStateManager")
 
 [node name="FarmingController" type="Node" parent="." unique_id=889834426]
@@ -1356,6 +1357,12 @@ z_index = 2
 y_sort_enabled = true
 tile_set = ExtResource("13_aotfg")
 
+[node name="SelectionOverlay" type="Node2D" parent="World" unique_id=1356376111 node_paths=PackedStringArray("terrain_layer")]
+editor_description = "RUNTIME: eligible, selected and queued plot highlights."
+z_index = 3
+script = ExtResource("28_3wfy2")
+terrain_layer = NodePath("../Terrain")
+
 [node name="CropOverlay" type="Node2D" parent="World" unique_id=1543953079 node_paths=PackedStringArray("terrain_layer")]
 editor_description = "DIAGNOSTICS: hidden crop-state overlay retained for debugging and integration checks."
 visible = false
@@ -1378,12 +1385,6 @@ editor_description = "RUNTIME: placeholder farmer that walks to queued tasks."
 z_index = 2
 script = ExtResource("27_bct15")
 
-[node name="SelectionOverlay" type="Node2D" parent="World" unique_id=1356376111 node_paths=PackedStringArray("terrain_layer")]
-editor_description = "RUNTIME: eligible, selected and queued plot highlights."
-z_index = 3
-script = ExtResource("28_3wfy2")
-terrain_layer = NodePath("../Terrain")
-
 [node name="CropShadows" type="Node2D" parent="World" unique_id=1294482079 node_paths=PackedStringArray("terrain_layer")]
 editor_description = "RUNTIME: procedural shadows beneath occupied plots."
 z_index = 1
@@ -1392,26 +1393,28 @@ script = ExtResource("29_3wfy2")
 terrain_layer = NodePath("../Terrain")
 
 [node name="Lighting" type="Node2D" parent="World" unique_id=832886728]
-editor_description = "Adjust Ambient color, Sunlight color/energy, and SoftLight texture/scale/position. World only; HUD uses its own canvas."
-visible = false
+editor_description = "Warm daylight inspired by the golden tropical reference. Ambient controls the green shade, Sunlight the golden highlights, and SoftLight the warm local glow."
 
 [node name="Ambient" type="CanvasModulate" parent="World/Lighting" unique_id=750346854]
-color = Color(0.7588539, 0.8019278, 0.9314976, 1)
+position = Vector2(1362, -728)
+color = Color(0.8, 0.82, 0.69, 1)
 
 [node name="Sunlight" type="DirectionalLight2D" parent="World/Lighting" unique_id=838271170]
-color = Color(0.87753177, 0.965138, 0.99999994, 1)
-energy = 0.22
+position = Vector2(-312, -239)
+color = Color(1, 0.91, 0.69, 1)
+energy = 0.2
+max_distance = 7769.0
 
 [node name="SoftLight" type="PointLight2D" parent="World/Lighting" unique_id=883445928]
 editor_description = "Soft scenery shadows: PCF5. Adjust Shadow Filter Smooth and Color alpha. Occluder mask uses layer 2."
 texture_filter = 2
-position = Vector2(608.5, -189)
-color = Color(0.062458597, 0.67136997, 0.77353424, 1)
-energy = 0.18
+position = Vector2(-693, -997)
+color = Color(1, 0.85, 0.53, 1)
+energy = 0.2
 shadow_enabled = true
-shadow_color = Color(0.08, 0.1, 0.16, 0.65)
+shadow_color = Color(0.12, 0.18, 0.1, 0.48)
 shadow_filter = 1
-shadow_filter_smooth = 1.5
+shadow_filter_smooth = 2.0
 shadow_item_cull_mask = 2
 texture = SubResource("GradientTexture2D_ia13u")
 texture_scale = 6.62
@@ -1429,8 +1432,10 @@ navigation_enabled = false
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_top = -208.0
-offset_right = 454.0
+offset_left = 16.0
+offset_top = -320.0
+offset_right = 470.0
+offset_bottom = -136.0
 grow_vertical = 0
 mouse_force_pass_scroll_events = false
 
@@ -1450,59 +1455,10 @@ text = "Turn: 0"
 layout_mode = 2
 text = "Mode: Inspect"
 
-[node name="CropButtons" type="HBoxContainer" parent="HUD/Panel/Margin/Controls" unique_id=572125762]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="SugarcaneButton" type="Button" parent="HUD/Panel/Margin/Controls/CropButtons" unique_id=1320538239]
-layout_mode = 2
-mouse_force_pass_scroll_events = false
-text = "Sugarcane"
-
-[node name="RiceButton" type="Button" parent="HUD/Panel/Margin/Controls/CropButtons" unique_id=87956307]
-layout_mode = 2
-mouse_force_pass_scroll_events = false
-toggle_mode = true
-text = "Rice"
-
-[node name="CornButton" type="Button" parent="HUD/Panel/Margin/Controls/CropButtons" unique_id=1308369973]
-layout_mode = 2
-mouse_force_pass_scroll_events = false
-toggle_mode = true
-text = "Corn"
-
-[node name="RemoveButton" type="Button" parent="HUD/Panel/Margin/Controls/CropButtons" unique_id=1666615518]
-custom_minimum_size = Vector2(64, 44)
-layout_mode = 2
-size_flags_horizontal = 8
-mouse_force_pass_scroll_events = false
-toggle_mode = true
-text = "Shovel"
-
-[node name="TransferButton" type="Button" parent="HUD/Panel/Margin/Controls/CropButtons" unique_id=1863874065]
-custom_minimum_size = Vector2(64, 44)
-layout_mode = 2
-size_flags_horizontal = 8
-mouse_force_pass_scroll_events = false
-toggle_mode = true
-text = "Move"
-
-[node name="HoeButton" type="Button" parent="HUD/Panel/Margin/Controls/CropButtons" unique_id=2028367947]
-custom_minimum_size = Vector2(64, 44)
-layout_mode = 2
-size_flags_horizontal = 8
-mouse_force_pass_scroll_events = false
-toggle_mode = true
-text = "Hoe"
-
-[node name="NextTurnButton" type="Button" parent="HUD/Panel/Margin/Controls" unique_id=1080894110]
-layout_mode = 2
-mouse_force_pass_scroll_events = false
-text = "Next Turn"
-
 [node name="StatusLabel" type="Label" parent="HUD/Panel/Margin/Controls" unique_id=1366868233]
 layout_mode = 2
 text = "Click a tile to inspect it."
+autowrap_mode = 3
 
 [node name="AlgorithmSelector" type="OptionButton" parent="HUD/Panel/Margin/Controls" unique_id=188980615]
 custom_minimum_size = Vector2(160, 44)
@@ -1524,8 +1480,10 @@ popup/item_3/id = 3
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -245.0
-offset_bottom = 575.0
+offset_left = -1194.0
+offset_top = 26.0
+offset_right = -949.0
+offset_bottom = 601.0
 grow_horizontal = 0
 size_flags_horizontal = 3
 mouse_force_pass_scroll_events = false
@@ -1773,36 +1731,35 @@ size_flags_horizontal = 8
 mouse_force_pass_scroll_events = false
 text = "Seed Infection"
 
-[node name="CameraZoomButton" type="Button" parent="HUD" unique_id=719855363]
-visible = false
-custom_minimum_size = Vector2(132, 48)
+[node name="FieldToolArc" type="Control" parent="HUD" unique_id=1723018790]
+layout_mode = 3
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -145.0
-offset_top = -52.0
-offset_right = -13.0
-offset_bottom = -4.0
 grow_horizontal = 0
 grow_vertical = 0
-size_flags_horizontal = 8
-mouse_force_pass_scroll_events = false
-text = "Zoom in"
-script = ExtResource("26_6a3lw")
+mouse_filter = 2
 
-[node name="HarvestButton" type="Button" parent="HUD" unique_id=1397664447]
-custom_minimum_size = Vector2(132, 48)
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -650.0
-offset_top = -53.0
-offset_right = -518.0
-offset_bottom = -5.0
+[node name="NextTurnButton" type="Button" parent="HUD/FieldToolArc" unique_id=1080894110]
+custom_minimum_size = Vector2(132, 118)
+layout_mode = 0
+offset_left = -148.0
+offset_top = -134.0
+offset_right = -16.0
+offset_bottom = -16.0
+mouse_force_pass_scroll_events = false
+theme_override_font_sizes/font_size = 24
+text = "Next Turn"
+
+[node name="HarvestButton" type="Button" parent="HUD/FieldToolArc" unique_id=1397664447]
+custom_minimum_size = Vector2(96, 52)
+layout_mode = 1
+offset_left = -112.0
+offset_top = -200.0
+offset_right = -16.0
+offset_bottom = -148.0
 grow_horizontal = 0
 grow_vertical = 0
 size_flags_horizontal = 8
@@ -1811,17 +1768,37 @@ toggle_mode = true
 text = "Harvest"
 script = ExtResource("26_6a3lw")
 
-[node name="WaterButton" type="Button" parent="HUD" unique_id=330012234]
-custom_minimum_size = Vector2(132, 48)
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -794.0
-offset_top = -54.0
-offset_right = -662.0
-offset_bottom = -6.0
+[node name="HoeButton" type="Button" parent="HUD/FieldToolArc" unique_id=2028367947]
+custom_minimum_size = Vector2(88, 52)
+layout_mode = 0
+offset_left = -205.0
+offset_top = -209.0
+offset_right = -117.0
+offset_bottom = -157.0
+size_flags_horizontal = 8
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Hoe"
+
+[node name="RemoveButton" type="Button" parent="HUD/FieldToolArc" unique_id=1666615518]
+custom_minimum_size = Vector2(88, 52)
+layout_mode = 0
+offset_left = -295.0
+offset_top = -169.0
+offset_right = -207.0
+offset_bottom = -117.0
+size_flags_horizontal = 8
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Shovel"
+
+[node name="WaterButton" type="Button" parent="HUD/FieldToolArc" unique_id=330012234]
+custom_minimum_size = Vector2(88, 52)
+layout_mode = 1
+offset_left = -318.0
+offset_top = -114.0
+offset_right = -230.0
+offset_bottom = -62.0
 grow_horizontal = 0
 grow_vertical = 0
 size_flags_horizontal = 8
@@ -1830,36 +1807,13 @@ toggle_mode = true
 text = "Water"
 script = ExtResource("26_6a3lw")
 
-[node name="FertilizeButton" type="Button" parent="HUD" unique_id=29001628]
-custom_minimum_size = Vector2(132, 48)
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -506.0
-offset_top = -52.0
-offset_right = -374.0
-offset_bottom = -4.0
-grow_horizontal = 0
-grow_vertical = 0
-size_flags_horizontal = 8
-mouse_force_pass_scroll_events = false
-toggle_mode = true
-text = "Fertilize"
-script = ExtResource("26_6a3lw")
-
-[node name="WaterBucketButton" type="Button" parent="HUD" unique_id=1429296836]
-custom_minimum_size = Vector2(132, 48)
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -350.0
-offset_top = -51.0
-offset_right = -218.0
-offset_bottom = -3.0
+[node name="WaterBucketButton" type="Button" parent="HUD/FieldToolArc" unique_id=1429296836]
+custom_minimum_size = Vector2(112, 52)
+layout_mode = 1
+offset_left = -270.0
+offset_top = -58.0
+offset_right = -157.0
+offset_bottom = -6.0
 grow_horizontal = 0
 grow_vertical = 0
 size_flags_horizontal = 8
@@ -1868,26 +1822,95 @@ toggle_mode = true
 text = "Water Bucket"
 script = ExtResource("26_6a3lw")
 
-[node name="FenceButton" type="Button" parent="HUD" unique_id=1378919391]
+[node name="CameraZoomButton" type="Button" parent="HUD/FieldToolArc" unique_id=719855363]
+visible = false
 custom_minimum_size = Vector2(132, 48)
+layout_mode = 1
+offset_left = -148.0
+offset_top = -255.0
+offset_right = -16.0
+offset_bottom = -207.0
+grow_horizontal = 0
+grow_vertical = 0
+size_flags_horizontal = 8
+mouse_force_pass_scroll_events = false
+text = "Zoom in"
+script = ExtResource("26_6a3lw")
+
+[node name="PlantingTools" type="VBoxContainer" parent="HUD" unique_id=1831830617]
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -132.0
-offset_top = -48.0
+offset_left = -112.0
+offset_top = -504.0
+offset_right = -16.0
+offset_bottom = -212.0
 grow_horizontal = 0
 grow_vertical = 0
-size_flags_horizontal = 8
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="SugarcaneButton" type="Button" parent="HUD/PlantingTools" unique_id=1320538239]
+custom_minimum_size = Vector2(96, 52)
+layout_mode = 2
+mouse_force_pass_scroll_events = false
+text = "Sugarcane"
+expand_icon = true
+
+[node name="RiceButton" type="Button" parent="HUD/PlantingTools" unique_id=87956307]
+custom_minimum_size = Vector2(96, 52)
+layout_mode = 2
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Rice"
+expand_icon = true
+
+[node name="CornButton" type="Button" parent="HUD/PlantingTools" unique_id=1308369973]
+custom_minimum_size = Vector2(96, 52)
+layout_mode = 2
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Corn"
+expand_icon = true
+
+[node name="FertilizeButton" type="Button" parent="HUD/PlantingTools" unique_id=29001628]
+custom_minimum_size = Vector2(96, 52)
+layout_mode = 2
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Fertilize"
+expand_icon = true
+script = ExtResource("26_6a3lw")
+
+[node name="FenceButton" type="Button" parent="HUD/PlantingTools" unique_id=1378919391]
+custom_minimum_size = Vector2(96, 52)
+layout_mode = 2
 mouse_force_pass_scroll_events = false
 toggle_mode = true
 text = "Fence"
+expand_icon = true
 script = ExtResource("26_6a3lw")
 
+[node name="TransferButton" type="Button" parent="HUD/PlantingTools" unique_id=1863874065]
+visible = false
+custom_minimum_size = Vector2(64, 44)
+layout_mode = 2
+size_flags_horizontal = 8
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Move"
+
 [node name="WeatherManager" type="Node" parent="." unique_id=673066105]
+editor_description = "Temporary warm-season gameplay preset: 27-33 C, 65% humidity, eight-turn wet/dry cycle. Rainfall and evaporation are normalized soil-moisture fractions per turn, not measured weather data. Tuned for net drying and recurring watering."
 script = ExtResource("27_mfnx3")
+base_temperature_celsius = 30.0
+evaporation_per_turn = 0.07
+ambient_humidity = 0.65
 fluctuations_enabled = true
+temperature_amplitude = 3.0
+rainfall_amplitude = 0.06
 
 [node name="SoilToolController" type="Node" parent="." unique_id=626484259 node_paths=PackedStringArray("farming_controller")]
 script = ExtResource("28_gxe8k")
@@ -1897,10 +1920,17 @@ farming_controller = NodePath("../FarmingController")
 
 [node name="PauseButton" type="Button" parent="PauseLayer" unique_id=2119795751]
 custom_minimum_size = Vector2(132, 48)
-offset_right = 132.0
-offset_bottom = 48.0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -85.0
+offset_right = 63.0
+offset_bottom = 182.0
+grow_horizontal = 0
+scale = Vector2(0.57, 0.57)
 mouse_force_pass_scroll_events = false
-text = "Pause"
+icon = ExtResource("76_xq5lu")
+flat = true
 
 [node name="PauseMenu" type="Control" parent="PauseLayer" unique_id=703054139 node_paths=PackedStringArray("continue_button", "exit_to_menu_button")]
 process_mode = 3

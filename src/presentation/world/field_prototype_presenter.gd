@@ -102,6 +102,9 @@ func _connect_once(source: Signal, callback: Callable) -> void:
 
 
 func _connect_signals() -> void:
+	for button: Button in [next_turn_button, remove_button, hoe_button, sugarcane_button, rice_button, corn_button]:
+		if button != null:
+			world_view.register_ui_input_root(button)
 	if water_bucket_button != null:
 		world_view.register_ui_input_root(water_bucket_button)
 		_connect_once(water_bucket_button.pressed, _on_water_bucket_pressed)

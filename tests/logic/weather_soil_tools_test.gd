@@ -130,16 +130,25 @@ func _run() -> void:
 	root.size = Vector2i(1280, 720)
 	var scene: FieldPrototypePresenter = (load("res://field_prototype.tscn") as PackedScene).instantiate() as FieldPrototypePresenter
 	GameplayFixture.prepare(scene, true)
-	scene.turn_controller.weather_manager.fluctuations_enabled = false
-	scene.turn_controller.weather_manager.rainfall_per_turn = 0.02
-	scene.turn_controller.weather_manager.evaporation_per_turn = 0.02
 	root.add_child(scene)
 	GameplayFixture.start(scene)
 	for frame: int in range(5):
 		await process_frame
 	_check(scene.soil_tool_controller != null and scene.turn_controller.weather_manager != null, "Saved services wired")
 	_check(scene.water_button != null and scene.fertilize_button != null, "Saved tool buttons wired")
-	# Balanced defaults are a confirmed weather tick, not a missing invocation.
+	var saved_weather: WeatherManager = scene.turn_controller.weather_manager
+	var weather_grid: FieldGridState = scene.farming_controller.get_grid_snapshot()
+	var initial_moisture: float = weather_grid.get_cell(Vector2i.ZERO).soil.moisture
+	for turn: int in range(1, 9):
+		_check(saved_weather.apply_to_grid(weather_grid, turn), "Temporary weather cycle applies")
+	_check(weather_grid.get_cell(Vector2i.ZERO).soil.moisture < initial_moisture - 0.2, "Saved weather preset dries soil across eight turns")
+	weather_grid = null
+	# Explicit balanced fixture for the native button arithmetic below.
+	saved_weather.base_temperature_celsius = 25.0
+	saved_weather.ambient_humidity = 0.5
+	saved_weather.rainfall_per_turn = 0.02
+	saved_weather.evaporation_per_turn = 0.02
+	saved_weather.fluctuations_enabled = false
 	_click(scene.next_turn_button.get_global_rect().get_center())
 	_check(scene.turn_controller.turn_index == 1 and scene.turn_controller.weather_manager.last_moisture_summary.contains("No net change"), "Native balanced turn reports weather invocation")
 	_check(is_equal_approx(scene.farming_controller.get_grid_snapshot().get_cell(Vector2i.ZERO).soil.moisture, 0.5), "Balanced defaults preserve moisture intentionally")

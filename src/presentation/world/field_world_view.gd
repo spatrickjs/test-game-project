@@ -66,9 +66,16 @@ var _selection_kind: int = -1
 var _selecting: bool = false
 var _selection_last: Vector2 = Vector2.ZERO
 var _middle_pan: bool = false
+var _infection_alerts: Node2D
+var _overhead_clouds: Sprite2D
 
 
 func _ready() -> void:
+	_overhead_clouds = preload("res://src/presentation/world/overhead_clouds.gd").new()
+	add_child(_overhead_clouds)
+	_infection_alerts = preload("res://src/presentation/world/infection_alert_overlay.gd").new()
+	_infection_alerts.terrain_layer = terrain_layer
+	add_child(_infection_alerts)
 	set_process_unhandled_input(_input_enabled)
 
 func validate_configuration() -> PackedStringArray:
@@ -267,6 +274,8 @@ func validate_crop_visuals(crops: CropDatabase) -> PackedStringArray:
 
 ## Validate before drawing, erase vacant cells, then refresh occupied tiles.
 func render_crops(snapshot: FieldGridState, crops: CropDatabase) -> bool:
+	if _infection_alerts != null:
+		_infection_alerts.show_snapshot(snapshot, crops)
 	_align_layer(crop_layer)
 	if crop_shadows != null:
 		crop_shadows.show_snapshot(snapshot)
@@ -419,6 +428,8 @@ func get_fence_icon() -> Texture2D:
 
 func set_interaction_enabled(enabled: bool) -> void:
 	_input_enabled = enabled and _snapshot != null
+	if _infection_alerts != null:
+		_infection_alerts.set_alerts_enabled(_input_enabled)
 	set_process_unhandled_input(_input_enabled)
 	if not _input_enabled:
 		_reset_touch_gesture()
@@ -476,6 +487,8 @@ func frame_field() -> void:
 	# The bottom HUD occupies screen space: move the camera DOWN to lift the field.
 	_default_camera_center = bounds.get_center() + Vector2(0.0, reserved * 0.5 / zoom_factor) + camera_center_offset
 	camera.global_position = _default_camera_center
+	if _overhead_clouds != null:
+		_overhead_clouds.cover_overview(_default_camera_center, viewport_size / zoom_factor)
 	min_zoom = zoom_factor
 	max_zoom = min_zoom * maxf(1.0, max_zoom_multiplier)
 	_render_cosmetic_border(_snapshot)
