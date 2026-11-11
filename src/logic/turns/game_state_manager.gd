@@ -10,7 +10,7 @@ signal game_ended(victory: bool)
 enum State { MENU, PLAYING, GAME_OVER, VICTORY }
 
 ## Maximum turns before the game is lost.
-@export var turn_limit: int = 20
+@export var turn_limit: int = 24
 ## Total harvest score required to win.
 @export var score_goal: int = 1000
 
