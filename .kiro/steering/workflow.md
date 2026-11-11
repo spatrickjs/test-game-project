@@ -13,3 +13,7 @@ inclusion: always
 8. Report: files changed, tests run, result. No restating code.
 9. Ask one question when blocked; do not guess at scene/resource wiring.
 10. Keep steering files short. Move detail into fileMatch files, not `always` ones.
+
+## Art and visual mappings
+
+When a task requires mapping art tiles to code (e.g. connection mask → atlas coords), ask the user rather than pixel-analysing the PNG. Isometric art fails pixel analysis because the central post/base occupies all quadrants.
