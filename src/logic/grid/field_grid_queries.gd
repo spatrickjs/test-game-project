@@ -3,6 +3,63 @@ extends RefCounted
 ## Read-only gameplay queries. Terrain permissions come only from configuration.
 ## Geometric queries live independently in Simulation's GridNeighborhood.
 
+## Connection mask bit constants. N=(0,-1), E=(1,0), S=(0,1), W=(-1,0).
+const FENCE_BIT_N: int = 1
+const FENCE_BIT_E: int = 2
+const FENCE_BIT_S: int = 4
+const FENCE_BIT_W: int = 8
+
+## Cardinal offsets in (direction, bit) order.
+const _FENCE_CARDINALS: Array = [
+	[Vector2i(0, -1), 1],  # N
+	[Vector2i(1,  0), 2],  # E
+	[Vector2i(0,  1), 4],  # S
+	[Vector2i(-1, 0), 8],  # W
+]
+
+## Returns a 4-bit connection mask for the fenced cell at coords.
+## Bit N=1, E=2, S=4, W=8. OOB or non-fence neighbors contribute 0.
+## Returns 0 when grid is null, coords are OOB, or the cell has no fence.
+static func fence_connections(grid: FieldGridState, coords: Vector2i) -> int:
+	if grid == null:
+		return 0
+	var cell: FieldCellState = grid.get_cell(coords)
+	if cell == null or not cell.has_fence:
+		return 0
+	var mask: int = 0
+	for pair: Array in _FENCE_CARDINALS:
+		var offset: Vector2i = pair[0] as Vector2i
+		var bit: int = pair[1] as int
+		var neighbor: FieldCellState = grid.get_cell(coords + offset)
+		if neighbor != null and neighbor.has_fence:
+			mask |= bit
+	return mask
+
+
+## Fence shape identifiers. Used only by rendering; never persisted.
+enum FenceShape { POST = 0, END = 1, STRAIGHT = 2, CORNER = 3, T = 4, CROSS = 5 }
+
+## Classifies a connection mask into a FenceShape.
+static func fence_shape(mask: int) -> FenceShape:
+	var count: int = 0
+	var m: int = mask & 0xF
+	for bit: int in [1, 2, 4, 8]:
+		if m & bit:
+			count += 1
+	match count:
+		0: return FenceShape.POST
+		1: return FenceShape.END
+		3: return FenceShape.T
+		4: return FenceShape.CROSS
+		2:
+			# Two opposite bits → straight; two adjacent → corner.
+			var opposites: Array = [[1, 4], [2, 8]]  # [N,S], [E,W]
+			for pair: Array in opposites:
+				if m & pair[0] and m & pair[1]:
+					return FenceShape.STRAIGHT
+			return FenceShape.CORNER
+	return FenceShape.POST
+
 
 static func can_plant(
 	grid: FieldGridState,
@@ -82,4 +139,6 @@ static func validate_terrain_assignments(
 					errors.append("%s: crop_type is not registered." % prefix)
 				if not terrain.allowed_crops.has(cell.crop_type):
 					errors.append("%s: terrain does not permit this crop_type." % prefix)
+			if cell.has_fence and cell.terrain_type != SimulationEnums.TerrainType.GRASS:
+				errors.append("%s: fenced cell must be on grass terrain." % prefix)
 	return errors

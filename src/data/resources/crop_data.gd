@@ -14,6 +14,11 @@ extends Resource
 @export var growth_profile: CropGrowthProfile = CropGrowthProfile.new()
 @export_range(0.0, 1.0, 0.01) var base_immunity: float = 0.5
 
+@export_group("Scoring")
+## Points awarded for a perfect-quality harvest of this crop. Quality loss
+## reduces the awarded score proportionally at harvest time.
+@export_range(0, 10000) var base_score: int = 100
+
 @export_group("Growth Visuals (Presentation Only)")
 ## Seedling, Vegetative, Reproductive, Mature. -1 means not authored yet.
 ## Logic and Simulation must not interpret these TileSet identifiers.
@@ -47,6 +52,8 @@ func validate() -> PackedStringArray:
 		errors.append("base_immunity must be finite.")
 	elif base_immunity < 0.0 or base_immunity > 1.0:
 		errors.append("base_immunity must be in [0.0, 1.0].")
+	if base_score < 0:
+		errors.append("base_score must not be negative.")
 	if growth_profile != null:
 		for error: String in growth_profile.validate():
 			errors.append("growth_profile: " + error)
@@ -86,6 +93,7 @@ func copy() -> CropData:
 	result.growth_ticks = growth_ticks
 	result.growth_profile = growth_profile.copy() if growth_profile != null else null
 	result.base_immunity = base_immunity
+	result.base_score = base_score
 	result.growth_stage_source_ids = growth_stage_source_ids.duplicate()
 	result.growth_stage_atlas_coords = growth_stage_atlas_coords.duplicate()
 	result.disease_stage_source_ids = disease_stage_source_ids.duplicate()

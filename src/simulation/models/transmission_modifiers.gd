@@ -18,7 +18,7 @@ static func needs_crop(profile: TransmissionModifierProfile) -> bool:
 	return profile != null and (profile.nitrogen_excess_strength > 0.0 or profile.potassium_protection_strength > 0.0)
 
 
-static func evaluate(disease: DiseaseData, environment: AbioticState, soil: SoilState, crop: CropData, pressure: float) -> Result:
+static func evaluate(disease: DiseaseData, environment: AbioticState, soil: SoilState, crop: CropData, pressure: float, mods: TreatmentModifiers = null) -> Result:
 	var result: Result = Result.new()
 	var profile: TransmissionModifierProfile = disease.transmission_modifier_profile
 	var beta_cap: float = 1.7976931348623157e308
@@ -50,6 +50,10 @@ static func evaluate(disease: DiseaseData, environment: AbioticState, soil: Soil
 	var hazard_factors: Array[float] = [result.effective_beta, pressure]
 	result.hazard_capped = _exceeds(hazard_factors, hazard_cap)
 	result.hazard = _product(hazard_factors, hazard_cap)
+	# Apply treatment hazard multiplier once to the final hazard value.
+	# Susceptibility is folded into hazard_mult by the resolver, never to fractions.
+	if mods != null:
+		result.hazard *= mods.hazard_mult
 	return result
 
 

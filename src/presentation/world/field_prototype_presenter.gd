@@ -25,6 +25,8 @@ extends Node
 @export var harvest_button: Button
 @export var water_button: Button
 @export var fertilize_button: Button
+@export var fence_button: Button
+@export var hoe_button: Button
 
 @export_group("Pause")
 @export var pause_button: Button
@@ -34,7 +36,14 @@ extends Node
 @export var soil_tool_controller: SoilToolController
 @export var water_bucket_button: Button
 @export var game_state_manager: GameStateManager
-enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE, TOOL_WATER_BUCKET }
+@export_group("Treatments")
+@export var treatment_controller: TreatmentController
+@export var treatment_panel: TreatmentPanel
+@export var fungicide_button: Button
+@export var bactericide_button: Button
+@export var protectant_button: Button
+@export var enhancer_button: Button
+enum ToolMode { INSPECT, PLANT, TOOL_REMOVE, TOOL_TRANSFER, TOOL_HARVEST, TOOL_WATER, TOOL_FERTILIZE, TOOL_WATER_BUCKET, TOOL_FUNGICIDE, TOOL_BACTERICIDE, TOOL_PROTECTANT, TOOL_ENHANCER, TOOL_FENCE, TOOL_HOE }
 var _tool_mode: ToolMode = ToolMode.INSPECT
 var _transfer_source: Vector2i = Vector2i(-1, -1)
 @export var playtest_disease_id: SimulationEnums.DiseaseId = SimulationEnums.DiseaseId.RICE_BLAST
@@ -46,6 +55,8 @@ var _start_overlay: CanvasLayer
 var _end_overlay: CanvasLayer
 var _end_overlay_title: Label
 var _end_overlay_details: Label
+var _end_overlay_score: Label
+var _end_overlay_breakdown: Label
 var _end_overlay_button: Button
 var _score_label: Label
 
@@ -61,7 +72,7 @@ func _ready() -> void:
 		button.toggle_mode = true
 		button.button_group = null
 		button.set_pressed_no_signal(false)
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, water_bucket_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, water_bucket_button, fence_button, hoe_button]:
 		if button != null:
 			button.toggle_mode = true
 			button.set_pressed_no_signal(false)
@@ -75,6 +86,8 @@ func _ready() -> void:
 		game_state_manager = GameStateManager.new()
 		add_child(game_state_manager)
 	turn_controller.game_state_manager = game_state_manager
+	if treatment_controller != null:
+		farming_controller.treatment_controller = treatment_controller
 	_create_overlays()
 	_connect_game_signals()
 	next_turn_button.text = "End Turn"
@@ -92,6 +105,9 @@ func _connect_signals() -> void:
 	if water_bucket_button != null:
 		world_view.register_ui_input_root(water_bucket_button)
 		_connect_once(water_bucket_button.pressed, _on_water_bucket_pressed)
+	if fence_button != null:
+		world_view.register_ui_input_root(fence_button)
+		_connect_once(fence_button.pressed, _on_fence_pressed)
 	if world_view.farmer_agent != null:
 		_connect_once(world_view.farmer_agent.arrived, _on_farmer_arrived)
 	_connect_once(world_view.cells_selected, _on_cells_selected)
@@ -123,8 +139,22 @@ func _connect_signals() -> void:
 
 	if remove_button != null:
 		_connect_once(remove_button.pressed, _on_remove_pressed)
+	if hoe_button != null:
+		_connect_once(hoe_button.pressed, _on_hoe_pressed)
 	if transfer_button != null:
 		_connect_once(transfer_button.pressed, _on_transfer_pressed)
+	if fungicide_button != null:
+		world_view.register_ui_input_root(fungicide_button)
+		_connect_once(fungicide_button.pressed, _on_fungicide_pressed)
+	if bactericide_button != null:
+		world_view.register_ui_input_root(bactericide_button)
+		_connect_once(bactericide_button.pressed, _on_bactericide_pressed)
+	if protectant_button != null:
+		world_view.register_ui_input_root(protectant_button)
+		_connect_once(protectant_button.pressed, _on_protectant_pressed)
+	if enhancer_button != null:
+		world_view.register_ui_input_root(enhancer_button)
+		_connect_once(enhancer_button.pressed, _on_enhancer_pressed)
 	_connect_once(sugarcane_button.pressed, _on_sugarcane_pressed)
 	_connect_once(rice_button.pressed, _on_rice_pressed)
 	_connect_once(corn_button.pressed, _on_corn_pressed)
@@ -189,7 +219,7 @@ func _on_field_initialized() -> void:
 
 
 func _set_controls_enabled(enabled: bool) -> void:
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button, fungicide_button, bactericide_button, protectant_button, enhancer_button, fence_button, hoe_button]:
 		if button != null:
 			button.disabled = not enabled
 	next_turn_button.disabled = not enabled
@@ -234,16 +264,28 @@ func _update_crop_buttons() -> void:
 	_refresh_tool_targets(true)
 	if water_bucket_button != null:
 		water_bucket_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_WATER_BUCKET)
+	if fence_button != null:
+		fence_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_FENCE)
 	if water_button != null:
 		water_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_WATER)
 	if fertilize_button != null:
 		fertilize_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_FERTILIZE)
 	if harvest_button != null:
 		harvest_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_HARVEST)
+	if hoe_button != null:
+		hoe_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_HOE)
 	if remove_button != null:
 		remove_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_REMOVE)
 	if transfer_button != null:
 		transfer_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_TRANSFER)
+	if fungicide_button != null:
+		fungicide_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_FUNGICIDE)
+	if bactericide_button != null:
+		bactericide_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_BACTERICIDE)
+	if protectant_button != null:
+		protectant_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_PROTECTANT)
+	if enhancer_button != null:
+		enhancer_button.set_pressed_no_signal(_tool_mode == ToolMode.TOOL_ENHANCER)
 	sugarcane_button.set_pressed_no_signal(_planting_enabled and _selected_crop == SimulationEnums.CropType.SUGARCANE)
 	rice_button.set_pressed_no_signal(_planting_enabled and _selected_crop == SimulationEnums.CropType.RICE)
 	corn_button.set_pressed_no_signal(_planting_enabled and _selected_crop == SimulationEnums.CropType.CORN)
@@ -352,6 +394,8 @@ func _on_turn_completed(turn_index: int) -> void:
 	_refresh_tool_targets()
 	_refresh_inspected_cell()
 	turn_label.text = "Turn: %d" % turn_index
+	if treatment_panel != null and treatment_controller != null:
+		treatment_panel.refresh(turn_index)
 	status_label.text = "Growth advanced. Mature crops have reached 100% growth."
 	if _tool_mode == ToolMode.TOOL_TRANSFER:
 		status_label.text = "Turn advanced. Choose a crop to move."
@@ -367,6 +411,10 @@ func _on_water_bucket_pressed() -> void:
 	_select_management_tool(ToolMode.TOOL_WATER_BUCKET)
 
 
+func _on_fence_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_FENCE)
+
+
 func _on_fertilize_pressed() -> void:
 	_select_management_tool(ToolMode.TOOL_FERTILIZE)
 
@@ -379,8 +427,28 @@ func _on_remove_pressed() -> void:
 	_select_management_tool(ToolMode.TOOL_REMOVE)
 
 
+func _on_hoe_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_HOE)
+
+
 func _on_transfer_pressed() -> void:
 	_select_management_tool(ToolMode.TOOL_TRANSFER)
+
+
+func _on_fungicide_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_FUNGICIDE)
+
+
+func _on_bactericide_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_BACTERICIDE)
+
+
+func _on_protectant_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_PROTECTANT)
+
+
+func _on_enhancer_pressed() -> void:
+	_select_management_tool(ToolMode.TOOL_ENHANCER)
 
 
 func _select_management_tool(mode: ToolMode) -> void:
@@ -395,9 +463,18 @@ func _select_management_tool(mode: ToolMode) -> void:
 	_inspected_coordinates = Vector2i(-1, -1)
 	tile_inspector.clear_display()
 	_update_crop_buttons()
+	if mode == ToolMode.TOOL_FENCE:
+		selected_crop_label.text = "Tool: Fence"
+		status_label.text = "Click or drag over tiles to fence them."
+		return
 	if mode == ToolMode.TOOL_WATER_BUCKET:
 		selected_crop_label.text = "Tool: Water Bucket"
 		status_label.text = "Drag over empty dry soil to queue paddy conversion."
+		return
+	if mode in [ToolMode.TOOL_FUNGICIDE, ToolMode.TOOL_BACTERICIDE, ToolMode.TOOL_PROTECTANT, ToolMode.TOOL_ENHANCER]:
+		var tname: String = "Fungicide" if mode == ToolMode.TOOL_FUNGICIDE else "Bactericide" if mode == ToolMode.TOOL_BACTERICIDE else "Protectant" if mode == ToolMode.TOOL_PROTECTANT else "Enhancer"
+		selected_crop_label.text = "Tool: %s" % tname
+		status_label.text = "Click a crop tile to queue %s treatment." % tname.to_lower()
 		return
 	if mode in [ToolMode.TOOL_WATER, ToolMode.TOOL_FERTILIZE]:
 		selected_crop_label.text = "Tool: Water" if mode == ToolMode.TOOL_WATER else "Tool: Fertilize"
@@ -407,8 +484,12 @@ func _select_management_tool(mode: ToolMode) -> void:
 		selected_crop_label.text = "Tool: Harvest"
 		status_label.text = "Click a mature crop to collect its yield quality."
 		return
+	if mode == ToolMode.TOOL_HOE:
+		selected_crop_label.text = "Tool: Hoe"
+		status_label.text = "Click or drag over empty grass to till it."
+		return
 	selected_crop_label.text = "Tool: Shovel" if mode == ToolMode.TOOL_REMOVE else "Tool: Move"
-	status_label.text = "Drag over crops to remove, or empty grass to dig. The first eligible plot locks the action." if mode == ToolMode.TOOL_REMOVE else "Click a crop, then an empty compatible tile."
+	status_label.text = "Drag over crops or fences to remove. The first eligible plot locks the action." if mode == ToolMode.TOOL_REMOVE else "Click a crop, then an empty compatible tile."
 
 
 func _handle_transfer_click(coordinates: Vector2i) -> void:
@@ -448,7 +529,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _show_failure(message: String) -> void:
 	_running = false
-	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button]:
+	for button: Button in [remove_button, transfer_button, harvest_button, water_button, fertilize_button, pause_button, water_bucket_button, fungicide_button, bactericide_button, protectant_button, enhancer_button, fence_button, hoe_button]:
 		if button != null:
 			button.disabled = true
 	if tile_inspector != null:
@@ -507,9 +588,16 @@ func _make_action(coordinates: Vector2i, known_cell: FieldCellState = null) -> F
 	action.crop_type = _selected_crop
 	action.source = _transfer_source
 	match _tool_mode:
+		ToolMode.TOOL_HOE:
+			action.kind = SimulationEnums.FieldActionKind.DIG_GRASS
 		ToolMode.TOOL_REMOVE:
 			var cell: FieldCellState = known_cell if known_cell != null else farming_controller.get_grid_snapshot().get_cell(coordinates)
-			action.kind = SimulationEnums.FieldActionKind.REMOVE_CROP if cell != null and cell.has_crop else SimulationEnums.FieldActionKind.DIG_GRASS
+			if cell != null and cell.has_fence:
+				action.kind = SimulationEnums.FieldActionKind.REMOVE_FENCE
+			else:
+				action.kind = SimulationEnums.FieldActionKind.REMOVE_CROP
+		ToolMode.TOOL_FENCE:
+			action.kind = SimulationEnums.FieldActionKind.FENCE
 		ToolMode.TOOL_WATER_BUCKET:
 			action.kind = SimulationEnums.FieldActionKind.MAKE_PADDY
 		ToolMode.TOOL_TRANSFER:
@@ -522,6 +610,14 @@ func _make_action(coordinates: Vector2i, known_cell: FieldCellState = null) -> F
 		ToolMode.TOOL_FERTILIZE:
 			action.kind = SimulationEnums.FieldActionKind.FERTILIZE
 			action.additions = Vector3(0, soil_tool_controller.nitrogen_boost_amount, soil_tool_controller.potassium_boost_amount) if soil_tool_controller != null else Vector3.INF
+		ToolMode.TOOL_FUNGICIDE:
+			action.kind = SimulationEnums.FieldActionKind.APPLY_FUNGICIDE
+		ToolMode.TOOL_BACTERICIDE:
+			action.kind = SimulationEnums.FieldActionKind.APPLY_BACTERICIDE
+		ToolMode.TOOL_PROTECTANT:
+			action.kind = SimulationEnums.FieldActionKind.APPLY_PROTECTANT
+		ToolMode.TOOL_ENHANCER:
+			action.kind = SimulationEnums.FieldActionKind.APPLY_ENHANCER
 		_:
 			action.kind = SimulationEnums.FieldActionKind.PLANT
 	return action
@@ -588,8 +684,26 @@ func _on_farmer_arrived(action_id: int, coordinates: Vector2i) -> void:
 	farming_controller.arrive_at_action(action_id, coordinates)
 
 
-func _on_action_finished(_action_id: int, success: bool, reason: String) -> void:
-	status_label.text = "Action complete." if success else reason
+func _on_action_finished(action_id: int, success: bool, reason: String) -> void:
+	if not success and reason.is_empty():
+		status_label.text = "Action failed."
+	elif not success:
+		# Check for treatment-specific cues (cooldown, mismatch)
+		if reason.contains("cooldown"):
+			status_label.text = "Treatment discarded: %s" % reason
+		else:
+			status_label.text = reason
+	else:
+		status_label.text = "Action complete."
+	# Refresh treatment panel on action completion
+	if treatment_panel != null and treatment_controller != null:
+		var turn: int = turn_controller.turn_index if turn_controller != null else 0
+		treatment_panel.refresh(turn)
+	# Show expiry cues from treatment state
+	if treatment_controller != null and treatment_controller.treatment_state != null:
+		for ev: Dictionary in treatment_controller.treatment_state.events:
+			if ev.get("type", "") == "expired":
+				status_label.text = "%s expired at (%d, %d)." % [ev.get("treatment_id", ""), ev.get("cell_x", 0), ev.get("cell_y", 0)]
 
 
 func _on_queued_harvest_completed(result: HarvestResult) -> void:
@@ -621,7 +735,17 @@ func _create_overlays() -> void:
 	start_title.add_theme_font_size_override("font_size", 28)
 	start_vbox.add_child(start_title)
 	var start_blurb := Label.new()
-	start_blurb.text = "Plant crops, manage soil, and harvest before the turn limit.\nGoal: harvest %d crops in %d turns." % [game_state_manager.harvest_goal, game_state_manager.turn_limit]
+	var start_blurb_text := "Plant crops, manage soil, and harvest before the turn limit.\nGoal: reach %d points in %d turns." % [game_state_manager.score_goal, game_state_manager.turn_limit]
+	if farming_controller != null and farming_controller.crop_database != null:
+		var values := PackedStringArray()
+		var crop_types: Array[SimulationEnums.CropType] = [SimulationEnums.CropType.SUGARCANE, SimulationEnums.CropType.CORN, SimulationEnums.CropType.RICE]
+		for crop_type: SimulationEnums.CropType in crop_types:
+			var c: CropData = farming_controller.crop_database.get_crop(crop_type)
+			if c != null:
+				values.append("%s: %d" % [c.display_name, c.base_score])
+		if not values.is_empty():
+			start_blurb_text += "\nPer harvest: " + " - ".join(values) + " (quality reduces score)."
+	start_blurb.text = start_blurb_text
 	start_blurb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	start_vbox.add_child(start_blurb)
 	var start_button := Button.new()
@@ -651,6 +775,13 @@ func _create_overlays() -> void:
 	_end_overlay_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_end_overlay_title.add_theme_font_size_override("font_size", 28)
 	end_vbox.add_child(_end_overlay_title)
+	_end_overlay_score = Label.new()
+	_end_overlay_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_end_overlay_score.add_theme_font_size_override("font_size", 22)
+	end_vbox.add_child(_end_overlay_score)
+	_end_overlay_breakdown = Label.new()
+	_end_overlay_breakdown.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	end_vbox.add_child(_end_overlay_breakdown)
 	_end_overlay_details = Label.new()
 	_end_overlay_details.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	end_vbox.add_child(_end_overlay_details)
@@ -662,7 +793,7 @@ func _create_overlays() -> void:
 	end_vbox.add_child(_end_overlay_button)
 	# --- Score label in HUD ---
 	_score_label = Label.new()
-	_score_label.text = "Harvested: 0 / %d" % game_state_manager.harvest_goal
+	_score_label.text = "Score: 0 / %d" % game_state_manager.score_goal
 	var controls: VBoxContainer = hud_panel.get_node("Margin/Controls")
 	controls.add_child(_score_label)
 	controls.move_child(_score_label, 1)
@@ -693,27 +824,49 @@ func _on_game_state_changed(_old_state: GameStateManager.State, new_state: GameS
 			_start_overlay.visible = true
 
 
-func _on_score_changed(_harvests: int, _goal: int) -> void:
+func _on_score_changed(_total_score: float, _goal: int) -> void:
 	_update_score_display()
 
 
 func _update_score_display() -> void:
 	if _score_label != null and game_state_manager != null:
-		_score_label.text = "Harvested: %d / %d" % [game_state_manager.harvest_count, game_state_manager.harvest_goal]
+		_score_label.text = "Score: %d / %d" % [roundi(game_state_manager.total_score), game_state_manager.score_goal]
 
 
 func _on_game_ended(victory: bool) -> void:
 	_set_controls_enabled(false)
+	_end_overlay_score.text = "Final Score: %d / %d" % [roundi(game_state_manager.total_score), game_state_manager.score_goal]
+	_end_overlay_breakdown.text = _build_score_breakdown()
 	if victory:
 		_end_overlay_title.text = "Victory!"
 		_end_overlay_title.add_theme_color_override("font_color", Color(0.3, 0.8, 0.3))
-		_end_overlay_details.text = "You harvested %d crops in %d turns!" % [game_state_manager.harvest_count, game_state_manager.turns_reached]
+		_end_overlay_details.text = "Goal reached in %d turns with %d harvests." % [game_state_manager.turns_reached, game_state_manager.harvest_count]
 	else:
 		_end_overlay_title.text = "Game Over"
 		_end_overlay_title.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
-		_end_overlay_details.text = "You harvested %d of %d crops in %d turns." % [game_state_manager.harvest_count, game_state_manager.harvest_goal, game_state_manager.turns_reached]
+		_end_overlay_details.text = "Out of turns (%d). %d harvests scored %d of %d points." % [game_state_manager.turn_limit, game_state_manager.harvest_count, roundi(game_state_manager.total_score), game_state_manager.score_goal]
 	_end_overlay_button.text = "Play Again"
 	_end_overlay.visible = true
+
+
+func _build_score_breakdown() -> String:
+	if game_state_manager == null or game_state_manager.crop_tally.is_empty():
+		return "No harvests yet."
+	var names: Dictionary = {
+		SimulationEnums.CropType.SUGARCANE: "Sugarcane",
+		SimulationEnums.CropType.RICE: "Rice",
+		SimulationEnums.CropType.CORN: "Corn",
+	}
+	var lines: PackedStringArray = PackedStringArray()
+	var keys: Array = game_state_manager.crop_tally.keys()
+	keys.sort()
+	for key: int in keys:
+		var tally: GameStateManager.CropTally = game_state_manager.crop_tally[key] as GameStateManager.CropTally
+		if tally == null:
+			continue
+		var crop_name: String = names.get(key, "Crop %d" % key) as String
+		lines.append("%s: %d harvests - %d pts" % [crop_name, tally.count, roundi(tally.score)])
+	return "\n".join(lines)
 
 
 func _on_play_again_pressed() -> void:

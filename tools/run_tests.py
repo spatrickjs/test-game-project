@@ -27,16 +27,30 @@ tests = [
     "tests/presentation/camera_zoom_test.gd",
     "tests/presentation/camera_ux_test.gd",
     "tests/simulation/crop_growth_test.gd",
+    "tests/simulation/scoring_model_test.gd",
     "tests/logic/weather_soil_tools_test.gd",
     "tests/presentation/terrain_preview_editor_test.gd",
     "tests/presentation/terrain_preview_runtime_test.gd",
     "tests/presentation/grass_overlay_test.gd",
     "tests/logic/queued_field_actions_test.gd",
+    "tests/presentation/hoe_and_shovel_test.gd",
+    "tests/logic/scoring_test.gd",
     "tests/presentation/background_layers_test.gd",
+    "tests/logic/fence_treatment_test.gd",
+    "tests/logic/fence_treatment_property_test.gd",
+    "tests/simulation/fence_containment_test.gd",
+    "tests/simulation/fence_connections_test.gd",
+    "tests/presentation/fence_presentation_test.gd",
+    "tests/presentation/fence_autotiling_test.gd",
     "tests/menu/settings_state_unit_test.gd",
     "tests/menu/settings_state_property_test.gd",
     "tests/menu/navigation_controller_property_test.gd",
     "tests/menu/save_game_controller_property_test.gd",
+    "tests/logic/treatment_test.gd",
+    "tests/logic/treatment_gherkin_test.gd",
+    "tests/logic/treatment_property_test.gd",
+    "tests/logic/treatment_integration_test.gd",
+    "tests/presentation/treatment_panel_test.gd",
 ]
 if args.test:
     unknown = set(args.test) - set(tests)
@@ -58,6 +72,7 @@ for test in tests:
     environment.pop("GODOT_DRAFT_DISEASE_PLAYTEST_SETUP", None)
     environment.pop("GODOT_SHADOW_SETUP", None)
     environment.pop("GODOT_LIGHTING_SETUP", None)
+    environment.pop("GODOT_FENCE_TOOL_SETUP", None)
     if test.endswith("editor_test.gd"):
         command = [args.godot, "--headless", "--path", str(root), "--editor",
                    "--log-file", str(logs / (Path(test).stem + ".log"))]

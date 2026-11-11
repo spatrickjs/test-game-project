@@ -11,6 +11,9 @@ var coordinates: Vector2i = Vector2i.ZERO
 var terrain_type: SimulationEnums.TerrainType = SimulationEnums.TerrainType.GRASS
 var soil: SoilState = null
 
+## Tile-level fence. A fenced cell is empty grass with no soil.
+var has_fence: bool = false
+
 var has_crop: bool = false
 ## Ignored when has_crop is false.
 var crop_type: SimulationEnums.CropType = SimulationEnums.CropType.SUGARCANE
@@ -90,6 +93,16 @@ func validate() -> PackedStringArray:
 	if soil != null:
 		for error: String in soil.validate():
 			errors.append("soil: %s" % error)
+	# Fenced cells are empty grass with no soil; any deviation is a structural error.
+	if has_fence:
+		if terrain_type != SimulationEnums.TerrainType.GRASS:
+			errors.append("fenced cells must be grass.")
+		if soil != null:
+			errors.append("fenced cells must not have soil.")
+		if has_crop:
+			errors.append("fenced cells must be empty.")
+		if has_active_disease:
+			errors.append("fenced cells must not have an active disease.")
 	_validate_fraction("susceptible_fraction", susceptible_fraction, errors)
 	_validate_fraction("exposed_fraction", exposed_fraction, errors)
 	_validate_fraction("infected_fraction", infected_fraction, errors)
@@ -122,6 +135,7 @@ func copy() -> FieldCellState:
 	var result: FieldCellState = FieldCellState.new()
 	result.coordinates = coordinates
 	result.terrain_type = terrain_type
+	result.has_fence = has_fence
 	result.has_crop = has_crop
 	result.crop_type = crop_type
 	result.growth_elapsed_ticks = growth_elapsed_ticks

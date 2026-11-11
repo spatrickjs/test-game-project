@@ -107,6 +107,8 @@ func display_cell(cell_state: FieldCellState, crop_data: CropData) -> void:
 		return
 	title_label.text = "Tile (%d, %d)" % [cell_state.coordinates.x, cell_state.coordinates.y]
 	terrain_label.text = "Terrain: %s" % _terrain_name(cell_state.terrain_type)
+	if cell_state.has_fence:
+		terrain_label.text += " (fenced)"
 	if cell_state.soil == null:
 		soil_ph_label.text = "No soil data"
 		macronutrients_label.text = "N: —   P: —   K: —"

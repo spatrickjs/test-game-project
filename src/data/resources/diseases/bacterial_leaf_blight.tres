@@ -15,6 +15,7 @@ disease_id = 4
 display_name = "Bacterial Leaf Blight (draft)"
 target_crop = 1
 transmission_modifier_profile = SubResource("Resource_qia4v")
+disease_category = 1
 beta = 0.35
 sigma = 0.3
 gamma = 0.1

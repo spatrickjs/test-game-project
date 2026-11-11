@@ -16,6 +16,7 @@ disease_id = 5
 display_name = "Rice Blast (playtest)"
 target_crop = 1
 transmission_modifier_profile = SubResource("Resource_kk45f")
+disease_category = 0
 beta = 0.6
 sigma = 0.5
 gamma = 0.15
