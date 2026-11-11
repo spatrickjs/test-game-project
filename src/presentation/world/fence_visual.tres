@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="FenceVisual" format=3 uid="uid://cp5eu6rwmxfxc"]
+
+[ext_resource type="Script" uid="uid://dq3e2l8o7skjk" path="res://src/presentation/world/fence_visual.gd" id="1_1ude4"]
+
+[resource]
+script = ExtResource("1_1ude4")
+source_id = 0

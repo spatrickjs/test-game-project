@@ -82,4 +82,6 @@ static func validate_terrain_assignments(
 					errors.append("%s: crop_type is not registered." % prefix)
 				if not terrain.allowed_crops.has(cell.crop_type):
 					errors.append("%s: terrain does not permit this crop_type." % prefix)
+			if cell.has_fence and cell.terrain_type != SimulationEnums.TerrainType.GRASS:
+				errors.append("%s: fenced cell must be on grass terrain." % prefix)
 	return errors
