@@ -40,11 +40,11 @@ static func set_one_hot(cell: FieldCellState, index: int) -> void:
 		cell.removed_outcome = SimulationEnums.RemovedOutcome.RECOVERED_IMMUNE if index == 3 else SimulationEnums.RemovedOutcome.DEAD
 
 
-static func continuous(cell: FieldCellState, disease: DiseaseData, hazard: float, dt: float, seir: bool) -> FieldCellState:
+static func continuous(cell: FieldCellState, disease: DiseaseData, hazard: float, dt: float, seir: bool, gamma_scale: float = 1.0) -> FieldCellState:
 	var next: FieldCellState = cell.copy()
 	var infection: float = cell.susceptible_fraction * probability(hazard, dt) if hazard > 0.0 else 0.0
 	var incubation: float = cell.exposed_fraction * probability(disease.sigma, dt) if seir else 0.0
-	var removal: float = cell.infected_fraction * probability(disease.gamma, dt)
+	var removal: float = cell.infected_fraction * probability(disease.gamma * gamma_scale, dt)
 	var waning: float = cell.recovered_immune_fraction * probability(disease.xi, dt)
 	var deaths: float = removal * disease.mortality_probability
 	next.susceptible_fraction = clampf(cell.susceptible_fraction - infection + waning, 0.0, 1.0)

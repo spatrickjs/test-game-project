@@ -25,23 +25,17 @@ Feature: Fence Treatment Method
 		And the tile terrain is GRASS
 		And the tile soil is null
 
-	Scenario: Fence an occupied tile
-		Given a tile with a crop
+	Scenario Outline: Reject fencing a planted plot
+		Given a tile with <crop>
 		When the player queues a fence on the tile
-		And the farmer arrives at the tile
-		Then the crop is removed
-		And the tile has a fence
-		And the tile terrain is GRASS
-		And the tile soil is null
-		And the tile has no active disease
-		And the tile compartment fractions are all zero
+		Then the action is rejected with "Remove or harvest the crop before placing a fence."
+		And the tile state is unchanged
+		And no fence action is queued
 
-	Scenario: Fence an infected tile
-		Given a tile with a crop and an active disease
-		When the player queues a fence on the tile
-		And the farmer arrives at the tile
-		Then the crop and disease identity are cleared
-		And the tile has a fence
+		Examples:
+			| crop                           |
+			| a healthy crop                 |
+			| a crop with an active disease  |
 
 	Scenario: Fenced tile is not a disease host
 		Given a fenced tile adjacent to an infected crop

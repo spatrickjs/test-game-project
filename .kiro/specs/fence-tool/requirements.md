@@ -28,7 +28,7 @@ Behavioral scenarios are in `fence_treatment.feature` (same folder).
 
 1. WHEN the player selects the Fence_Tool, THE Presenter SHALL enter `TOOL_FENCE` mode, clear any plant or inspect selection, and show eligible tiles highlighted.
 2. WHEN the player clicks or drag-selects tiles in `TOOL_FENCE` mode, THE FarmingController SHALL enqueue one `FENCE` Field_Action per eligible tile.
-3. THE FarmingController SHALL accept a `FENCE` action on any in-field tile that is not already fenced and has no queued action. This covers dry soil, paddy mud, grass, and occupied or infected tiles.
+3. THE FarmingController SHALL accept a `FENCE` action on any empty in-field tile that is not already fenced and has no queued action. This covers empty dry soil, paddy mud, and grass. Planted tiles are rejected regardless of crop disease status.
 4. IF the target is outside the field, THEN THE FarmingController SHALL reject the action with "Choose a tile inside the field."
 5. IF the target is already reserved by a queued action, THEN THE FarmingController SHALL reject the action with "This plot already has a queued action."
 6. IF the target is already fenced, THEN THE FarmingController SHALL reject the action.
@@ -45,16 +45,13 @@ Behavioral scenarios are in `fence_treatment.feature` (same folder).
 2. THE FarmingController SHALL emit `cell_changed` once for that tile after the change is committed.
 3. THE FarmingController SHALL emit `action_finished` with `success == true`.
 
-### Requirement 3: Fence an occupied tile
+### Requirement 3: Reject occupied tiles
 
-**User Story:** As a player, I want fencing to clear a diseased crop, so that I can contain an outbreak.
+Fencing must not destroy planted crops.
 
-#### Acceptance Criteria
-
-1. WHEN the farmer arrives at a queued `FENCE` target that has a crop, THE FarmingController SHALL remove the crop and fence the tile in one atomic commit.
-2. WHEN a crop is replaced by a fence, THE FarmingController SHALL reset growth, vitality, yield quality loss, categorical SIR state, removed outcome, active disease identity and all compartment fractions to the empty-cell values.
-3. THE FarmingController SHALL NOT grant a harvest or count the removal toward the harvest goal.
-4. THE FarmingController SHALL emit `cell_changed` once for that tile, after commit.
+1. Reject FENCE on any tile with a crop with "Remove or harvest the crop before placing a fence."
+2. Preserve crop, disease, soil, terrain, and score; do not enqueue the rejected action.
+3. Revalidate at arrival and cancel if the target has become occupied.
 
 ### Requirement 4: Fenced tile invariants
 

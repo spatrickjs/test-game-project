@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="TreatmentConfig" format=3]
+
+[ext_resource type="Script" path="res://src/data/resources/treatment_data.gd" id="1_td"]
+[ext_resource type="Script" path="res://src/data/resources/treatment_config.gd" id="2_tc"]
+[ext_resource type="Resource" path="res://src/data/treatments/fungicide.tres" id="3_fung"]
+[ext_resource type="Resource" path="res://src/data/treatments/bactericide.tres" id="4_bact"]
+[ext_resource type="Resource" path="res://src/data/treatments/protectant.tres" id="5_prot"]
+[ext_resource type="Resource" path="res://src/data/treatments/enhancer.tres" id="6_enh"]
+[ext_resource type="Resource" path="res://src/data/treatments/insecticide.tres" id="7_ins"]
+
+[resource]
+script = ExtResource("2_tc")
+max_queued_per_turn = 2
+resistance_window_turns = 10
+threshold = 2
+penalty_per_extra_use = 0.15
+potency_floor = 0.4
+enhancer_repeat_decay = 0.7
+min_hazard_mult = 0.2
+max_gamma_scale = 10.0
+min_vitality_loss_mult = 0.0
+vector_growth_rate = 0.1
+rebound_factor = 0.8
+beneficial_index_recovery_step = 0.05
+treatments = Array[ExtResource("1_td")]([ExtResource("3_fung"), ExtResource("4_bact"), ExtResource("5_prot"), ExtResource("6_enh"), ExtResource("7_ins")])

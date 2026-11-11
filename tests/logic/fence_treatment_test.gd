@@ -98,37 +98,26 @@ func _run() -> void:
 	_check(paddy_cell.soil == null, "Fenced paddy: soil null")
 
 	# ------------------------------------------------------------------
-	# Scenario: Fence an occupied tile (Requirement 3).
-	# ------------------------------------------------------------------
+	# Occupied targets reject fencing without crop, soil, or disease mutation.
+	for infected: bool in [false, true]:
+		_farming.initialize_field()
+		_check(_farming.try_plant(dry, SimulationEnums.CropType.CORN), "Prepare occupied tile")
+		var live: FieldCellState = _farming._grid.get_cell(dry)
+		live.has_active_disease = infected
+		var occupied_before: FieldCellState = live.copy()
+		_check(not _farming.enqueue_action(_action(Kind.FENCE, dry)), "Occupied fence rejected")
+		_check(_farming.last_error == "Remove or harvest the crop before placing a fence.", "Helpful rejection")
+		var occupied_after: FieldCellState = _farming.get_grid_snapshot().get_cell(dry)
+		_check(occupied_after.has_crop and not occupied_after.has_fence, "Crop retained without fence")
+		_check(occupied_after.has_active_disease == occupied_before.has_active_disease and occupied_after.terrain_type == occupied_before.terrain_type, "Disease and terrain retained")
+		_check(occupied_after.soil.moisture == occupied_before.soil.moisture and not _farming.has_pending_actions(), "Soil retained and no action queued")
+	# Revalidate occupancy when a previously empty target changes occupied_before arrival.
 	_farming.initialize_field()
-	_check(_farming.try_plant(dry, SimulationEnums.CropType.CORN), "Precondition: crop planted on dry")
-	var counter: Array[int] = [0]
-	var _count_changes: Callable = func(_c: Vector2i) -> void: counter[0] += 1
-	_farming.cell_changed.connect(_count_changes)
-	_plant_fence(dry)
-	var occ_cell: FieldCellState = _farming.get_grid_snapshot().get_cell(dry)
-	_check(occ_cell.has_fence, "Fenced occupied tile: has_fence")
-	_check(not occ_cell.has_crop, "Fenced occupied tile: crop removed")
-	_check(occ_cell.terrain_type == SimulationEnums.TerrainType.GRASS, "Fenced occupied tile: terrain GRASS")
-	_check(occ_cell.soil == null, "Fenced occupied tile: soil null")
-	_check(not occ_cell.has_active_disease, "Fenced occupied tile: no active disease")
-	_check(occ_cell.susceptible_fraction == 0.0, "Fenced occupied tile: S fraction zero")
-	_check(occ_cell.validate().is_empty(), "Fenced occupied tile: validate passes")
-	_check(counter[0] == 1, "Exactly one cell_changed signal for fence commit (got %d)" % counter[0])
-	_farming.cell_changed.disconnect(_count_changes)
-
-	# ------------------------------------------------------------------
-	# Scenario: Fence an infected tile (Requirement 3.2, 7.3).
-	# ------------------------------------------------------------------
-	_farming.initialize_field()
-	var paddy_grid: FieldGridState = _farming.get_grid_snapshot()
-	# Make paddy so rice can be planted.
-	var paddy_cell2: FieldCellState = paddy_grid.get_cell(paddy)
-	_check(_farming.try_plant(dry, SimulationEnums.CropType.CORN), "Precondition: corn planted for infection test")
-	_plant_fence(dry)
-	var inf_after: FieldCellState = _farming.get_grid_snapshot().get_cell(dry)
-	_check(inf_after.has_fence, "Fenced infected: has_fence")
-	_check(not inf_after.has_active_disease, "Fenced infected: disease identity cleared")
+	_check(_farming.enqueue_action(_action(Kind.FENCE, dry)), "Queue empty plot")
+	var pending: FieldAction = _farming.get_current_action()
+	_check(_farming.try_plant(dry, SimulationEnums.CropType.CORN), "Plant occupied_before arrival")
+	_check(not _farming.arrive_at_action(pending.id, dry), "Cancel occupied arrival")
+	_check(_farming.get_grid_snapshot().get_cell(dry).has_crop, "Arrival preserves crop")
 
 	# ------------------------------------------------------------------
 	# Requirement 5 — Fenced tile restrictions.

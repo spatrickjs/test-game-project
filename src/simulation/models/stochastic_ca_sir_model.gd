@@ -2,7 +2,7 @@ class_name StochasticCASIRModel
 extends RefCounted
 
 
-func evaluate(cell: FieldCellState, disease: DiseaseData, hazard: float, dt: float, rng: RandomNumberGenerator) -> FieldCellState:
+func evaluate(cell: FieldCellState, disease: DiseaseData, hazard: float, dt: float, rng: RandomNumberGenerator, gamma_scale: float = 1.0) -> FieldCellState:
 	var next: FieldCellState = cell.copy()
 	var state: int = CompartmentMath.one_hot_index(cell)
 	# Exactly one transition per tick; CA entry has already been validated.
@@ -11,7 +11,7 @@ func evaluate(cell: FieldCellState, disease: DiseaseData, hazard: float, dt: flo
 			if hazard > 0.0 and _draw(CompartmentMath.probability(hazard, dt), rng):
 				state = 2
 		2:
-			if _draw(CompartmentMath.probability(disease.gamma, dt), rng):
+			if _draw(CompartmentMath.probability(disease.gamma * gamma_scale, dt), rng):
 				state = 4 if _draw(disease.mortality_probability, rng) else 3
 		3:
 			if _draw(CompartmentMath.probability(disease.xi, dt), rng):

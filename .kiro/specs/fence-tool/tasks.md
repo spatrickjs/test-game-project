@@ -129,7 +129,7 @@ flowchart TD
 - [x] 7. Write Simulation containment test
   - `tests/simulation/fence_containment_test.gd`
   - Fenced cell is not a host and gives no pressure, for SIR, SEIR and CA
-  - Fencing an infected crop clears its disease; `validate_turn` passes
+  - Fencing an infected crop is rejected without changing its crop or disease state
   - `DiseaseActivationController` never selects a fenced cell
   - [ ]* Property 5: containment equivalence with ordinary grass
   - No production code change expected in `src/simulation/`
