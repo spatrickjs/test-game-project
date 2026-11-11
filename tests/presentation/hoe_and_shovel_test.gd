@@ -85,6 +85,31 @@ func _run() -> void:
 	# Shovel highlights crops and fences, not grass.
 	_check(_world.selection_overlay.eligible.has(dry2) and _world.selection_overlay.eligible.has(dry), "Shovel highlights crops and fences")
 	_check(not _world.selection_overlay.eligible.has(grass), "Shovel does not highlight grass")
+	_scene._on_cell_clicked(grass)
+	_check(_scene._tool_mode == FieldPrototypePresenter.ToolMode.TOOL_REMOVE, "Rejected selection keeps tool active")
+	_scene._on_cell_clicked(dry)
+	_check(_scene._tool_mode == FieldPrototypePresenter.ToolMode.INSPECT, "Successful single selection returns to Inspect")
+	_check(QueueDriver.finish(_scene), "Single selected action completes after Inspect reset")
+	_scene._on_hoe_pressed()
+	var grass2: Vector2i = Vector2i(7, 0)
+	var selected: Array[Vector2i] = [grass, grass2]
+	_scene._on_cells_selected(selected, Kind.DIG_GRASS)
+	_check(_scene._tool_mode == FieldPrototypePresenter.ToolMode.INSPECT, "Drag returns to Inspect")
+	_check(_farming.get_queued_coordinates().has(grass) and _farming.get_queued_coordinates().has(grass2), "Entire drag queues before resetting tool")
+	_check(_world.selection_overlay.eligible.is_empty(), "Completed drag clears tool targets")
+	_check(QueueDriver.finish(_scene), "Drag actions complete after Inspect reset")
+	_scene._on_cell_clicked(grass)
+	_check(not _farming.has_pending_actions(), "Next plot tap inspects without queuing")
+	_scene._on_sugarcane_pressed()
+	_scene._on_cell_clicked(grass)
+	_check(_scene._tool_mode == FieldPrototypePresenter.ToolMode.INSPECT, "Crop planting returns to Inspect")
+	_check(QueueDriver.finish(_scene), "Planting completes after Inspect reset")
+	_scene._on_transfer_pressed()
+	_scene._on_cell_clicked(grass)
+	_check(_scene._tool_mode == FieldPrototypePresenter.ToolMode.TOOL_TRANSFER, "Move remains active after source selection")
+	_scene._on_cell_clicked(grass2)
+	_check(_scene._tool_mode == FieldPrototypePresenter.ToolMode.INSPECT, "Move returns to Inspect after destination")
+	_check(QueueDriver.finish(_scene), "Move completes after Inspect reset")
 
 	# ------------------------------------------------------------------
 	# Hoe and Shovel are disabled outside gameplay.

@@ -246,7 +246,7 @@ func _select_crop(crop_type: SimulationEnums.CropType) -> void:
 	tile_inspector.clear_display()
 	_update_crop_buttons()
 	selected_crop_label.text = "Plant: %s" % crop.display_name
-	status_label.text = "Click an eligible tile to plant. Click this crop button again to inspect."
+	status_label.text = "Tap or drag over eligible plots to plant, then return to Inspect. Tap this crop again to cancel."
 
 
 func _enter_inspect_mode() -> void:
@@ -362,7 +362,9 @@ func _on_cell_clicked(coordinates: Vector2i) -> void:
 		_handle_transfer_click(coordinates)
 		return
 	if _tool_mode != ToolMode.INSPECT:
-		_queue_at(coordinates)
+		if _queue_at(coordinates):
+			_enter_inspect_mode()
+			status_label.text = "Action queued. The farmer is on the way."
 	else:
 		_inspected_coordinates = coordinates
 		_refresh_inspected_cell()
@@ -509,8 +511,7 @@ func _handle_transfer_click(coordinates: Vector2i) -> void:
 		status_label.text = "Move cancelled. Choose another crop."
 		return
 	if _queue_at(coordinates):
-		_transfer_source = Vector2i(-1, -1)
-		_refresh_tool_targets(true)
+		_enter_inspect_mode()
 		status_label.text = "Move queued. The farmer will visit both plots."
 	else:
 		status_label.text = farming_controller.last_error + " Choose another destination or click the source to cancel."
@@ -638,8 +639,13 @@ func _queue_at(coordinates: Vector2i, expected_kind: int = -1) -> bool:
 func _on_cells_selected(coordinates: Array[Vector2i], kind: int) -> void:
 	if not _running or not game_state_manager.is_playing() or _tool_mode == ToolMode.INSPECT:
 		return
+	var queued_any: bool = false
 	for coords: Vector2i in coordinates:
-		_queue_at(coords, kind)
+		if _queue_at(coords, kind):
+			queued_any = true
+	if queued_any:
+		_enter_inspect_mode()
+		status_label.text = "Actions queued. The farmer is on the way."
 
 
 func _refresh_tool_targets(mode_changed: bool = false) -> void:
