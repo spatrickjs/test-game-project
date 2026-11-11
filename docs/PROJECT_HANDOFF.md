@@ -1,5 +1,9 @@
 # Project handoff: isometric crop disease education game
 
+## Weather-cycle verification update
+
+The weather-cycle implementation is based on checkout `fe5fcdf43cce2db37a957b4172866fe7b0558c69`. The runner currently registers 29 tests; counts and results in older sections below are historical. The existing cycle is retained, with an evaporation-overflow guard and expanded numeric, rollback, fence, and inspector coverage. See [WEATHER_CYCLE_VERIFICATION.md](WEATHER_CYCLE_VERIFICATION.md) for current execution evidence and remaining limits. No authored scene or asset changes are part of this work.
+
 Latest implementation update: **2026-11-08 (Asia/Manila)**. Earlier sections retain the November 6 checkpoint as history. Paths below are relative to the project root; `res://` means the directory containing `project.godot`.
 
 ## Current handoff: November 8, 2026

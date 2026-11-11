@@ -210,3 +210,104 @@ Feature: Turn-based weather cycle
         And weather should use rainfall 0.04
         And the tile moisture should be 0.518
         And the current turn index should be 2
+
+    Scenario: Sequential turns accumulate moisture using each cycle phase
+        Given weather fluctuations are enabled
+        And the cycle length is 4 turns
+        And the temperature amplitude is 5
+        And the rainfall amplitude is 0.02
+        And the current turn index is 0
+        And a soil tile has moisture 0.5
+        When I complete 3 successful turns
+        Then the tile moisture should be 0.518
+        When I complete 1 more successful turn
+        Then the tile moisture should be 0.5
+
+    Scenario: Re-enabling weather uses the current game turn
+        Given the four-turn cycle has temperature amplitude 5 and rainfall amplitude 0.02
+        And a soil tile has moisture 0.5
+        And I have completed the first turn
+        When weather is disabled for 2 successful turns
+        And weather is enabled again
+        And I click the Next Turn button and the turn succeeds
+        Then the tile moisture should be 0.482
+        And the current turn index should be 4
+
+    Scenario: A new session resets the weather phase
+        Given I have advanced the weather cycle
+        When a new session initializes the field and resets the clock
+        Then the current turn index should be 0
+        And the next successful turn should use baseline weather at phase zero
+
+    Scenario: Requests outside active gameplay do not advance weather
+        Given the game is on the menu or has ended
+        When a Next Turn request is made
+        Then the turn should be rejected
+        And the field state and turn counter should remain unchanged
+
+    Scenario: A reentrant turn request cannot consume a second phase
+        Given a successful turn is notifying completion listeners
+        When a listener requests another turn before that notification finishes
+        Then the nested request should be rejected
+        And only the original turn should be committed
+
+    Scenario: Fence work blocks turns until the queued action completes
+        Given a fence action is queued on a soil tile
+        When a Next Turn request is made before the farmer arrives
+        Then the turn should be rejected
+        And the field state and weather phase should remain unchanged
+
+    Scenario: Weather follows the fence and soil lifecycle
+        Given the rainfall baseline is 0
+        And the evaporation baseline is 0.05
+        When the farmer completes a fence action on a soil tile
+        And I click the Next Turn button and the turn succeeds
+        Then the fenced tile should have no soil
+        And neighboring soil should lose 0.05 moisture within normalized bounds
+        When the farmer removes that fence
+        And I click the Next Turn button and the turn succeeds
+        Then the unfenced grass tile should still have no soil
+        When the farmer digs that grass tile
+        And I click the Next Turn button and the turn succeeds
+        Then the restored soil should lose 0.05 moisture within normalized bounds
+
+    Scenario: Disabled weather bypasses configuration errors but not invalid inputs
+        Given weather is disabled with invalid settings and an unsupported source
+        When weather is evaluated on a valid grid at a nonnegative turn index
+        Then the evaluation should succeed without changing the grid
+        When weather is evaluated with a missing grid, invalid grid, or negative turn index
+        Then the evaluation should be rejected
+
+    Scenario: Invalid numeric weather settings cannot partially change the field
+        Given weather settings contain an out-of-range value, a non-finite value, reversed bounds, or a temperature cycle below absolute zero
+        When weather is evaluated
+        Then the evaluation should be rejected with an actionable diagnostic
+        And the complete grid should remain unchanged
+
+    Scenario: Evaporation overflow is rejected even on a soil-free field
+        Given finite configured factors would produce non-finite evaporation
+        And every field tile has no soil
+        When weather is evaluated
+        Then the evaluation should be rejected with an overflow diagnostic
+
+    Scenario: A failed activation proposal does not commit weather or randomness
+        Given weather and crop growth have been staged
+        And disease activation has proposed an introduction
+        When activation processing rejects the turn
+        Then the complete field and activation history should remain unchanged
+        And simulation randomness and counters should be restored
+        And no turn completion or new weather summary should be published
+
+    Scenario: Weather summaries describe committed outcomes
+        Given debug console output is disabled
+        When a successful turn changes soil moisture
+        Then the committed summary should record its turn number, changed tile count, total soil tile count, and before and after means
+        And no weather summary should be printed to the console
+        And balanced, disabled, and soil-free outcomes should remain distinguishable
+
+    Scenario: The selected tile inspector refreshes after weather commits
+        Given I am inspecting a soil tile with moisture 0.65
+        And the rainfall baseline is 0
+        And the evaporation baseline is 0.05
+        When I click the Next Turn button and the turn succeeds
+        Then the inspector should display soil moisture as 60.0 percent
