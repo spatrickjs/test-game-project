@@ -9,6 +9,11 @@ extends Resource
 @export_range(0, 1000, 1, "or_greater") var cooldown_turns: int = 2
 @export_range(0, 1000, 1, "or_greater") var max_introductions_per_session: int = 5
 @export var random_seed: int = 2026
+## When true, each new session seeds the activation RNG from OS entropy via
+## RandomNumberGenerator.randomize() instead of the fixed [random_seed].
+## Lets the saved game policy vary outbreaks across playthroughs while tests
+## that construct DiseaseActivationPolicy.new() stay deterministic.
+@export var randomize_seed: bool = false
 @export_multiline var design_note: String = "Illustrative game encounters; frequency and timing are designer choices, not measured outbreak probabilities."
 
 func validate() -> PackedStringArray:

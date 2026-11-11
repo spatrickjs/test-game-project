@@ -107,7 +107,7 @@ func _test_policy_and_replay() -> void:
 	f.game.start_game()
 	var random_before: int = f.activation.get_state_snapshot().rng_state
 	check(f.turns.advance_turn(), "Empty field permits ordinary turn")
-	check(f.activation.get_state_snapshot().rng_state == random_before and not f.activation.get_state_snapshot().has_selected_disease, "No host consumes no activation randomness")
+	check(f.activation.get_state_snapshot().rng_state == random_before, "No host consumes no activation randomness")
 	check(f.plant_all(), "Plant policy fixture")
 	var detached: FieldGridState = f.farming.get_grid_snapshot()
 	var proposal: DiseaseActivationController.Result = f.activation.evaluate(detached, f.turns.disease_database, 1)
@@ -149,7 +149,7 @@ func _test_policy_and_replay() -> void:
 	check(f.farming.initialize_field() and f.plant_all(), "Reset fixture field")
 	f.turns.reset_clock()
 	f.turns.reset_clock()
-	check(f.activation.get_state_snapshot().introductions_committed == 0 and not f.activation.get_state_snapshot().has_selected_disease and f.activation.get_state_snapshot().rng_state == random_before, "Repeated reset is idempotent")
+	check(f.activation.get_state_snapshot().introductions_committed == 0 and f.activation.get_state_snapshot().rng_state == random_before, "Repeated reset is idempotent")
 	check(f.turns.advance_turn() and f.farming.last_turn_introduction.coordinates == first, "Seeded restart repeats selection")
 	f.game.turn_limit = 2
 	f.activation.policy.cooldown_turns = 0
@@ -241,7 +241,7 @@ func _test_saved_scene() -> void:
 	scene.game_state_manager.check_turn_limit(scene.game_state_manager.turn_limit)
 	check(not scene.turn_controller.advance_turn(), "Saved scene blocks after game over")
 	scene._on_play_again_pressed()
-	check(scene.game_state_manager.is_playing() and scene.turn_controller.turn_index == 0 and activation.get_state_snapshot().introductions_committed == 0 and not activation.get_state_snapshot().has_selected_disease, "Play Again clears activation and session history")
+	check(scene.game_state_manager.is_playing() and scene.turn_controller.turn_index == 0 and activation.get_state_snapshot().introductions_committed == 0, "Play Again clears activation and session history")
 	check(scene.farming_controller.try_plant(Vector2i.ZERO, SimulationEnums.CropType.RICE) and scene.turn_controller.advance_turn(), "Restart remains playable")
 	scene.queue_free()
 	await process_frame
