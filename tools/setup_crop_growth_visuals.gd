@@ -8,6 +8,13 @@ const Normalizer: Script = preload("res://tools/crop_texture_normalizer.gd")
 const GENERATED_DIR: String = "res://assets/art/tilesets/crops/normalized"
 const CROP_NAMES: Array[String] = ["rice", "corn", "sugarcane"]
 const FRAME_COUNT: int = 11
+## Enable to import the diseased folders instead of healthy crops.
+const IMPORT_DISEASES: bool = true
+const DISEASE_FOLDERS: Dictionary = {
+	"rice": {"rice_tungro": 3, "bacterial_leaf_blight": 4, "rice_blast": 5},
+	"corn": {"common_corn_rust": 6, "philippine_downy_mildew": 7, "ear_rot": 8},
+	"sugarcane": {"red_striped_soft_scale_insect": 0, "sugarcane_smut": 1, "leaf_scald": 2},
+}
 const ANIMATION_FPS: float = 8.0
 
 
@@ -67,7 +74,16 @@ func run_setup() -> int:
 
 	var cell_size: Vector2i = Normalizer.single_cell_size(tiles.tile_size)
 
+	var jobs: Array[Dictionary] = []
 	for crop_name: String in CROP_NAMES:
+		if IMPORT_DISEASES:
+			for disease: String in DISEASE_FOLDERS[crop_name]:
+				jobs.append({"crop": crop_name, "disease": disease})
+		else:
+			jobs.append({"crop": crop_name, "disease": ""})
+	for job: Dictionary in jobs:
+		var crop_name: String = job.crop
+		var disease: String = job.disease
 		var crop_path: String = "res://src/data/resources/%s_data.tres" % crop_name
 		var crop: Resource = load(crop_path)
 		if crop == null:
@@ -77,7 +93,7 @@ func run_setup() -> int:
 		var stage_frame_sets: Array = []
 
 		for stage: int in range(4):
-			var frames: Array[Image] = _load_stage_frames(crop_name, stage)
+			var frames: Array[Image] = _load_disease_frames(crop_name, disease, stage) if IMPORT_DISEASES else _load_stage_frames(crop_name, stage)
 			if frames.is_empty():
 				return _fail("Could not load frames or static PNG for %s stage %d" % [crop_name, stage])
 			print("Loaded %d frame(s) for %s stage %d" % [frames.size(), crop_name, stage])
@@ -89,6 +105,8 @@ func run_setup() -> int:
 
 		for stage: int in range(4):
 			var source_name: String = "%s_stage_%d" % [crop_name, stage]
+			if IMPORT_DISEASES:
+				source_name = "%s_%s_stage_%d" % [crop_name, disease, stage]
 			var source_id: int = _find_source(tiles, source_name)
 			var artwork_scale: float = 0.5 if stage == 0 and crop_name in ["corn", "sugarcane"] else 1.0
 			var frames: Array[Image] = stage_frame_sets[stage]
@@ -122,8 +140,24 @@ func run_setup() -> int:
 			ids.append(source_id)
 			coords.append(Vector2i.ZERO)
 
-		crop.set("growth_stage_source_ids", ids)
-		crop.set("growth_stage_atlas_coords", coords)
+		if IMPORT_DISEASES:
+			var disease_id: int = DISEASE_FOLDERS[crop_name][disease]
+			var visual: DiseaseVisualSet = null
+			for existing_visual: DiseaseVisualSet in crop.disease_visuals:
+				if existing_visual != null and existing_visual.disease_id == disease_id:
+					visual = existing_visual
+			if visual == null:
+				visual = DiseaseVisualSet.new()
+				visual.disease_id = disease_id
+				var visuals: Array[DiseaseVisualSet] = []
+				visuals.assign(crop.disease_visuals)
+				visuals.append(visual)
+				crop.disease_visuals = visuals
+			visual.stage_source_ids = ids
+			visual.stage_atlas_coords = coords
+		else:
+			crop.set("growth_stage_source_ids", ids)
+			crop.set("growth_stage_atlas_coords", coords)
 		if ResourceSaver.save(crop, crop_path) != OK:
 			return _fail("Could not save crop: " + crop_path)
 
@@ -210,3 +244,16 @@ func _fail(message: String) -> int:
 	push_error(message)
 	print("SETUP FAILED: " + message)
 	return 1
+
+func _load_disease_frames(crop_name: String, disease: String, stage: int) -> Array[Image]:
+	var directory: String = "res://assets/art/tilesets/crops_raw/%s/diseased/%s/stage_%d" % [crop_name, disease, stage]
+	var names: PackedStringArray = DirAccess.get_files_at(directory)
+	names.sort()
+	var frames: Array[Image] = []
+	for filename: String in names:
+		if filename.begins_with("frame") and filename.ends_with(".png"):
+			var source: Image = Image.new()
+			if source.load_png_from_buffer(FileAccess.get_file_as_bytes(directory.path_join(filename))) != OK:
+				return []
+			frames.append(Normalizer.prepare_frame(source))
+	return frames

@@ -31,18 +31,54 @@
 [ext_resource type="Texture2D" uid="uid://csfml1v1ks5po" path="res://assets/art/tilesets/crops/normalized/corn_stage_3.res" id="22_iu8er"]
 [ext_resource type="Texture2D" uid="uid://vdgtdhkjf8rs" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_0.res" id="23_aotfg"]
 [ext_resource type="Texture2D" uid="uid://cq8lexkbo264a" path="res://assets/art/tilesets/crops/normalized/sugarcane_stage_1.res" id="24_ia13u"]
+[ext_resource type="Texture2D" uid="uid://dubeaydlqy0kl" path="res://assets/art/tilesets/crops/normalized/rice_rice_tungro_stage_0.res" id="25_2tfc1"]
 [ext_resource type="Script" uid="uid://cp76etb7tv8y4" path="res://src/presentation/world/field_terrain_preview.gd" id="25_gxe8k"]
 [ext_resource type="Script" uid="uid://c7x4cbtfkuilb" path="res://src/presentation/ui/camera_zoom_button.gd" id="26_6a3lw"]
 [ext_resource type="Texture2D" uid="uid://ymbkqy087onx" path="res://assets/art/tilesets/foliage/animated_grass_tuft.png" id="26_dqm82"]
+[ext_resource type="Texture2D" uid="uid://dbkjuo233istl" path="res://assets/art/tilesets/crops/normalized/rice_rice_tungro_stage_1.res" id="26_xq5lu"]
 [ext_resource type="Script" uid="uid://bvqqs0qec7sgl" path="res://src/presentation/world/farmer_agent.gd" id="27_bct15"]
 [ext_resource type="Script" uid="uid://dmwfbudlygvky" path="res://src/logic/environment/weather_manager.gd" id="27_mfnx3"]
+[ext_resource type="Texture2D" uid="uid://dpqstmw1qhyeh" path="res://assets/art/tilesets/crops/normalized/rice_rice_tungro_stage_2.res" id="27_utpka"]
 [ext_resource type="Script" uid="uid://bh07j7g2ueac1" path="res://src/presentation/world/field_selection_overlay.gd" id="28_3wfy2"]
+[ext_resource type="Texture2D" uid="uid://co8emxtj8wkyp" path="res://assets/art/tilesets/crops/normalized/rice_rice_tungro_stage_3.res" id="28_4ow4g"]
 [ext_resource type="Script" uid="uid://c0xjvj7idv2fq" path="res://src/logic/farming/soil_tool_controller.gd" id="28_gxe8k"]
 [ext_resource type="Script" uid="uid://q2tph6b4xeio" path="res://src/presentation/world/crop_shadow_overlay.gd" id="29_3wfy2"]
+[ext_resource type="Texture2D" uid="uid://bdugd1fd44ucv" path="res://assets/art/tilesets/crops/normalized/rice_bacterial_leaf_blight_stage_0.res" id="29_8s8x7"]
 [ext_resource type="Script" uid="uid://ma86048skmrv" path="res://src/presentation/ui/pause_menu_view.gd" id="29_pause"]
+[ext_resource type="Texture2D" uid="uid://b4yj2fqbtry1t" path="res://assets/art/tilesets/crops/normalized/rice_bacterial_leaf_blight_stage_1.res" id="30_yrblw"]
+[ext_resource type="Texture2D" uid="uid://ccgu4rahk3sdd" path="res://assets/art/tilesets/crops/normalized/rice_bacterial_leaf_blight_stage_2.res" id="31_26c31"]
+[ext_resource type="Texture2D" uid="uid://bfuy6vbqlcdh5" path="res://assets/art/tilesets/crops/normalized/rice_bacterial_leaf_blight_stage_3.res" id="32_loncs"]
+[ext_resource type="Texture2D" uid="uid://ddojnl0y02306" path="res://assets/art/tilesets/crops/normalized/rice_rice_blast_stage_0.res" id="34_pa7k6"]
+[ext_resource type="Texture2D" uid="uid://b1a111qg3plbq" path="res://assets/art/tilesets/crops/normalized/rice_rice_blast_stage_1.res" id="35_qbkfi"]
+[ext_resource type="Texture2D" uid="uid://cqghop68qeoew" path="res://assets/art/tilesets/crops/normalized/rice_rice_blast_stage_2.res" id="36_mrgme"]
 [ext_resource type="Script" uid="uid://xv0vhi4veopc" path="res://src/logic/environment/disease_activation_controller.gd" id="37_jeedr"]
+[ext_resource type="Texture2D" uid="uid://bp70bxdwo0tcs" path="res://assets/art/tilesets/crops/normalized/rice_rice_blast_stage_3.res" id="37_k5dj2"]
+[ext_resource type="Texture2D" uid="uid://cdebkexq86fw6" path="res://assets/art/tilesets/crops/normalized/corn_common_corn_rust_stage_0.res" id="38_6pmr1"]
 [ext_resource type="Resource" uid="uid://dhxtd6ic3uj68" path="res://src/data/resources/disease_activation/default_activation_policy.tres" id="38_7a55d"]
 [ext_resource type="Script" uid="uid://cgcmesq61apy" path="res://src/logic/turns/game_state_manager.gd" id="39_0n7ni"]
+[ext_resource type="Texture2D" uid="uid://cvahlllouse0e" path="res://assets/art/tilesets/crops/normalized/corn_common_corn_rust_stage_1.res" id="39_ga15o"]
+[ext_resource type="Texture2D" uid="uid://dmi7w1ix0ej26" path="res://assets/art/tilesets/crops/normalized/corn_common_corn_rust_stage_2.res" id="40_o1eil"]
+[ext_resource type="Texture2D" uid="uid://l5vhr0yytqkd" path="res://assets/art/tilesets/crops/normalized/corn_common_corn_rust_stage_3.res" id="41_rtnsn"]
+[ext_resource type="Texture2D" uid="uid://cgbu44lwu24xn" path="res://assets/art/tilesets/crops/normalized/corn_philippine_downy_mildew_stage_0.res" id="42_myts5"]
+[ext_resource type="Texture2D" uid="uid://di4n7twbolt4l" path="res://assets/art/tilesets/crops/normalized/corn_philippine_downy_mildew_stage_1.res" id="43_jlgvj"]
+[ext_resource type="Texture2D" uid="uid://hypj3wmeirad" path="res://assets/art/tilesets/crops/normalized/corn_philippine_downy_mildew_stage_2.res" id="45_q0a6n"]
+[ext_resource type="Texture2D" uid="uid://davuywlbpq8kx" path="res://assets/art/tilesets/crops/normalized/corn_philippine_downy_mildew_stage_3.res" id="46_5m6hf"]
+[ext_resource type="Texture2D" uid="uid://b4ohbepu1e3ln" path="res://assets/art/tilesets/crops/normalized/corn_ear_rot_stage_0.res" id="47_xcv2r"]
+[ext_resource type="Texture2D" uid="uid://diq752f6x5ifl" path="res://assets/art/tilesets/crops/normalized/corn_ear_rot_stage_1.res" id="48_b0pje"]
+[ext_resource type="Texture2D" uid="uid://bmxwsd42d84kp" path="res://assets/art/tilesets/crops/normalized/corn_ear_rot_stage_2.res" id="49_8xqhb"]
+[ext_resource type="Texture2D" uid="uid://url8u53103aw" path="res://assets/art/tilesets/crops/normalized/corn_ear_rot_stage_3.res" id="50_2hfqp"]
+[ext_resource type="Texture2D" uid="uid://dea05efeb6t6t" path="res://assets/art/tilesets/crops/normalized/sugarcane_red_striped_soft_scale_insect_stage_0.res" id="51_hdyqy"]
+[ext_resource type="Texture2D" uid="uid://lxo8juw4cpr4" path="res://assets/art/tilesets/crops/normalized/sugarcane_red_striped_soft_scale_insect_stage_1.res" id="52_t5ce2"]
+[ext_resource type="Texture2D" uid="uid://buyo1rydwyjyb" path="res://assets/art/tilesets/crops/normalized/sugarcane_red_striped_soft_scale_insect_stage_2.res" id="53_kk280"]
+[ext_resource type="Texture2D" uid="uid://j7kp25bn2x0a" path="res://assets/art/tilesets/crops/normalized/sugarcane_red_striped_soft_scale_insect_stage_3.res" id="54_n4nfo"]
+[ext_resource type="Texture2D" uid="uid://deeh7rawrsi28" path="res://assets/art/tilesets/crops/normalized/sugarcane_sugarcane_smut_stage_0.res" id="56_8ruwo"]
+[ext_resource type="Texture2D" uid="uid://b7rm6t7u024mk" path="res://assets/art/tilesets/crops/normalized/sugarcane_sugarcane_smut_stage_1.res" id="57_u8qcu"]
+[ext_resource type="Texture2D" uid="uid://bplpm6k1p7jfd" path="res://assets/art/tilesets/crops/normalized/sugarcane_sugarcane_smut_stage_2.res" id="58_hu8b8"]
+[ext_resource type="Texture2D" uid="uid://c4ddomuh4bnpo" path="res://assets/art/tilesets/crops/normalized/sugarcane_sugarcane_smut_stage_3.res" id="59_4giee"]
+[ext_resource type="Texture2D" uid="uid://ctkn35e1yo5pp" path="res://assets/art/tilesets/crops/normalized/sugarcane_leaf_scald_stage_0.res" id="60_2mqkj"]
+[ext_resource type="Texture2D" uid="uid://c02jnwlh7jqsr" path="res://assets/art/tilesets/crops/normalized/sugarcane_leaf_scald_stage_1.res" id="61_fwll2"]
+[ext_resource type="Texture2D" uid="uid://b733sre0babc7" path="res://assets/art/tilesets/crops/normalized/sugarcane_leaf_scald_stage_2.res" id="62_4xsk4"]
+[ext_resource type="Texture2D" uid="uid://bvlelyjr4djsa" path="res://assets/art/tilesets/crops/normalized/sugarcane_leaf_scald_stage_3.res" id="63_iygra"]
 
 [sub_resource type="Resource" id="Resource_34f8n"]
 script = ExtResource("7_p35bb")
@@ -281,6 +317,166 @@ texture_region_size = Vector2i(270, 400)
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(-3, 196)
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2tfc1"]
+resource_name = "rice_rice_tungro_stage_0"
+texture = ExtResource("25_2tfc1")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-2, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_xq5lu"]
+resource_name = "rice_rice_tungro_stage_1"
+texture = ExtResource("26_xq5lu")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-1, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_utpka"]
+resource_name = "rice_rice_tungro_stage_2"
+texture = ExtResource("27_utpka")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-1, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4ow4g"]
+resource_name = "rice_rice_tungro_stage_3"
+texture = ExtResource("28_4ow4g")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-24, 195)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8s8x7"]
+resource_name = "rice_bacterial_leaf_blight_stage_0"
+texture = ExtResource("29_8s8x7")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-2, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_yrblw"]
+resource_name = "rice_bacterial_leaf_blight_stage_1"
+texture = ExtResource("30_yrblw")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-1, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_26c31"]
+resource_name = "rice_bacterial_leaf_blight_stage_2"
+texture = ExtResource("31_26c31")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(0, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_loncs"]
+resource_name = "rice_bacterial_leaf_blight_stage_3"
+texture = ExtResource("32_loncs")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-24, 196)
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3wfy2"]
 resource_name = "rice_stage_2"
 texture = ExtResource("17_gxe8k")
@@ -300,6 +496,205 @@ texture_region_size = Vector2i(270, 400)
 0:0/animation_frame_10/duration = 1.0
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(0, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pa7k6"]
+resource_name = "rice_rice_blast_stage_0"
+texture = ExtResource("34_pa7k6")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-2, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qbkfi"]
+resource_name = "rice_rice_blast_stage_1"
+texture = ExtResource("35_qbkfi")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-1, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mrgme"]
+resource_name = "rice_rice_blast_stage_2"
+texture = ExtResource("36_mrgme")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(0, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k5dj2"]
+resource_name = "rice_rice_blast_stage_3"
+texture = ExtResource("37_k5dj2")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-23, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6pmr1"]
+resource_name = "corn_common_corn_rust_stage_0"
+texture = ExtResource("38_6pmr1")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 10
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-2, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ga15o"]
+resource_name = "corn_common_corn_rust_stage_1"
+texture = ExtResource("39_ga15o")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-1, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o1eil"]
+resource_name = "corn_common_corn_rust_stage_2"
+texture = ExtResource("40_o1eil")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-1, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rtnsn"]
+resource_name = "corn_common_corn_rust_stage_3"
+texture = ExtResource("41_rtnsn")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-4, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_myts5"]
+resource_name = "corn_philippine_downy_mildew_stage_0"
+texture = ExtResource("42_myts5")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-2, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jlgvj"]
+resource_name = "corn_philippine_downy_mildew_stage_1"
+texture = ExtResource("43_jlgvj")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-1, 196)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_iu8er"]
 resource_name = "rice_stage_3"
@@ -321,6 +716,206 @@ texture_region_size = Vector2i(270, 400)
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(-24, 196)
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_q0a6n"]
+resource_name = "corn_philippine_downy_mildew_stage_2"
+texture = ExtResource("45_q0a6n")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-1, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5m6hf"]
+resource_name = "corn_philippine_downy_mildew_stage_3"
+texture = ExtResource("46_5m6hf")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-3, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_xcv2r"]
+resource_name = "corn_ear_rot_stage_0"
+texture = ExtResource("47_xcv2r")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-2, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_b0pje"]
+resource_name = "corn_ear_rot_stage_1"
+texture = ExtResource("48_b0pje")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-1, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8xqhb"]
+resource_name = "corn_ear_rot_stage_2"
+texture = ExtResource("49_8xqhb")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-1, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2hfqp"]
+resource_name = "corn_ear_rot_stage_3"
+texture = ExtResource("50_2hfqp")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-3, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hdyqy"]
+resource_name = "sugarcane_red_striped_soft_scale_insect_stage_0"
+texture = ExtResource("51_hdyqy")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-3, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_t5ce2"]
+resource_name = "sugarcane_red_striped_soft_scale_insect_stage_1"
+texture = ExtResource("52_t5ce2")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-12, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_kk280"]
+resource_name = "sugarcane_red_striped_soft_scale_insect_stage_2"
+texture = ExtResource("53_kk280")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-8, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_n4nfo"]
+resource_name = "sugarcane_red_striped_soft_scale_insect_stage_3"
+texture = ExtResource("54_n4nfo")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-3, 196)
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_aotfg"]
 resource_name = "corn_stage_0"
 texture = ExtResource("19_2l5e1")
@@ -340,6 +935,166 @@ texture_region_size = Vector2i(270, 400)
 0:0/animation_frame_10/duration = 1.0
 0:0/0 = 0
 0:0/0/texture_origin = Vector2i(-2, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8ruwo"]
+resource_name = "sugarcane_sugarcane_smut_stage_0"
+texture = ExtResource("56_8ruwo")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-2, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_u8qcu"]
+resource_name = "sugarcane_sugarcane_smut_stage_1"
+texture = ExtResource("57_u8qcu")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-12, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hu8b8"]
+resource_name = "sugarcane_sugarcane_smut_stage_2"
+texture = ExtResource("58_hu8b8")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-9, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4giee"]
+resource_name = "sugarcane_sugarcane_smut_stage_3"
+texture = ExtResource("59_4giee")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-3, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2mqkj"]
+resource_name = "sugarcane_leaf_scald_stage_0"
+texture = ExtResource("60_2mqkj")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-3, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fwll2"]
+resource_name = "sugarcane_leaf_scald_stage_1"
+texture = ExtResource("61_fwll2")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-12, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4xsk4"]
+resource_name = "sugarcane_leaf_scald_stage_2"
+texture = ExtResource("62_4xsk4")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 20.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-8, 196)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_iygra"]
+resource_name = "sugarcane_leaf_scald_stage_3"
+texture = ExtResource("63_iygra")
+texture_region_size = Vector2i(270, 400)
+0:0/animation_columns = 11
+0:0/animation_speed = 8.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/animation_frame_4/duration = 1.0
+0:0/animation_frame_5/duration = 1.0
+0:0/animation_frame_6/duration = 1.0
+0:0/animation_frame_7/duration = 1.0
+0:0/animation_frame_8/duration = 1.0
+0:0/animation_frame_9/duration = 1.0
+0:0/animation_frame_10/duration = 1.0
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-3, 196)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ia13u"]
 resource_name = "corn_stage_1"
@@ -457,6 +1212,42 @@ sources/8 = SubResource("TileSetAtlasSource_jeedr")
 sources/9 = SubResource("TileSetAtlasSource_7a55d")
 sources/10 = SubResource("TileSetAtlasSource_2l5e1")
 sources/11 = SubResource("TileSetAtlasSource_bct15")
+sources/12 = SubResource("TileSetAtlasSource_2tfc1")
+sources/13 = SubResource("TileSetAtlasSource_xq5lu")
+sources/14 = SubResource("TileSetAtlasSource_utpka")
+sources/15 = SubResource("TileSetAtlasSource_4ow4g")
+sources/16 = SubResource("TileSetAtlasSource_8s8x7")
+sources/17 = SubResource("TileSetAtlasSource_yrblw")
+sources/18 = SubResource("TileSetAtlasSource_26c31")
+sources/19 = SubResource("TileSetAtlasSource_loncs")
+sources/20 = SubResource("TileSetAtlasSource_pa7k6")
+sources/21 = SubResource("TileSetAtlasSource_qbkfi")
+sources/22 = SubResource("TileSetAtlasSource_mrgme")
+sources/23 = SubResource("TileSetAtlasSource_k5dj2")
+sources/24 = SubResource("TileSetAtlasSource_6pmr1")
+sources/25 = SubResource("TileSetAtlasSource_ga15o")
+sources/26 = SubResource("TileSetAtlasSource_o1eil")
+sources/27 = SubResource("TileSetAtlasSource_rtnsn")
+sources/28 = SubResource("TileSetAtlasSource_myts5")
+sources/29 = SubResource("TileSetAtlasSource_jlgvj")
+sources/30 = SubResource("TileSetAtlasSource_q0a6n")
+sources/31 = SubResource("TileSetAtlasSource_5m6hf")
+sources/32 = SubResource("TileSetAtlasSource_xcv2r")
+sources/33 = SubResource("TileSetAtlasSource_b0pje")
+sources/34 = SubResource("TileSetAtlasSource_8xqhb")
+sources/35 = SubResource("TileSetAtlasSource_2hfqp")
+sources/36 = SubResource("TileSetAtlasSource_hdyqy")
+sources/37 = SubResource("TileSetAtlasSource_t5ce2")
+sources/38 = SubResource("TileSetAtlasSource_kk280")
+sources/39 = SubResource("TileSetAtlasSource_n4nfo")
+sources/40 = SubResource("TileSetAtlasSource_8ruwo")
+sources/41 = SubResource("TileSetAtlasSource_u8qcu")
+sources/42 = SubResource("TileSetAtlasSource_hu8b8")
+sources/43 = SubResource("TileSetAtlasSource_4giee")
+sources/44 = SubResource("TileSetAtlasSource_2mqkj")
+sources/45 = SubResource("TileSetAtlasSource_fwll2")
+sources/46 = SubResource("TileSetAtlasSource_4xsk4")
+sources/47 = SubResource("TileSetAtlasSource_iygra")
 
 [sub_resource type="Gradient" id="Gradient_aotfg"]
 interpolation_mode = 2
@@ -1113,6 +1904,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0, 0, 0, 0.6)
 
 [node name="CenterContainer" type="CenterContainer" parent="PauseLayer/PauseMenu" unique_id=2137092682]
