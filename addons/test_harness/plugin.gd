@@ -30,6 +30,9 @@ func _enter_tree() -> void:
 	if OS.get_environment("GODOT_CROP_VISUAL_SETUP") == "1":
 		_run_crop_setup.call_deferred()
 		return
+	if OS.get_environment("GODOT_TILESET_REPAIR") == "1":
+		_run_tileset_repair.call_deferred()
+		return
 	if OS.get_environment("GODOT_PLAYTEST_SETUP") == "1":
 		_run_setup.call_deferred()
 		return
@@ -92,6 +95,14 @@ func _run_manual_world_setup() -> void:
 
 func _run_setup() -> void:
 	var setup_script: Script = load("res://tools/setup_disease_playtest.gd") as Script
+	var setup: EditorScript = setup_script.new() as EditorScript
+	var result: int = await setup.run_setup()
+	setup = null
+	get_tree().quit(result)
+
+
+func _run_tileset_repair() -> void:
+	var setup_script: Script = load("res://tools/repair_tileset_atlas.gd") as Script
 	var setup: EditorScript = setup_script.new() as EditorScript
 	var result: int = await setup.run_setup()
 	setup = null

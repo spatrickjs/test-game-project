@@ -43,10 +43,11 @@ func _run() -> void:
 	var dry2: Vector2i  = Vector2i(1, 0)
 
 	# ------------------------------------------------------------------
-	# Requirement 4.6 — enum values.
+	# Requirement 4.6 — enum values. Treatment actions (8-12) were appended
+	# before the fence tool, so FENCE/REMOVE_FENCE are save-stable at 13/14.
 	# ------------------------------------------------------------------
-	_check(Kind.FENCE == 8, "FENCE enum value is 8")
-	_check(Kind.REMOVE_FENCE == 9, "REMOVE_FENCE enum value is 9")
+	_check(Kind.FENCE == 13, "FENCE enum value is 13")
+	_check(Kind.REMOVE_FENCE == 14, "REMOVE_FENCE enum value is 14")
 
 	# ------------------------------------------------------------------
 	# Requirement 1 — Queue a fence action.
