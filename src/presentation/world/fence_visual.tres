@@ -21,6 +21,6 @@ tile_mapping = {
 11: [2, Vector2i(2, 6), 0],
 12: [2, Vector2i(2, 7), 0],
 13: [2, Vector2i(4, 6), 0],
-14: [2, Vector2i(4, 6), 1],
+14: [2, Vector2i(3, 6), 0],
 15: [2, Vector2i(0, 6), 0]
 }
