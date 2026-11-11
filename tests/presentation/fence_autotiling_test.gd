@@ -24,12 +24,8 @@ func _initialize() -> void:
 func _run() -> void:
 	root.size = Vector2i(1280, 720)
 	_scene = (load("res://field_prototype.tscn") as PackedScene).instantiate() as FieldPrototypePresenter
-	_scene.farming_controller.terrain_bands = [
-		SimulationEnums.TerrainType.DRY_SOIL,
-		SimulationEnums.TerrainType.PADDY_MUD,
-		SimulationEnums.TerrainType.GRASS,
-	]
-	GameplayFixture.prepare(_scene, true)
+	GameplayFixture.prepare(_scene, false)
+	_scene.farming_controller.terrain_bands = [SimulationEnums.TerrainType.GRASS]
 	root.add_child(_scene)
 	GameplayFixture.start(_scene)
 	for _frame: int in range(5):
@@ -59,8 +55,6 @@ func _run() -> void:
 	# Use grass coordinates (y-band where terrain is GRASS).
 	# ------------------------------------------------------------------
 	var snap: FieldGridState = _farming.get_grid_snapshot()
-	# Find enough grass cells to test. The default field has y=0 as DRY_SOIL, so
-	# use the last row which is GRASS for all terrain_bands configurations.
 	var gy: int = snap.height - 1
 	# Need at least 3 columns: col 1 is center, col 0/2 are neighbors.
 	_check(snap.width >= 3, "grid wide enough for neighbor tests")
@@ -102,15 +96,10 @@ func _run() -> void:
 	_check_atlas(center, E | W, "center placed between existing fences → straight E+W immediately")
 
 	# ------------------------------------------------------------------
-	# More mask combinations using a 5-cell row on the same grass band.
-	# Use a different row to avoid the used cells above interfering.
+	# Use a separate area so the straight fence above cannot affect the cross.
 	# ------------------------------------------------------------------
-	if snap.width >= 5 and snap.height >= 2:
-		var gy2: int = snap.height - 2
-		# Confirm row gy2 is GRASS.
-		var sample_cell: FieldCellState = snap.get_cell(Vector2i(2, gy2))
-		if sample_cell != null and sample_cell.terrain_type == SimulationEnums.TerrainType.GRASS:
-			await _test_all_masks(gy2)
+	_check(snap.width >= 6 and snap.height >= 3, "grid wide enough for junction tests")
+	await _test_cross_transitions(Vector2i(4, snap.height - 2))
 
 	# ------------------------------------------------------------------
 	# Null-safety regression: render_fences with null fence_visual must not crash (R9).
@@ -127,51 +116,35 @@ func _run() -> void:
 	_finish()
 
 
-## Tests all 16 connection masks by building a cross of fences on row gy2.
-func _test_all_masks(gy2: int) -> void:
-	var snap: FieldGridState = _farming.get_grid_snapshot()
-	# Need a 5×5 area; use center=(2,gy2) if height permits.
-	var cx: int = 2
-	var cy: int = gy2
-	# Check all 4 cardinal neighbor slots are in bounds and on GRASS.
-	var cardinals: Array = [
-		[Vector2i(cx, cy-1), N],
-		[Vector2i(cx+1, cy), E],
-		[Vector2i(cx, cy+1), S],
-		[Vector2i(cx-1, cy), W],
-	]
-	for card: Array in cardinals:
-		var nc: Vector2i = card[0] as Vector2i
-		if not snap.is_in_bounds(nc):
-			return
-		var nc_cell: FieldCellState = snap.get_cell(nc)
-		if nc_cell == null or nc_cell.terrain_type != SimulationEnums.TerrainType.GRASS:
-			return
-
+func _test_cross_transitions(c: Vector2i) -> void:
 	# Place center.
-	var c: Vector2i = Vector2i(cx, cy)
 	await _place_fence(c)
 	_check_atlas(c, 0, "extended: isolated center → mask 0")
 
 	# Add N → mask 1 (end-N).
-	var n_cell: Vector2i = cardinals[0][0] as Vector2i
+	var n_cell: Vector2i = c + Vector2i.UP
 	await _place_fence(n_cell)
 	_check_atlas(c, N, "extended: N only → mask 1")
 
 	# Add E → mask 3 (corner N+E).
-	var e_cell: Vector2i = cardinals[1][0] as Vector2i
+	var e_cell: Vector2i = c + Vector2i.RIGHT
 	await _place_fence(e_cell)
 	_check_atlas(c, N | E, "extended: N+E corner → mask 3")
 
 	# Add S → mask 7 (T N+E+S).
-	var s_cell: Vector2i = cardinals[2][0] as Vector2i
+	var s_cell: Vector2i = c + Vector2i.DOWN
 	await _place_fence(s_cell)
 	_check_atlas(c, N | E | S, "extended: N+E+S T → mask 7")
 
 	# Add W → mask 15 (cross).
-	var w_cell: Vector2i = cardinals[3][0] as Vector2i
+	var w_cell: Vector2i = c + Vector2i.LEFT
 	await _place_fence(w_cell)
 	_check_atlas(c, N | E | S | W, "extended: cross → mask 15")
+
+	# The atlas uses a mirrored tile for the E+S+W junction.
+	await _remove_fence(n_cell)
+	_check_atlas(c, E | S | W, "extended: remove N → mirrored T mask 14")
+	await _place_fence(n_cell)
 
 	# Remove W → back to T (mask 7).
 	await _remove_fence(w_cell)
@@ -229,8 +202,10 @@ func _check_atlas(coords: Vector2i, expected_mask: int, label: String) -> void:
 		return
 	var expected_source_id: int = int(entry[0])
 	var expected_coords: Vector2i = entry[1] as Vector2i
+	var expected_alternative: int = int(entry[2])
 	var actual_source: int = _world.fence_layer.get_cell_source_id(coords)
 	var actual_coords: Vector2i = _world.fence_layer.get_cell_atlas_coords(coords)
+	var actual_alternative: int = _world.fence_layer.get_cell_alternative_tile(coords)
 	_check(
 		actual_source == expected_source_id and actual_coords == expected_coords,
 		label + " [mask %d: expected source=%d coords=%s, got source=%d coords=%s]" % [
@@ -238,6 +213,8 @@ func _check_atlas(coords: Vector2i, expected_mask: int, label: String) -> void:
 			actual_source, str(actual_coords)
 		]
 	)
+	_check(actual_alternative == expected_alternative,
+		"%s [expected alternative %d, got %d]" % [label, expected_alternative, actual_alternative])
 
 
 func _check(condition: bool, label: String) -> void:
