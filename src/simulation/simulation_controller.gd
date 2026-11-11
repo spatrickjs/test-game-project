@@ -9,10 +9,15 @@ var time_step: float = 1.0
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var last_error: String = ""
 var crop_database: CropDatabase = null
+## Treatment system: set externally to enable treatment modifiers. Null = no treatments.
+var treatment_state: TreatmentState = null
+var treatment_config: TreatmentConfig = null
 ## Diagnostics for the last successful turn (failed turns discard counts).
 var weather_cap_count: int = 0
 var beta_cap_count: int = 0
 var hazard_cap_count: int = 0
+## Print a line each time a cell newly acquires an active disease via spread.
+var debug_infections: bool = true
 
 var _sir: SpatialSIRModel = SpatialSIRModel.new()
 var _seir: SpatialSEIRModel = SpatialSEIRModel.new()
@@ -95,7 +100,7 @@ func process_turn(grid_state: FieldGridState, disease_database: DiseaseDatabase)
 			for disease: DiseaseData in candidates:
 				var neighbors: Array[FieldCellState] = _neighbors(snapshot, cell, disease)
 				if not cell.has_active_disease and candidates.size() > 1:
-					if _transmission(cell, disease, neighbors, snapshot.abiotic_state).hazard == 0.0:
+					if _transmission(cell, disease, neighbors, snapshot.abiotic_state, _resolve_mods(cell)).hazard == 0.0:
 						continue
 				var next: FieldCellState = _evaluate_cell(cell, disease, neighbors, snapshot.abiotic_state)
 				if next == null:
@@ -122,6 +127,7 @@ func process_turn(grid_state: FieldGridState, disease_database: DiseaseDatabase)
 	# No authoritative state has been changed before this commit.
 	for next: FieldCellState in staged:
 		var target: FieldCellState = grid_state.get_cell(next.coordinates)
+		var was_infected: bool = target.has_active_disease
 		target.susceptible_fraction = next.susceptible_fraction
 		target.exposed_fraction = next.exposed_fraction
 		target.infected_fraction = next.infected_fraction
@@ -131,25 +137,38 @@ func process_turn(grid_state: FieldGridState, disease_database: DiseaseDatabase)
 		target.removed_outcome = next.removed_outcome
 		target.has_active_disease = next.has_active_disease
 		target.active_disease_id = next.active_disease_id
+		if debug_infections and not was_infected and next.has_active_disease:
+			var disease: DiseaseData = disease_database.get_disease(next.active_disease_id)
+			var disease_name: String = disease.display_name if disease != null else str(next.active_disease_id)
+			print("Infection spread: %s infected cell %s (infected_fraction=%.2f)." % [disease_name, next.coordinates, next.infected_fraction])
 	return true
 
 
 func _evaluate_cell(cell: FieldCellState, disease: DiseaseData, neighbors: Array[FieldCellState], environment: AbioticState) -> FieldCellState:
-	var response: TransmissionModifiers.Result = _transmission(cell, disease, neighbors, environment)
+	var mods: TreatmentModifiers = _resolve_mods(cell)
+	var response: TransmissionModifiers.Result = _transmission(cell, disease, neighbors, environment, mods)
 	weather_cap_count += int(response.weather_capped)
 	beta_cap_count += int(response.beta_capped)
 	hazard_cap_count += int(response.hazard_capped)
+	var gamma_scale: float = mods.gamma_scale if mods != null else 1.0
 	match _algorithm(disease):
 		SimulationEnums.SimulationAlgorithm.SPATIAL_SEIR:
-			return _seir.evaluate(cell, disease, response.hazard, time_step)
+			return _seir.evaluate(cell, disease, response.hazard, time_step, gamma_scale)
 		SimulationEnums.SimulationAlgorithm.STOCHASTIC_CA_SIR:
-			return _ca.evaluate(cell, disease, response.hazard, time_step, rng)
-	return _sir.evaluate(cell, disease, response.hazard, time_step)
+			return _ca.evaluate(cell, disease, response.hazard, time_step, rng, gamma_scale)
+	return _sir.evaluate(cell, disease, response.hazard, time_step, gamma_scale)
 
 
-func _transmission(cell: FieldCellState, disease: DiseaseData, neighbors: Array[FieldCellState], environment: AbioticState) -> TransmissionModifiers.Result:
+func _transmission(cell: FieldCellState, disease: DiseaseData, neighbors: Array[FieldCellState], environment: AbioticState, mods: TreatmentModifiers = null) -> TransmissionModifiers.Result:
 	var crop: CropData = crop_database.get_crop(cell.crop_type) if crop_database != null else null
-	return TransmissionModifiers.evaluate(disease, environment, cell.soil, crop, _pressure(cell, disease, neighbors))
+	return TransmissionModifiers.evaluate(disease, environment, cell.soil, crop, _pressure(cell, disease, neighbors), mods)
+
+
+## Resolves treatment modifiers for a cell from the start-of-turn treatment state.
+func _resolve_mods(cell: FieldCellState) -> TreatmentModifiers:
+	if treatment_state == null or treatment_config == null:
+		return null
+	return TreatmentResolver.resolve(cell.coordinates, treatment_state, treatment_config)
 
 
 func _algorithm(disease: DiseaseData) -> int:

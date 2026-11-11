@@ -11,7 +11,7 @@ static func prepare(scene: FieldPrototypePresenter, plantable_bands: bool = true
 		activation.policy.enabled = false
 	if scene.game_state_manager != null:
 		scene.game_state_manager.turn_limit = 10000
-		scene.game_state_manager.harvest_goal = 10000
+		scene.game_state_manager.score_goal = 10000
 
 static func start(scene: FieldPrototypePresenter) -> void:
 	scene._on_start_pressed()

@@ -14,11 +14,23 @@ extends Resource
 @export var growth_profile: CropGrowthProfile = CropGrowthProfile.new()
 @export_range(0.0, 1.0, 0.01) var base_immunity: float = 0.5
 
+@export_group("Scoring")
+## Points awarded for a perfect-quality harvest of this crop. Quality loss
+## reduces the awarded score proportionally at harvest time.
+@export_range(0, 10000) var base_score: int = 100
+
 @export_group("Growth Visuals (Presentation Only)")
 ## Seedling, Vegetative, Reproductive, Mature. -1 means not authored yet.
 ## Logic and Simulation must not interpret these TileSet identifiers.
 @export var growth_stage_source_ids: Array[int] = [-1, -1, -1, -1]
 @export var growth_stage_atlas_coords: Array[Vector2i] = [Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO]
+## Generic diseased fallback, parallel to growth stages; -1 means not authored.
+## Per-disease visuals in disease_visuals take precedence over this fallback.
+@export var disease_stage_source_ids: Array[int] = [-1, -1, -1, -1]
+@export var disease_stage_atlas_coords: Array[Vector2i] = [Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO]
+## Per-disease visual sets. Checked before the generic fallback above.
+## Add as many as needed; unlisted diseases fall back to the generic diseased look.
+@export var disease_visuals: Array[DiseaseVisualSet] = []
 
 @export_group("Optional Rules")
 ## Outside these intervals, crop stress increases. Empty arrays are neutral.
@@ -40,6 +52,8 @@ func validate() -> PackedStringArray:
 		errors.append("base_immunity must be finite.")
 	elif base_immunity < 0.0 or base_immunity > 1.0:
 		errors.append("base_immunity must be in [0.0, 1.0].")
+	if base_score < 0:
+		errors.append("base_score must not be negative.")
 	if growth_profile != null:
 		for error: String in growth_profile.validate():
 			errors.append("growth_profile: " + error)
@@ -79,8 +93,17 @@ func copy() -> CropData:
 	result.growth_ticks = growth_ticks
 	result.growth_profile = growth_profile.copy() if growth_profile != null else null
 	result.base_immunity = base_immunity
+	result.base_score = base_score
 	result.growth_stage_source_ids = growth_stage_source_ids.duplicate()
 	result.growth_stage_atlas_coords = growth_stage_atlas_coords.duplicate()
+	result.disease_stage_source_ids = disease_stage_source_ids.duplicate()
+	result.disease_stage_atlas_coords = disease_stage_atlas_coords.duplicate()
+	result.disease_visuals = []
+	for visual_set: DiseaseVisualSet in disease_visuals:
+		if visual_set == null:
+			result.disease_visuals.append(null)
+		else:
+			result.disease_visuals.append(visual_set.copy())
 	for rule: AbioticRule in abiotic_tolerance_rules:
 		if rule == null:
 			result.abiotic_tolerance_rules.append(null)
@@ -92,3 +115,26 @@ func copy() -> CropData:
 		else:
 			result.nutrient_requirement_rules.append(rule.copy())
 	return result
+
+
+## Resolves the TileSet source ID and atlas coordinate for a diseased crop at
+## the given growth stage. Checks per-disease visual sets first, then the
+## generic diseased fallback. Returns [source_id, atlas_coord] if authored,
+## or null if not (caller should fall back to the healthy sprite).
+func get_disease_visual(disease_id: int, stage: int) -> Variant:
+	# Per-disease lookup
+	for visual_set: DiseaseVisualSet in disease_visuals:
+		if visual_set != null and visual_set.disease_id == disease_id:
+			if stage >= 0 and stage < visual_set.stage_source_ids.size() and visual_set.stage_source_ids[stage] >= 0:
+				var coord: Vector2i = Vector2i.ZERO
+				if stage < visual_set.stage_atlas_coords.size():
+					coord = visual_set.stage_atlas_coords[stage]
+				return [visual_set.stage_source_ids[stage], coord]
+			break
+	# Generic fallback
+	if stage >= 0 and stage < disease_stage_source_ids.size() and disease_stage_source_ids[stage] >= 0:
+		var coord: Vector2i = Vector2i.ZERO
+		if stage < disease_stage_atlas_coords.size():
+			coord = disease_stage_atlas_coords[stage]
+		return [disease_stage_source_ids[stage], coord]
+	return null

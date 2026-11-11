@@ -22,7 +22,12 @@ func reset_session() -> void:
 func _initial_state() -> DiseaseActivationState:
 	var state: DiseaseActivationState = DiseaseActivationState.new()
 	var random: RandomNumberGenerator = RandomNumberGenerator.new()
-	random.seed = policy.random_seed if policy != null else 0
+	if policy != null and policy.randomize_seed:
+		# Non-deterministic seed drawn from the OS entropy source so repeated
+		# playthroughs do not reproduce the same outbreak sequence.
+		random.randomize()
+	else:
+		random.seed = policy.random_seed if policy != null else 0
 	state.rng_state = random.state
 	return state
 
@@ -52,27 +57,37 @@ func evaluate(grid: FieldGridState, diseases: DiseaseDatabase, completed_turn: i
 		return result
 	if not allow_introduction or completed_turn < policy.first_eligible_turn or result.next_state.introductions_committed >= policy.max_introductions_per_session:
 		return result
-	# Retained identities count, including recovered crops. Do not create competition.
-	var board_ids: Array[SimulationEnums.DiseaseId] = []
+	# Track which disease identities are already active on each crop. Retained
+	# identities (including recovered crops) count. A disease may be reseeded on
+	# its own crop, but a *different* disease on the same crop is excluded: two
+	# diseases sharing a host would create ambiguous cross-exposure that the
+	# simulation rejects. Different crops do not share hosts, so more than one
+	# disease can coexist in a session when distinct crops are planted.
+	var active_ids_by_crop: Dictionary = {}
 	for y: int in range(grid.height):
 		for x: int in range(grid.width):
 			var cell: FieldCellState = grid.get_cell(Vector2i(x, y))
-			if cell.has_crop and cell.has_active_disease and not board_ids.has(cell.active_disease_id):
-				board_ids.append(cell.active_disease_id)
-	if board_ids.size() > 1:
-		return result
-	if result.next_state.has_selected_disease and not board_ids.is_empty() and board_ids[0] != result.next_state.selected_disease_id:
-		return result
+			if cell.has_crop and cell.has_active_disease:
+				var ids: Array = active_ids_by_crop.get(cell.crop_type, [])
+				if not ids.has(cell.active_disease_id):
+					ids.append(cell.active_disease_id)
+				active_ids_by_crop[cell.crop_type] = ids
 	var eligible_ids: Array[SimulationEnums.DiseaseId] = []
 	var eligible_cells: Dictionary[int, Array] = {}
 	for disease_id: SimulationEnums.DiseaseId in policy.allowed_disease_ids:
 		if active_filter != -1 and disease_id != active_filter:
 			continue
-		if result.next_state.has_selected_disease and disease_id != result.next_state.selected_disease_id:
-			continue
-		if not board_ids.is_empty() and disease_id != board_ids[0]:
-			continue
 		var disease: DiseaseData = diseases.get_disease(disease_id)
+		if disease == null:
+			continue
+		var competitors: Array = active_ids_by_crop.get(disease.target_crop, [])
+		var blocked: bool = false
+		for competitor_id in competitors:
+			if competitor_id != disease_id:
+				blocked = true
+				break
+		if blocked:
+			continue
 		var coordinates: Array[Vector2i] = []
 		for y: int in range(grid.height):
 			for x: int in range(grid.width):
@@ -87,16 +102,16 @@ func evaluate(grid: FieldGridState, diseases: DiseaseDatabase, completed_turn: i
 	eligible_ids.sort()
 	var random: RandomNumberGenerator = RandomNumberGenerator.new()
 	random.state = result.next_state.rng_state
-	if not result.next_state.has_selected_disease:
-		result.next_state.selected_disease_id = eligible_ids[random.randi_range(0, eligible_ids.size() - 1)]
-		result.next_state.has_selected_disease = true
+	# No per-session sticky selection: each eligible turn draws a fresh disease
+	# from the eligible set, so a session can feature more than one disease.
+	var chosen_id: SimulationEnums.DiseaseId = eligible_ids[random.randi_range(0, eligible_ids.size() - 1)]
 	var succeeds: bool = policy.chance_per_eligible_turn >= 1.0
 	if policy.chance_per_eligible_turn > 0.0 and policy.chance_per_eligible_turn < 1.0:
 		succeeds = random.randf() < policy.chance_per_eligible_turn
 	if succeeds:
-		var cells: Array = eligible_cells[result.next_state.selected_disease_id]
+		var cells: Array = eligible_cells[chosen_id]
 		result.request = DiseaseActivationRequest.new()
-		result.request.disease_id = result.next_state.selected_disease_id
+		result.request.disease_id = chosen_id
 		result.request.coordinates = cells[random.randi_range(0, cells.size() - 1)]
 		result.next_state.introductions_committed += 1
 		result.next_state.cooldown_remaining = policy.cooldown_turns

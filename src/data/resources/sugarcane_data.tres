@@ -2,8 +2,23 @@
 
 [ext_resource type="Script" uid="uid://bbr8k8k27fpoh" path="res://src/data/resources/abiotic_rule.gd" id="1_70nkg"]
 [ext_resource type="Script" uid="uid://bd8k7muh8e7gn" path="res://src/data/resources/nutrient_rule.gd" id="2_6km3l"]
+[ext_resource type="Script" uid="uid://bx60c0ljwpuff" path="res://src/data/resources/disease_visual_set.gd" id="2_gxv3q"]
 [ext_resource type="Script" uid="uid://ce0gays3wdad0" path="res://src/data/resources/crop_growth_profile.gd" id="3_f0ty6"]
 [ext_resource type="Script" uid="uid://cy15hmnrw2rf7" path="res://src/data/resources/crop_data.gd" id="3_gxv3q"]
+
+[sub_resource type="Resource" id="Resource_f0ty6"]
+script = ExtResource("2_gxv3q")
+stage_source_ids = Array[int]([36, 37, 38, 39])
+
+[sub_resource type="Resource" id="Resource_gxv3q"]
+script = ExtResource("2_gxv3q")
+disease_id = 1
+stage_source_ids = Array[int]([40, 41, 42, 43])
+
+[sub_resource type="Resource" id="Resource_q8jli"]
+script = ExtResource("2_gxv3q")
+disease_id = 2
+stage_source_ids = Array[int]([44, 45, 46, 47])
 
 [sub_resource type="Resource" id="Resource_u4u2b"]
 script = ExtResource("3_f0ty6")
@@ -12,7 +27,9 @@ metadata/_custom_type_script = "uid://ce0gays3wdad0"
 [resource]
 script = ExtResource("3_gxv3q")
 display_name = "Sugarcane"
-growth_ticks = 5
+growth_ticks = 12
+base_score = 150
 growth_profile = SubResource("Resource_u4u2b")
 growth_stage_source_ids = Array[int]([8, 9, 10, 11])
+disease_visuals = Array[ExtResource("2_gxv3q")]([SubResource("Resource_f0ty6"), SubResource("Resource_gxv3q"), SubResource("Resource_q8jli")])
 metadata/_custom_type_script = "uid://cy15hmnrw2rf7"

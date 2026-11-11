@@ -2,7 +2,7 @@
 
 ## Overview
 
-A fence is a flag on `FieldCellState` set by a queued farmer action. Fencing a tile converts it to soil-less grass, clears any crop and disease on it, and blocks all farming actions. A second new action, `REMOVE_FENCE`, lets the Shovel destroy it.
+A fence is a flag on `FieldCellState` set by a queued farmer action. Fencing an empty tile converts it to soil-less grass and blocks farming actions. Planted tiles are rejected without mutation. A second new action, `REMOVE_FENCE`, lets the Shovel destroy it.
 
 Disease containment needs no change in Simulation. A fenced tile is GRASS with no crop, which `SimulationController` already excludes as a host and as pressure source. We add regression tests for this.
 
@@ -83,13 +83,14 @@ Add per cell: `if cell.has_fence and cell.terrain_type != GRASS` → "fenced cel
 
 | Kind | Rejected when | Message |
 |---|---|---|
+| `FENCE` | `cell.has_crop` | "Remove or harvest the crop before placing a fence." |
 | `FENCE` | `cell.has_fence` | "This tile is already fenced." |
 | `REMOVE_FENCE` | `not cell.has_fence` | "Choose a fence to remove." |
 | `DIG_GRASS` | `cell.has_fence` | "Remove the fence before digging." |
 | `MAKE_PADDY` | already rejected (needs DRY_SOIL) | existing |
 | `WATER_SOIL` / `FERTILIZE` | `soil == null` (already) | existing |
 
-Every branch also needs a valid in-field cell and, when `check_reservations`, no reservation. `FENCE` has no other restrictions, so it is valid on occupied, infected and grass tiles.
+Every branch also needs a valid in-field cell and, when `check_reservations`, no reservation. `FENCE` also rejects any tile with a crop, including infected crops. Empty grass and soil tiles remain eligible. Arrival revalidation preserves crops planted after queuing.
 
 **`_planting_error`**: before the terrain checks, return "This tile is fenced." for fenced cells. This covers plant and move-crop destination.
 
