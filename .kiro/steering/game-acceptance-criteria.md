@@ -21,3 +21,6 @@ The project uses Gherkin feature files to define expected game behavior.
 
 Main Menu:
 #[[file:features/main_menu.feature]]
+
+Weather Cycle:
+#[[file:features/weather_cycle.feature]]

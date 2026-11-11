@@ -81,6 +81,10 @@ func apply_to_grid(staged_grid: FieldGridState, turn_index: int) -> bool:
 	var temperature_factor: float = clampf(raw_temperature_factor, minimum_evaporation_factor, maximum_evaporation_factor)
 	var humidity_factor: float = clampf(raw_humidity_factor, minimum_evaporation_factor, maximum_evaporation_factor)
 	var evaporation: float = evaporation_per_turn * temperature_factor * humidity_factor
+	# Validate even when the grid has no soil cells to evaluate below.
+	if not is_finite(evaporation):
+		last_error = "Evaporation overflow. Reduce configured values."
+		return false
 	var updates: Dictionary[Vector2i, float] = {}
 	for y: int in range(staged_grid.height):
 		for x: int in range(staged_grid.width):

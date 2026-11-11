@@ -1,6 +1,7 @@
 extends SceneTree
 const GameplayFixture = preload("res://tests/logic/gameplay_test_fixture.gd")
 const QueueDriver = preload("res://tests/logic/queued_action_test_driver.gd")
+const CycleChecks = preload("res://tests/logic/weather_cycle_checks.gd")
 
 class RejectedTurn:
 	extends SimulationController
@@ -16,6 +17,7 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _run() -> void:
+	_failures.append_array(CycleChecks.new().run())
 	_check(is_equal_approx(SoilMoistureModel.next_moisture(0.5, 0.1, 0.02, 2.0), 0.68), "Pure rainfall/evaporation formula")
 	_check(SoilMoistureModel.next_moisture(0.9, 1.0, 0.0, 2.0) == 1.0, "Moisture upper clamp")
 	_check(SoilMoistureModel.next_moisture(0.1, 0.0, 1.0, 1.0) == 0.0, "Moisture lower clamp")
@@ -139,6 +141,10 @@ func _run() -> void:
 		await process_frame
 	_check(scene.soil_tool_controller != null and scene.turn_controller.weather_manager != null, "Saved services wired")
 	_check(scene.water_button != null and scene.fertilize_button != null, "Saved tool buttons wired")
+	var idle_before: Variant = CycleChecks.state(scene.farming_controller.get_grid_snapshot())
+	for frame: int in range(3):
+		await process_frame
+	_check(scene.turn_controller.turn_index == 0 and CycleChecks.state(scene.farming_controller.get_grid_snapshot()) == idle_before, "Idle frames never advance weather")
 	# Balanced defaults are a confirmed weather tick, not a missing invocation.
 	_click(scene.next_turn_button.get_global_rect().get_center())
 	_check(scene.turn_controller.turn_index == 1 and scene.turn_controller.weather_manager.last_moisture_summary.contains("No net change"), "Native balanced turn reports weather invocation")
@@ -162,6 +168,44 @@ func _run() -> void:
 	scene.turn_controller.weather_manager.evaporation_per_turn = 0.05
 	_click(scene.next_turn_button.get_global_rect().get_center())
 	_check(scene.turn_controller.turn_index == 3 and is_equal_approx(scene.farming_controller.get_grid_snapshot().get_cell(target).soil.moisture, 0.65), "Native Next Turn also invokes drying settings")
+	# Keep the inspector open across a weather commit and verify its displayed value.
+	scene._enter_inspect_mode()
+	scene._on_cell_clicked(target)
+	_check(scene.tile_inspector.macronutrients_label.text.contains("Soil moisture: 65.0%"), "Inspector displays current moisture")
+	_click(scene.next_turn_button.get_global_rect().get_center())
+	_check(scene.tile_inspector.macronutrients_label.text.contains("Soil moisture: 60.0%"), "Inspector refreshes committed weather moisture")
+	scene._on_inspector_closed()
+	# Fence/null-soil lifecycle through the real queue and walker, R3/R4.
+	var fence: FieldAction = FieldAction.new()
+	fence.kind = SimulationEnums.FieldActionKind.FENCE
+	fence.target = target
+	var fence_clock: int = scene.turn_controller.turn_index
+	_check(scene.farming_controller.enqueue_action(fence), "Queue fence for weather lifecycle")
+	var queued_before: Variant = CycleChecks.state(scene.farming_controller.get_grid_snapshot())
+	_check(not scene.turn_controller.advance_turn(), "Pending fence rejects weather turn")
+	_check(scene.turn_controller.turn_index == fence_clock and CycleChecks.state(scene.farming_controller.get_grid_snapshot()) == queued_before, "Pending queue rejection preserves field and phase")
+	_check(QueueDriver.finish(scene), "Fence walker completes")
+	_check(scene.turn_controller.turn_index == fence_clock, "Fence action does not advance weather")
+	var neighbor: Vector2i = Vector2i(1, 0)
+	var neighbor_before: float = scene.farming_controller.get_grid_snapshot().get_cell(neighbor).soil.moisture
+	_click(scene.next_turn_button.get_global_rect().get_center())
+	var fenced: FieldCellState = scene.farming_controller.get_grid_snapshot().get_cell(target)
+	_check(fenced.has_fence and fenced.soil == null, "Weather preserves fenced null-soil cell")
+	_check(absf(scene.farming_controller.get_grid_snapshot().get_cell(neighbor).soil.moisture - (neighbor_before - 0.05)) <= 0.000001, "Neighbor soil still receives weather beside fence")
+	var remove: FieldAction = FieldAction.new()
+	remove.kind = SimulationEnums.FieldActionKind.REMOVE_FENCE
+	remove.target = target
+	_check(scene.farming_controller.enqueue_action(remove) and QueueDriver.finish(scene), "Remove fence through queue")
+	_click(scene.next_turn_button.get_global_rect().get_center())
+	fenced = scene.farming_controller.get_grid_snapshot().get_cell(target)
+	_check(not fenced.has_fence and fenced.soil == null, "Unfenced grass stays soil-free after weather")
+	var dig: FieldAction = FieldAction.new()
+	dig.kind = SimulationEnums.FieldActionKind.DIG_GRASS
+	dig.target = target
+	_check(scene.farming_controller.enqueue_action(dig) and QueueDriver.finish(scene), "Dig restores soil through queue")
+	var dug_moisture: float = scene.farming_controller.get_grid_snapshot().get_cell(target).soil.moisture
+	_click(scene.next_turn_button.get_global_rect().get_center())
+	_check(absf(scene.farming_controller.get_grid_snapshot().get_cell(target).soil.moisture - (dug_moisture - 0.05)) <= 0.000001, "Restored soil receives weather on next turn")
 	scene.queue_free()
 	await process_frame
 	if _failures.is_empty():

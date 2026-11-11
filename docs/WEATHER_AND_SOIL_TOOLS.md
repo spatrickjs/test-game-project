@@ -53,7 +53,13 @@ No nutrient consumption, irrigation animation, terrain tilling, inventory costs,
 
 `tests/logic/weather_soil_tools_test.gd` verifies configured rainfall/evaporation, warm/dry evaporation factors and caps, normalized bounds, all soil tiles, disabled weather, live configuration changes, unsupported sources, deterministic cycles, weather-before-growth ordering, full failed-turn rollback, local tool additions/no-ops/rejections, signals, saved wiring and native HUD/Next Turn input.
 
-Historical result after the crop-animation fixes: all 15 tests passed with zero engine warnings/errors. The November 6 full run is failing on scene grass-atlas errors and crop-animation speed mismatches; see section 15 of `PROJECT_HANDOFF.md` for current status. The runner now includes sixteen tests; the new grass-overlay test passed separately.
+Historical result after the crop-animation fixes: all 15 tests passed with zero engine warnings/errors. The November 6 failures and later handoff counts are historical and do not establish current suite health. The current runner registers 29 tests; see [weather-cycle verification](WEATHER_CYCLE_VERIFICATION.md) for the implementation revision, acceptance mapping, and current execution evidence.
+
+## Reproduce a four-turn cycle
+
+On the runtime WeatherManager, enable fluctuations, set `cycle_length_turns = 4`, `temperature_amplitude = 5`, and `rainfall_amplitude = 0.02`. Keep the other baseline settings at their defaults. Starting at turn index zero with moisture 0.5, four successful turns produce moisture 0.5, 0.518, 0.518, and 0.5. The phase uses the clock before incrementing it. These settings are an opt-in demo; saved defaults remain balanced with fluctuations disabled.
+
+Disabling weather skips hydration but the game clock keeps advancing. Re-enabling uses the current phase. A failed turn consumes no phase and publishes no new committed summary. Fenced grass and newly unfenced grass have no soil and are skipped; digging restores soil eligibility for subsequent turns. Invalid computed evaporation is rejected even when every tile is soil-free.
 
 
 ## Static-moisture troubleshooting
