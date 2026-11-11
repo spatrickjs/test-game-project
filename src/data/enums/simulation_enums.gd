@@ -16,6 +16,8 @@ enum FieldActionKind {
 	APPLY_PROTECTANT = 10,
 	APPLY_ENHANCER = 11,
 	APPLY_INSECTICIDE = 12,
+	FENCE = 13,
+	REMOVE_FENCE = 14,
 }
 
 enum SIRState {

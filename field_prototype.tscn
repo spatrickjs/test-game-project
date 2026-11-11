@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://jt23o8e58cda" path="res://src/data/resources/soil_state.gd" id="7_p35bb"]
 [ext_resource type="Resource" uid="uid://dfb1u1g6nryvu" path="res://src/data/databases/default_disease_database.tres" id="8_qayry"]
 [ext_resource type="Script" uid="uid://ddq1k2v5ci1j1" path="res://src/data/resources/abiotic_state.gd" id="8_yhesb"]
+[ext_resource type="Resource" uid="uid://cp5eu6rwmxfxc" path="res://src/presentation/world/fence_visual.tres" id="11_11m5t"]
 [ext_resource type="Shader" uid="uid://dmm6k3vqff1h7" path="res://watercolor_floor.gdshader" id="11_ia13u"]
 [ext_resource type="Script" uid="uid://dphgo78jfmxeh" path="res://src/presentation/ui/inspectors/tile_inspector_view.gd" id="12_56fpe"]
 [ext_resource type="Texture2D" uid="uid://jba8xq3unjak" path="res://assets/art/tilesets/crops/normalized/rice_stage_0.res" id="13_5j4ag"]
@@ -40,6 +41,7 @@
 [ext_resource type="Script" uid="uid://c0xjvj7idv2fq" path="res://src/logic/farming/soil_tool_controller.gd" id="28_gxe8k"]
 [ext_resource type="Script" uid="uid://q2tph6b4xeio" path="res://src/presentation/world/crop_shadow_overlay.gd" id="29_3wfy2"]
 [ext_resource type="Script" uid="uid://ma86048skmrv" path="res://src/presentation/ui/pause_menu_view.gd" id="29_pause"]
+[ext_resource type="Texture2D" uid="uid://qaokkgso2k0a" path="res://assets/art/tilesets/fence/fence.png" id="37_8nlti"]
 [ext_resource type="Script" uid="uid://xv0vhi4veopc" path="res://src/logic/environment/disease_activation_controller.gd" id="37_jeedr"]
 [ext_resource type="Resource" uid="uid://dhxtd6ic3uj68" path="res://src/data/resources/disease_activation/default_activation_policy.tres" id="38_7a55d"]
 [ext_resource type="Script" uid="uid://cgcmesq61apy" path="res://src/logic/turns/game_state_manager.gd" id="39_0n7ni"]
@@ -471,7 +473,18 @@ fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 0.5)
 
-[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "pause_button", "pause_menu", "soil_tool_controller", "water_bucket_button", "game_state_manager")]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_whdnl"]
+texture = ExtResource("37_8nlti")
+texture_region_size = Vector2i(213, 122)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_8nlti"]
+tile_shape = 1
+tile_layout = 4
+tile_size = Vector2i(213, 122)
+sources/0 = SubResource("TileSetAtlasSource_whdnl")
+
+[node name="FieldPrototype" type="Node" unique_id=1936008589 node_paths=PackedStringArray("farming_controller", "turn_controller", "world_view", "tile_inspector", "hud_panel", "turn_label", "selected_crop_label", "status_label", "sugarcane_button", "rice_button", "corn_button", "next_turn_button", "algorithm_selector", "remove_button", "transfer_button", "camera_zoom_button", "harvest_button", "water_button", "fertilize_button", "fence_button", "pause_button", "pause_menu", "soil_tool_controller", "water_bucket_button", "game_state_manager")]
 script = ExtResource("1_44tld")
 farming_controller = NodePath("FarmingController")
 turn_controller = NodePath("TurnController")
@@ -492,6 +505,7 @@ camera_zoom_button = NodePath("HUD/CameraZoomButton")
 harvest_button = NodePath("HUD/HarvestButton")
 water_button = NodePath("HUD/WaterButton")
 fertilize_button = NodePath("HUD/FertilizeButton")
+fence_button = NodePath("HUD/FenceButton")
 pause_button = NodePath("PauseLayer/PauseButton")
 pause_menu = NodePath("PauseLayer/PauseMenu")
 soil_tool_controller = NodePath("SoilToolController")
@@ -515,7 +529,7 @@ disease_activation_controller = NodePath("../DiseaseActivationController")
 game_state_manager = NodePath("../GameStateManager")
 disease_database = ExtResource("8_qayry")
 
-[node name="World" type="Node2D" parent="." unique_id=369827757 node_paths=PackedStringArray("terrain_layer", "background_terrain_layer", "background_decorations", "crop_overlay", "crop_layer", "crop_shadows", "camera", "farmer_agent", "selection_overlay", "grass_overlay_layer")]
+[node name="World" type="Node2D" parent="." unique_id=369827757 node_paths=PackedStringArray("terrain_layer", "background_terrain_layer", "background_decorations", "crop_overlay", "crop_layer", "crop_shadows", "fence_layer", "camera", "farmer_agent", "selection_overlay", "grass_overlay_layer")]
 y_sort_enabled = true
 script = ExtResource("4_34f8n")
 terrain_layer = NodePath("Terrain")
@@ -525,6 +539,8 @@ visual_map = ExtResource("5_jfjlv")
 crop_overlay = NodePath("CropOverlay")
 crop_layer = NodePath("Crops")
 crop_shadows = NodePath("CropShadows")
+fence_layer = NodePath("FenceLayer")
+fence_visual = ExtResource("11_11m5t")
 camera = NodePath("Camera2D")
 farmer_agent = NodePath("FarmerAgent")
 selection_overlay = NodePath("SelectionOverlay")
@@ -637,6 +653,13 @@ shadow_filter_smooth = 1.5
 shadow_item_cull_mask = 2
 texture = SubResource("GradientTexture2D_ia13u")
 texture_scale = 6.62
+
+[node name="FenceLayer" type="TileMapLayer" parent="World" unique_id=725239561]
+z_index = 2
+y_sort_enabled = true
+tile_set = SubResource("TileSet_8nlti")
+collision_enabled = false
+navigation_enabled = false
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=222609720]
 
@@ -1076,6 +1099,23 @@ toggle_mode = true
 text = "Water Bucket"
 script = ExtResource("26_6a3lw")
 
+[node name="FenceButton" type="Button" parent="HUD" unique_id=1378919391]
+custom_minimum_size = Vector2(132, 48)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -148.0
+offset_top = -344.0
+offset_right = -16.0
+offset_bottom = -296.0
+size_flags_horizontal = 8
+mouse_force_pass_scroll_events = false
+toggle_mode = true
+text = "Fence"
+script = ExtResource("26_6a3lw")
+
 [node name="WeatherManager" type="Node" parent="." unique_id=673066105]
 script = ExtResource("27_mfnx3")
 fluctuations_enabled = true
@@ -1113,6 +1153,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0, 0, 0, 0.6)
 
 [node name="CenterContainer" type="CenterContainer" parent="PauseLayer/PauseMenu" unique_id=2137092682]

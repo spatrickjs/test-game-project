@@ -304,6 +304,8 @@ func _planting_error(coordinates: Vector2i, crop_type: SimulationEnums.CropType)
 	var cell: FieldCellState = _grid.get_cell(coordinates)
 	if cell == null:
 		return "Choose a tile inside the field."
+	if cell.has_fence:
+		return "This tile is fenced."
 	if cell.has_crop:
 		return "This tile already contains a crop."
 	var crop: CropData = crop_database.get_crop(crop_type)
@@ -373,6 +375,8 @@ func action_error(action: FieldAction, check_reservations: bool = true) -> Strin
 		SimulationEnums.FieldActionKind.REMOVE_CROP:
 			return "Choose a crop to remove." if not cell.has_crop else ""
 		SimulationEnums.FieldActionKind.DIG_GRASS:
+			if cell.has_fence:
+				return "Remove the fence before digging."
 			if cell.has_crop or cell.terrain_type != SimulationEnums.TerrainType.GRASS:
 				return "Shovel conversion requires empty grass."
 			if initial_soil == null or not initial_soil.validate().is_empty():
@@ -402,6 +406,10 @@ func action_error(action: FieldAction, check_reservations: bool = true) -> Strin
 			if treatment_controller == null:
 				return "Treatments are not configured."
 			return treatment_controller.action_error(action)
+		SimulationEnums.FieldActionKind.FENCE:
+			return "This tile is already fenced." if cell.has_fence else ""
+		SimulationEnums.FieldActionKind.REMOVE_FENCE:
+			return "Choose a fence to remove." if not cell.has_fence else ""
 	return "Unknown action."
 
 
@@ -467,6 +475,10 @@ func arrive_at_action(action_id: int, stop: Vector2i) -> bool:
 				success = treatment_controller.commit_treatment(action, _grid, _current_turn_index)
 			else:
 				success = _fail("Treatments are not configured.")
+		SimulationEnums.FieldActionKind.FENCE:
+			success = _apply_fence(action)
+		SimulationEnums.FieldActionKind.REMOVE_FENCE:
+			success = _remove_fence(action)
 	_actions.pop_front()
 	action_finished.emit(action.id, success, last_error)
 	if harvest != null:
@@ -497,6 +509,39 @@ func _convert_terrain(action: FieldAction) -> bool:
 	return true
 
 
+## Fencing is an atomic, time-free commit. The cell becomes grass with no soil and
+## any crop/disease is cleared. Built on the same copy–validate–commit pattern.
+func _apply_fence(action: FieldAction) -> bool:
+	var candidate: FieldGridState = _grid.copy()
+	var cell: FieldCellState = candidate.get_cell(action.target)
+	cell.has_crop = false
+	cell.reset_crop_state()
+	cell.terrain_type = SimulationEnums.TerrainType.GRASS
+	cell.soil = null
+	cell.has_fence = true
+	var errors: PackedStringArray = FieldGridQueries.validate_terrain_assignments(candidate, crop_database, terrain_database)
+	if not errors.is_empty():
+		return _fail("\n".join(errors))
+	_grid = candidate
+	last_error = ""
+	_emit_cell_changed(action.target)
+	return true
+
+
+## Destroying a fence leaves grass with null soil. The tile can then be dug.
+func _remove_fence(action: FieldAction) -> bool:
+	var candidate: FieldGridState = _grid.copy()
+	var cell: FieldCellState = candidate.get_cell(action.target)
+	cell.has_fence = false
+	var errors: PackedStringArray = FieldGridQueries.validate_terrain_assignments(candidate, crop_database, terrain_database)
+	if not errors.is_empty():
+		return _fail("\n".join(errors))
+	_grid = candidate
+	last_error = ""
+	_emit_cell_changed(action.target)
+	return true
+
+
 ## Mature-only collection. Commit the clearing before observers receive a signal.
 func harvest_crop(coordinates: Vector2i) -> HarvestResult:
 	var result: HarvestResult = HarvestResult.new()
@@ -518,6 +563,9 @@ func harvest_crop(coordinates: Vector2i) -> HarvestResult:
 				else:
 					result.crop_type = cell.crop_type
 					result.quality_multiplier = 1.0 - cell.yield_quality_loss
+					var scoring: ScoringModel.Result = ScoringModel.evaluate(result, crop)
+					result.base_score = scoring.base_score
+					result.score = scoring.score
 					var candidate: FieldGridState = _grid.copy()
 					var cleared: FieldCellState = candidate.get_cell(coordinates)
 					cleared.has_crop = false

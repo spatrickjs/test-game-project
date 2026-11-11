@@ -1,0 +1,14 @@
+[gd_resource type="TileSet" format=3 uid="uid://yyjepvrala7y"]
+
+[ext_resource type="Texture2D" uid="uid://qaokkgso2k0a" path="res://assets/art/tilesets/fence/fence.png" id="1_p3mde"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_whdnl"]
+texture = ExtResource("1_p3mde")
+texture_region_size = Vector2i(213, 122)
+0:0/0 = 0
+
+[resource]
+tile_shape = 1
+tile_layout = 4
+tile_size = Vector2i(213, 122)
+sources/0 = SubResource("TileSetAtlasSource_whdnl")
