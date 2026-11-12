@@ -12,6 +12,8 @@ args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 logs = root / ".godot"
 tests = [
+    "tests/presentation/tile_inspector_popup_test.gd",
+    "tests/presentation/button_feedback_test.gd",
     "tests/presentation/infection_alert_test.gd",
     "tests/logic/field_prototype_smoke.gd",
     "tests/logic/disease_activation_test.gd",

@@ -2,7 +2,7 @@ extends Node2D
 ## Presentation-only reminders. Timing never advances the simulation.
 
 const ALERT_DURATION: float = 5.0
-const COOLDOWN_DURATION: float = 10.0
+const COOLDOWN_DURATION: float = 5.0
 const FLASH_INTERVAL: float = 0.5
 
 var terrain_layer: TileMapLayer

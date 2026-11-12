@@ -91,7 +91,9 @@ func _ready() -> void:
 		farming_controller.treatment_controller = treatment_controller
 	_create_overlays()
 	_connect_game_signals()
-	next_turn_button.text = "End Turn"
+	if next_turn_button.icon == null:
+		next_turn_button.text = "End Turn"
+	next_turn_button.tooltip_text = "End Turn"
 	# All listeners are connected before Logic emits its initialization signal.
 	if not farming_controller.initialize_field():
 		_show_failure(farming_controller.last_error)
@@ -300,6 +302,29 @@ func _update_crop_buttons() -> void:
 	corn_button.set_pressed_no_signal(_planting_enabled and _selected_crop == SimulationEnums.CropType.CORN)
 
 
+func _process(_delta: float) -> void:
+	if tile_inspector != null and tile_inspector.visible and _inspected_coordinates.x >= 0:
+		_position_inspector()
+
+
+func _position_inspector() -> void:
+	if world_view == null or world_view.terrain_layer == null:
+		return
+	var terrain: TileMapLayer = world_view.terrain_layer
+	var canvas_inverse: Transform2D = tile_inspector.get_canvas_transform().affine_inverse()
+	var tile_transform: Transform2D = canvas_inverse * terrain.get_global_transform_with_canvas()
+	var target: Vector2 = tile_transform * terrain.map_to_local(_inspected_coordinates)
+	var tile_half_width: float = 0.0
+	if terrain.tile_set != null:
+		var half_size: Vector2 = Vector2(terrain.tile_set.tile_size) * 0.5
+		tile_half_width = absf(tile_transform.x.x) * half_size.x + absf(tile_transform.y.x) * half_size.y
+	var obstacles: Array[Rect2] = []
+	for control: Control in [hud_panel, pause_button, next_turn_button, sugarcane_button, rice_button, corn_button, remove_button, transfer_button, harvest_button, water_button, fertilize_button, fence_button, hoe_button, water_bucket_button]:
+		if control != null and control.is_visible_in_tree():
+			obstacles.append(canvas_inverse * (control.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, control.size)))
+	tile_inspector.place_near_tile(target, obstacles, tile_half_width)
+
+
 func _refresh_inspected_cell() -> void:
 	if _planting_enabled or _inspected_coordinates.x < 0:
 		return
@@ -315,6 +340,7 @@ func _refresh_inspected_cell() -> void:
 	if cell.has_crop:
 		crop = farming_controller.crop_database.get_crop(cell.crop_type)
 	tile_inspector.display_cell(cell, crop)
+	_position_inspector()
 	var disease: DiseaseData = turn_controller.disease_database.get_disease(playtest_disease_id) if turn_controller.disease_database != null else null
 	tile_inspector.set_seed_available(cell.has_crop and disease != null and cell.crop_type == disease.target_crop and not cell.has_active_disease and cell.susceptible_fraction == 1.0)
 
