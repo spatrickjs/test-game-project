@@ -8,6 +8,8 @@ signal planting_rejected(coordinates: Vector2i, reason: String)
 signal action_queue_changed
 signal action_finished(action_id: int, success: bool, reason: String)
 signal queued_harvest_completed(result: HarvestResult)
+signal actions_remaining_changed(remaining: int, max: int)
+signal max_actions_changed(new_max: int)
 
 @export var crop_database: CropDatabase
 @export var terrain_database: TerrainDatabase
@@ -20,6 +22,8 @@ signal queued_harvest_completed(result: HarvestResult)
 	SimulationEnums.TerrainType.GRASS,
 ]
 
+const DEFAULT_MAX_ACTIONS: int = 5
+
 var last_error: String = ""
 var _grid: FieldGridState = null
 var last_turn_introduction: DiseaseActivationRequest
@@ -30,10 +34,55 @@ var _revisions: Dictionary[Vector2i, int] = {}
 var treatment_controller: TreatmentController = null
 ## Updated by advance_simulated_turn; used by treatment commit for turn-based logic.
 var _current_turn_index: int = 0
+var _max_actions: int = DEFAULT_MAX_ACTIONS
+var _actions_remaining: int = DEFAULT_MAX_ACTIONS
 
 
 func is_initialized() -> bool:
 	return _grid != null
+
+
+func get_max_actions() -> int:
+	return _max_actions
+
+
+func get_actions_remaining() -> int:
+	return _actions_remaining
+
+
+func validate_max_actions(n: int) -> PackedStringArray:
+	var errors := PackedStringArray()
+	if n <= 0:
+		errors.append("Maximum actions must be positive.")
+	return errors
+
+
+func try_set_max_actions(n: int) -> bool:
+	var errors: PackedStringArray = validate_max_actions(n)
+	if not errors.is_empty():
+		last_error = errors[0]
+		return false
+	_max_actions = n
+	# Clamp remaining to new maximum
+	_actions_remaining = mini(_actions_remaining, _max_actions)
+	last_error = ""
+	max_actions_changed.emit(_max_actions)
+	actions_remaining_changed.emit(_actions_remaining, _max_actions)
+	return true
+
+
+func adjust_actions_remaining(delta: int) -> void:
+	var old_value: int = _actions_remaining
+	_actions_remaining = clampi(_actions_remaining + delta, 0, _max_actions)
+	if _actions_remaining != old_value:
+		actions_remaining_changed.emit(_actions_remaining, _max_actions)
+
+
+func reset_actions_remaining() -> void:
+	var old_value: int = _actions_remaining
+	_actions_remaining = _max_actions
+	if _actions_remaining != old_value:
+		actions_remaining_changed.emit(_actions_remaining, _max_actions)
 
 
 func initialize_field() -> bool:
@@ -74,6 +123,9 @@ func initialize_field() -> bool:
 	_actions.clear()
 	last_turn_introduction = null
 	_revisions.clear()
+	if _max_actions < 1:
+		_max_actions = DEFAULT_MAX_ACTIONS
+	_actions_remaining = _max_actions
 	action_queue_changed.emit()
 	field_initialized.emit()
 	return true
@@ -367,6 +419,8 @@ func get_queued_coordinates() -> Array[Vector2i]:
 func action_error(action: FieldAction, check_reservations: bool = true) -> String:
 	if action == null or _grid == null:
 		return "Initialize the field before selecting an action."
+	if _actions_remaining <= 0:
+		return "Insufficient actions remaining."
 	var cell: FieldCellState = _grid.get_cell(action.target)
 	if cell == null:
 		return "Choose a tile inside the field."
@@ -487,6 +541,8 @@ func arrive_at_action(action_id: int, stop: Vector2i) -> bool:
 	if harvest != null:
 		queued_harvest_completed.emit(harvest)
 	action_queue_changed.emit()
+	if success:
+		adjust_actions_remaining(-1)
 	return success
 
 

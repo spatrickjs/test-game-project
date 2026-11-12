@@ -71,6 +71,7 @@ func advance_turn() -> bool:
 		game_state_manager.check_turn_limit(turn_index)
 	if disease_activation_controller != null:
 		disease_activation_controller.report_committed(farming_controller.last_turn_introduction, turn_index)
+	farming_controller.reset_actions_remaining()
 	turn_completed.emit(turn_index)
 	_advancing = false
 	return true

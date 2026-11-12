@@ -34,6 +34,7 @@ tests = [
     "tests/presentation/terrain_preview_runtime_test.gd",
     "tests/presentation/grass_overlay_test.gd",
     "tests/logic/queued_field_actions_test.gd",
+    "tests/logic/action_bar_test.gd",
     "tests/presentation/hoe_and_shovel_test.gd",
     "tests/logic/scoring_test.gd",
     "tests/presentation/background_layers_test.gd",

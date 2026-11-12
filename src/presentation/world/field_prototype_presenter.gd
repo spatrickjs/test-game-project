@@ -14,6 +14,7 @@ extends Node
 @export var turn_label: Label
 @export var selected_crop_label: Label
 @export var status_label: Label
+@export var action_bar_view: ActionBarView
 @export var sugarcane_button: Button
 @export var rice_button: Button
 @export var corn_button: Button
@@ -166,6 +167,7 @@ func _connect_signals() -> void:
 	_connect_once(farming_controller.field_initialized, _on_field_initialized)
 	_connect_once(farming_controller.cell_changed, _on_cell_changed)
 	_connect_once(farming_controller.planting_rejected, _on_planting_rejected)
+	_connect_once(farming_controller.actions_remaining_changed, _on_actions_remaining_changed)
 	_connect_once(turn_controller.turn_completed, _on_turn_completed)
 	_connect_once(get_viewport().size_changed, _on_viewport_resized)
 	_connect_once(tile_inspector.close_requested, _on_inspector_closed)
@@ -194,6 +196,8 @@ func _validate_references() -> PackedStringArray:
 		errors.append_array(tile_inspector.validate_configuration())
 	if hud_panel == null or turn_label == null or selected_crop_label == null or status_label == null:
 		errors.append("Presenter: assign hud_panel and all three labels.")
+	if action_bar_view != null:
+		errors.append_array(action_bar_view.validate_configuration())
 	if sugarcane_button == null or rice_button == null or corn_button == null or next_turn_button == null:
 		errors.append("Presenter: assign all four buttons.")
 	return errors
@@ -210,6 +214,8 @@ func _on_field_initialized() -> void:
 		world_view.farmer_agent.global_position = world_view.standing_point(Vector2i.ZERO, world_view.terrain_layer.to_global(world_view.terrain_layer.map_to_local(Vector2i(-1, 0))))
 	_enter_inspect_mode()
 	turn_label.text = "Turn: 0"
+	if action_bar_view != null:
+		action_bar_view.set_counts(farming_controller.get_actions_remaining(), farming_controller.get_max_actions())
 	_sync_algorithm_selector()
 	_update_score_display()
 	# Run again after the scene's first layout pass.
@@ -884,3 +890,10 @@ func _on_play_again_pressed() -> void:
 		_show_failure(farming_controller.last_error)
 		return
 	game_state_manager.start_game()
+
+
+func _on_actions_remaining_changed(remaining: int, max: int) -> void:
+	if action_bar_view != null:
+		action_bar_view.set_counts(remaining, max)
+	if remaining <= 0:
+		status_label.text = "No actions remaining. End turn to reset."
