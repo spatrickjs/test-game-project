@@ -90,7 +90,9 @@ func _ready() -> void:
 		farming_controller.treatment_controller = treatment_controller
 	_create_overlays()
 	_connect_game_signals()
-	next_turn_button.text = "End Turn"
+	if next_turn_button.icon == null:
+		next_turn_button.text = "End Turn"
+	next_turn_button.tooltip_text = "End Turn"
 	# All listeners are connected before Logic emits its initialization signal.
 	if not farming_controller.initialize_field():
 		_show_failure(farming_controller.last_error)
