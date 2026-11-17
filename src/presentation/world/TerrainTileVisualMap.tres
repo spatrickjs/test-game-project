@@ -13,7 +13,7 @@ metadata/_custom_type_script = "uid://uqyd1q3fy7yc"
 script = ExtResource("1_1aewo")
 terrain_type = 2
 source_id = 1
-atlas_coords = Vector2i(4, 9)
+atlas_coords = Vector2i(0, 6)
 metadata/_custom_type_script = "uid://uqyd1q3fy7yc"
 
 [sub_resource type="Resource" id="Resource_b1lj4"]

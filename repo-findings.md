@@ -8,7 +8,7 @@ Verified by static inspection of [spatrickjs/test-game-project](https://github.c
 - Startup: `src/presentation/menu/main_menu.tscn`; its `game_scene` points to `field_prototype.tscn`.
 - `field_prototype.tscn`: saved field is 9×9 with grass-only terrain bands. `FarmingController` defaults are 9×6 with mixed bands; scene exports override them.
 - `src/`: layer responsibilities are in [.agents/architecture.md](.agents/architecture.md).
-- `assets/art/tilesets/`: terrain, foliage, crop textures, and other world art; `crops_raw/` contains source frames, `crops/normalized/` contains runtime textures.
+- `assets/art/tilesets/`: terrain, foliage, crop textures, and other world art; runtime crop strips are imported from `crops/<crop>/<variant>/` at 216 × 320 pixels per frame. The older `crops_raw/` and `crops/normalized/` assets are legacy inputs and outputs.
 - `tools/`: test runner, UI baker, and editor setup utilities. `addons/test_harness/`: environment-gated editor entry points.
 - `features/`: menu and fence Gherkin. `.kiro/specs/`: matching requirements/design/tasks. `.kiro/steering/`: pre-existing project guidance.
 - `docs/`: feature setup guides and historical handoff. Test infrastructure is documented only in [.agents/testing-guidelines.md](.agents/testing-guidelines.md).
